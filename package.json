@@ -1,7 +1,8 @@
 {
-  "name": "nextjs-template",
+  "name": "meowsliver",
   "version": "0.1.0",
   "private": true,
+  "description": "Thai personal finance dashboard for importing and analyzing Meowjot-style transaction data with Next.js, Zustand, and Recharts.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
