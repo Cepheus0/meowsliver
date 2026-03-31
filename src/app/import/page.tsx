@@ -1,0 +1,754 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Upload,
+  FileSpreadsheet,
+  CheckCircle,
+  X,
+  AlertTriangle,
+  Sparkles,
+  FileWarning,
+  ArrowRight,
+  ArrowLeft,
+  Loader2,
+  Download,
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
+import { cn, formatBaht } from "@/lib/utils";
+import { useFinanceStore } from "@/store/finance-store";
+import type { Transaction } from "@/lib/types";
+import {
+  parseFile,
+  detectMeowjotFormat,
+  normalizeDate,
+  resolveTransactionType,
+  EMPTY_MAPPING,
+  type ParseResult,
+  type ColumnMapping,
+  type RawRow,
+} from "@/lib/excel-parser";
+
+type ImportStep = "upload" | "mapping" | "preview" | "done";
+
+const STEP_LABELS = ["อัปโหลดไฟล์", "จับคู่คอลัมน์", "ตรวจสอบข้อมูล", "เสร็จสิ้น"];
+
+/** The mapping fields we need users to confirm */
+const MAPPING_FIELDS: {
+  key: keyof ColumnMapping;
+  label: string;
+  required: boolean;
+  description: string;
+}[] = [
+  { key: "date", label: "วันที่", required: true, description: "คอลัมน์วันที่ของรายการ" },
+  { key: "amount", label: "จำนวนเงิน", required: true, description: "จำนวนเงินรายการ (ติดลบ = รายจ่าย)" },
+  { key: "type", label: "ประเภท", required: false, description: "รายรับ / รายจ่าย (ถ้าไม่มี จะดูจากเครื่องหมาย +/-)" },
+  { key: "category", label: "หมวดหมู่", required: false, description: "หมวดหมู่ เช่น อาหาร, ช้อปปิ้ง" },
+  { key: "note", label: "โน้ต / หมายเหตุ", required: false, description: "รายละเอียดเพิ่มเติม" },
+  { key: "paymentChannel", label: "ช่องทางจ่าย", required: false, description: "บัตรเครดิต, บัญชี, เงินสด" },
+  { key: "payFrom", label: "จ่ายจาก", required: false, description: "ชื่อบัตร/บัญชีที่จ่าย" },
+  { key: "recipient", label: "ผู้รับ", required: false, description: "ร้านค้า/ผู้รับเงิน" },
+  { key: "tag", label: "แท็ก", required: false, description: "แท็กเพิ่มเติม" },
+];
+
+export default function ImportPage() {
+  const router = useRouter();
+  const { replaceImportedTransactions } = useFinanceStore();
+
+  // Wizard state
+  const [step, setStep] = useState<ImportStep>("upload");
+  const [isDragging, setIsDragging] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Parsed file data
+  const [fileName, setFileName] = useState("");
+  const [parseResult, setParseResult] = useState<ParseResult | null>(null);
+  const [isMeowjot, setIsMeowjot] = useState(false);
+  const [confidence, setConfidence] = useState(0);
+  const [mapping, setMapping] = useState<ColumnMapping>(EMPTY_MAPPING);
+
+  // Preview data
+  const [previewTransactions, setPreviewTransactions] = useState<Transaction[]>([]);
+  const [importStats, setImportStats] = useState({
+    total: 0,
+    income: 0,
+    expense: 0,
+    skipped: 0,
+    totalIncome: 0,
+    totalExpense: 0,
+  });
+
+  // === Step 1: File upload handlers ===
+
+  const processUploadedFile = useCallback(async (file: File) => {
+    setError(null);
+    setIsProcessing(true);
+
+    try {
+      // Validate file type
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      if (!ext || !["xlsx", "xls", "csv"].includes(ext)) {
+        throw new Error("รองรับเฉพาะไฟล์ .xlsx, .xls, .csv เท่านั้น");
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error("ไฟล์ใหญ่เกินไป (สูงสุด 10MB)");
+      }
+
+      setFileName(file.name);
+
+      // Parse the file
+      const result = await parseFile(file);
+
+      if (result.rows.length === 0) {
+        throw new Error("ไม่พบข้อมูลในไฟล์ กรุณาตรวจสอบว่าไฟล์มีข้อมูลอยู่");
+      }
+
+      if (result.columns.length === 0) {
+        throw new Error("ไม่พบคอลัมน์ในไฟล์ กรุณาตรวจสอบว่าแถวแรกเป็นหัวคอลัมน์");
+      }
+
+      setParseResult(result);
+
+      // Auto-detect เหมียวจด format
+      const detection = detectMeowjotFormat(result.columns);
+      setIsMeowjot(detection.isMeowjot);
+      setConfidence(detection.confidence);
+      setMapping(detection.autoMapping);
+
+      setStep("mapping");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการอ่านไฟล์");
+    } finally {
+      setIsProcessing(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        processUploadedFile(file);
+      }
+    },
+    [processUploadedFile]
+  );
+
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        processUploadedFile(file);
+      }
+      // Reset so the same file can be re-selected
+      e.target.value = "";
+    },
+    [processUploadedFile]
+  );
+
+  // === Step 2 → 3: Build preview from mapping ===
+
+  const buildPreview = useCallback(() => {
+    if (!parseResult) return;
+
+    const transactions: Transaction[] = [];
+    let incomeCount = 0;
+    let expenseCount = 0;
+    let skippedCount = 0;
+    let totalIncome = 0;
+    let totalExpense = 0;
+
+    for (let i = 0; i < parseResult.rows.length; i++) {
+      const row: RawRow = parseResult.rows[i];
+
+      // Get the date
+      const rawDate = mapping.date ? row[mapping.date] : "";
+      const date = normalizeDate(rawDate);
+      if (!date) {
+        skippedCount++;
+        continue;
+      }
+
+      // Get the amount
+      const rawAmount = mapping.amount ? row[mapping.amount] : "";
+      // Remove commas and whitespace, parse as float
+      const amount = parseFloat(rawAmount.replace(/[,\s]/g, ""));
+      if (isNaN(amount) || amount === 0) {
+        skippedCount++;
+        continue;
+      }
+
+      // Get transaction type
+      const rawType = mapping.type ? row[mapping.type] : "";
+      const txType = resolveTransactionType(rawType, amount);
+
+      // Get category
+      const category = mapping.category ? row[mapping.category] || "" : "";
+
+      // Build note from multiple fields
+      const noteParts: string[] = [];
+      if (mapping.note && row[mapping.note]) noteParts.push(row[mapping.note]);
+      if (mapping.recipient && row[mapping.recipient]) noteParts.push(row[mapping.recipient]);
+      const note = noteParts.join(" | ") || undefined;
+
+      // Build subcategory from payment info
+      const subParts: string[] = [];
+      if (mapping.paymentChannel && row[mapping.paymentChannel]) subParts.push(row[mapping.paymentChannel]);
+      if (mapping.payFrom && row[mapping.payFrom]) subParts.push(row[mapping.payFrom]);
+      const subcategory = subParts.join(" — ") || undefined;
+
+      const absAmount = Math.abs(amount);
+
+      if (txType === "income") {
+        incomeCount++;
+        totalIncome += absAmount;
+      } else {
+        expenseCount++;
+        totalExpense += absAmount;
+      }
+
+      transactions.push({
+        id: `import-${Date.now()}-${i}`,
+        date,
+        amount: absAmount,
+        category: category || (txType === "income" ? "รายรับ" : "รายจ่าย"),
+        subcategory,
+        type: txType,
+        note,
+      });
+    }
+
+    setPreviewTransactions(transactions);
+    setImportStats({
+      total: transactions.length,
+      income: incomeCount,
+      expense: expenseCount,
+      skipped: skippedCount,
+      totalIncome,
+      totalExpense,
+    });
+    setStep("preview");
+  }, [parseResult, mapping]);
+
+  // === Step 3 → Done: Confirm import ===
+
+  const confirmImport = useCallback(() => {
+    replaceImportedTransactions(previewTransactions);
+    setStep("done");
+  }, [previewTransactions, replaceImportedTransactions]);
+
+  // === Reset ===
+
+  const resetWizard = useCallback(() => {
+    setStep("upload");
+    setFileName("");
+    setParseResult(null);
+    setIsMeowjot(false);
+    setConfidence(0);
+    setMapping(EMPTY_MAPPING);
+    setPreviewTransactions([]);
+    setError(null);
+    setImportStats({ total: 0, income: 0, expense: 0, skipped: 0, totalIncome: 0, totalExpense: 0 });
+  }, []);
+
+  // === Validation: can we proceed from mapping? ===
+  const canProceedFromMapping = mapping.date !== "" && mapping.amount !== "";
+
+  // === Step indicator index ===
+  const stepIndex = ["upload", "mapping", "preview", "done"].indexOf(step);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
+          นำเข้าข้อมูล
+        </h1>
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          Import Excel / CSV จาก เหมียวจด หรือแอปบัญชีอื่นๆ
+        </p>
+      </div>
+
+      {/* Progress Steps */}
+      <div className="flex items-center gap-1">
+        {STEP_LABELS.map((label, i) => (
+          <div key={label} className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors",
+                  i === stepIndex
+                    ? "bg-emerald-500 text-white"
+                    : i < stepIndex
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400"
+                      : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"
+                )}
+              >
+                {i < stepIndex ? <CheckCircle size={16} /> : i + 1}
+              </div>
+              <span
+                className={cn(
+                  "hidden text-xs font-medium sm:block",
+                  i === stepIndex
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-zinc-400"
+                )}
+              >
+                {label}
+              </span>
+            </div>
+            {i < 3 && (
+              <div
+                className={cn(
+                  "mx-1 h-0.5 w-6 sm:w-10",
+                  i < stepIndex ? "bg-emerald-400" : "bg-zinc-200 dark:bg-zinc-700"
+                )}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Error display */}
+      {error && (
+        <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/40 dark:bg-red-500/5">
+          <FileWarning size={20} className="shrink-0 text-red-500" />
+          <div>
+            <p className="text-sm font-medium text-red-700 dark:text-red-400">
+              เกิดข้อผิดพลาด
+            </p>
+            <p className="text-xs text-red-600 dark:text-red-500">{error}</p>
+          </div>
+          <button
+            onClick={() => setError(null)}
+            className="ml-auto text-red-400 hover:text-red-600"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* ============ STEP 1: UPLOAD ============ */}
+      {step === "upload" && (
+        <Card>
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={cn(
+              "flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 transition-all sm:p-16",
+              isDragging
+                ? "border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-500/5"
+                : "border-zinc-300 hover:border-zinc-400 dark:border-zinc-700 dark:hover:border-zinc-500",
+              isProcessing && "pointer-events-none opacity-60"
+            )}
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 size={48} className="mb-4 animate-spin text-emerald-500" />
+                <p className="text-lg font-semibold text-zinc-700 dark:text-zinc-200">
+                  กำลังอ่านไฟล์...
+                </p>
+              </>
+            ) : (
+              <>
+                <Upload size={48} className="mb-4 text-zinc-400" />
+                <p className="mb-2 text-lg font-semibold text-zinc-700 dark:text-zinc-200">
+                  ลากไฟล์มาวางที่นี่
+                </p>
+                <p className="mb-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  รองรับ .xlsx, .xls, .csv (สูงสุด 10MB)
+                </p>
+                <p className="mb-6 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                  <Sparkles size={14} />
+                  ตรวจจับรูปแบบ เหมียวจด อัตโนมัติ
+                </p>
+                <label>
+                  <input
+                    type="file"
+                    accept=".xlsx,.csv,.xls"
+                    onChange={handleFileInput}
+                    className="hidden"
+                  />
+                  <span className="cursor-pointer rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700">
+                    <Download size={16} className="mr-2 inline" />
+                    เลือกไฟล์
+                  </span>
+                </label>
+              </>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* ============ STEP 2: COLUMN MAPPING ============ */}
+      {step === "mapping" && parseResult && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileSpreadsheet size={16} />
+              จับคู่คอลัมน์ — {fileName}
+            </CardTitle>
+            <button
+              onClick={resetWizard}
+              className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+            >
+              <X size={16} />
+            </button>
+          </CardHeader>
+
+          {/* Detection banner */}
+          {isMeowjot ? (
+            <div className="mb-4 flex items-center gap-3 rounded-xl bg-emerald-50 p-3 dark:bg-emerald-500/5">
+              <Sparkles size={18} className="shrink-0 text-emerald-500" />
+              <div>
+                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                  ตรวจพบรูปแบบ เหมียวจด! (ความเชื่อมั่น {Math.round(confidence * 100)}%)
+                </p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-500">
+                  จับคู่คอลัมน์อัตโนมัติแล้ว — กรุณาตรวจสอบก่อนดำเนินการ
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-4 flex items-center gap-3 rounded-xl bg-amber-50 p-3 dark:bg-amber-500/5">
+              <AlertTriangle size={18} className="shrink-0 text-amber-500" />
+              <div>
+                <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                  ไม่ใช่รูปแบบ เหมียวจด — กรุณาจับคู่คอลัมน์เอง
+                </p>
+                <p className="text-xs text-amber-600 dark:text-amber-500">
+                  พบ {parseResult.columns.length} คอลัมน์,{" "}
+                  {parseResult.totalRows} แถวข้อมูล (ชีท: {parseResult.sheetName})
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* File info */}
+          <div className="mb-4 grid grid-cols-3 gap-3">
+            <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/50">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">จำนวนแถว</p>
+              <p className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
+                {parseResult.totalRows.toLocaleString()}
+              </p>
+            </div>
+            <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/50">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">จำนวนคอลัมน์</p>
+              <p className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
+                {parseResult.columns.length}
+              </p>
+            </div>
+            <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/50">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">ชีท</p>
+              <p className="truncate text-lg font-bold text-zinc-800 dark:text-zinc-100">
+                {parseResult.sheetName}
+              </p>
+            </div>
+          </div>
+
+          {/* Mapping form */}
+          <div className="space-y-3">
+            {MAPPING_FIELDS.map((field) => {
+              const value = mapping[field.key];
+              return (
+                <div
+                  key={field.key}
+                  className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-4"
+                >
+                  <div className="w-full sm:w-52">
+                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                      {field.label}
+                      {field.required && (
+                        <span className="ml-1 text-red-500">*</span>
+                      )}
+                    </label>
+                    <p className="text-xs text-zinc-400 dark:text-zinc-500">
+                      {field.description}
+                    </p>
+                  </div>
+                  <div className="flex-1">
+                    <select
+                      value={value}
+                      onChange={(e) =>
+                        setMapping((prev) => ({
+                          ...prev,
+                          [field.key]: e.target.value,
+                        }))
+                      }
+                      className={cn(
+                        "w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm outline-none transition-colors focus:border-emerald-500",
+                        value
+                          ? "border-emerald-300 dark:border-emerald-700"
+                          : field.required
+                            ? "border-red-300 dark:border-red-700"
+                            : "border-zinc-200 dark:border-zinc-700",
+                        "text-zinc-800 dark:text-zinc-100"
+                      )}
+                    >
+                      <option value="">
+                        {field.required ? "-- เลือก (จำเป็น) --" : "-- ไม่เลือก --"}
+                      </option>
+                      {parseResult.columns.map((col) => (
+                        <option key={col} value={col}>
+                          {col}
+                          {/* Show a sample value */}
+                          {parseResult.rows[0]?.[col]
+                            ? ` (ตัวอย่าง: ${parseResult.rows[0][col].slice(0, 30)})`
+                            : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Raw data preview */}
+          <details className="mt-5">
+            <summary className="cursor-pointer text-xs font-medium text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200">
+              ดูข้อมูลดิบ (5 แถวแรก)
+            </summary>
+            <div className="mt-2 overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-zinc-50 dark:bg-zinc-800">
+                    <th className="px-3 py-2 font-medium text-zinc-500">#</th>
+                    {parseResult.columns.map((col) => (
+                      <th key={col} className="whitespace-nowrap px-3 py-2 font-medium text-zinc-500">
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {parseResult.rows.slice(0, 5).map((row, i) => (
+                    <tr key={i}>
+                      <td className="px-3 py-1.5 text-zinc-400">{i + 1}</td>
+                      {parseResult.columns.map((col) => (
+                        <td
+                          key={col}
+                          className="max-w-[200px] truncate whitespace-nowrap px-3 py-1.5 text-zinc-600 dark:text-zinc-300"
+                        >
+                          {row[col] || "-"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          {/* Actions */}
+          <div className="mt-5 flex items-center justify-between">
+            <Button variant="ghost" onClick={resetWizard}>
+              <ArrowLeft size={16} />
+              เลือกไฟล์ใหม่
+            </Button>
+            <Button onClick={buildPreview} disabled={!canProceedFromMapping}>
+              ดูตัวอย่าง
+              <ArrowRight size={16} />
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* ============ STEP 3: PREVIEW ============ */}
+      {step === "preview" && (
+        <>
+          {/* Import summary cards */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">รายการทั้งหมด</p>
+              <p className="mt-1 text-2xl font-bold text-zinc-800 dark:text-zinc-100">
+                {importStats.total}
+              </p>
+            </div>
+            <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                รายรับ ({importStats.income})
+              </p>
+              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                {formatBaht(importStats.totalIncome)}
+              </p>
+            </div>
+            <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                รายจ่าย ({importStats.expense})
+              </p>
+              <p className="mt-1 text-2xl font-bold text-red-500">
+                {formatBaht(importStats.totalExpense)}
+              </p>
+            </div>
+            <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">ข้ามรายการ</p>
+              <p className="mt-1 text-2xl font-bold text-amber-500">
+                {importStats.skipped}
+              </p>
+            </div>
+          </div>
+
+          {/* Preview table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>ตัวอย่างข้อมูลที่จะนำเข้า (20 แถวแรก)</CardTitle>
+            </CardHeader>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">#</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">วันที่</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">ประเภท</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">หมวดหมู่</th>
+                    <th className="py-2.5 pr-3 text-right text-xs font-medium text-zinc-500">จำนวน</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">โน้ต</th>
+                    <th className="py-2.5 text-xs font-medium text-zinc-500">ช่องทาง</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {previewTransactions.slice(0, 20).map((tx, i) => (
+                    <tr key={tx.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                      <td className="py-2 pr-3 text-xs text-zinc-400">{i + 1}</td>
+                      <td className="whitespace-nowrap py-2 pr-3 text-zinc-600 dark:text-zinc-300">
+                        {tx.date}
+                      </td>
+                      <td className="py-2 pr-3">
+                        <span
+                          className={cn(
+                            "inline-block rounded-md px-2 py-0.5 text-xs font-medium",
+                            tx.type === "income"
+                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+                              : "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                          )}
+                        >
+                          {tx.type === "income" ? "รายรับ" : "รายจ่าย"}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-3 text-zinc-700 dark:text-zinc-200">
+                        {tx.category || "-"}
+                      </td>
+                      <td
+                        className={cn(
+                          "whitespace-nowrap py-2 pr-3 text-right font-medium",
+                          tx.type === "income"
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-red-500"
+                        )}
+                      >
+                        {tx.type === "income" ? "+" : "-"}
+                        {formatBaht(tx.amount)}
+                      </td>
+                      <td className="max-w-[200px] truncate py-2 pr-3 text-xs text-zinc-500 dark:text-zinc-400">
+                        {tx.note || "-"}
+                      </td>
+                      <td className="max-w-[150px] truncate py-2 text-xs text-zinc-500 dark:text-zinc-400">
+                        {tx.subcategory || "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {previewTransactions.length > 20 && (
+                <p className="py-3 text-center text-xs text-zinc-400">
+                  ...และอีก {previewTransactions.length - 20} รายการ
+                </p>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="mt-5 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800">
+              <Button variant="ghost" onClick={() => setStep("mapping")}>
+                <ArrowLeft size={16} />
+                แก้ไขการจับคู่
+              </Button>
+              <Button onClick={confirmImport}>
+                <CheckCircle size={16} />
+                ยืนยันนำเข้า {importStats.total.toLocaleString()} รายการ
+              </Button>
+            </div>
+          </Card>
+        </>
+      )}
+
+      {/* ============ STEP 4: DONE ============ */}
+      {step === "done" && (
+        <Card className="py-10 text-center">
+          <CheckCircle size={64} className="mx-auto mb-4 text-emerald-500" />
+          <h2 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
+            นำเข้าสำเร็จ!
+          </h2>
+          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+            นำเข้า{" "}
+            <span className="font-bold text-zinc-800 dark:text-zinc-100">
+              {importStats.total.toLocaleString()}
+            </span>{" "}
+            รายการจาก{" "}
+            <span className="font-medium text-zinc-700 dark:text-zinc-200">
+              {fileName}
+            </span>
+          </p>
+
+          {/* Summary */}
+          <div className="mx-auto mt-6 grid max-w-md grid-cols-2 gap-4">
+            <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-500/5">
+              <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                รายรับ {importStats.income} รายการ
+              </p>
+              <p className="mt-1 text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                {formatBaht(importStats.totalIncome)}
+              </p>
+            </div>
+            <div className="rounded-xl bg-red-50 p-3 dark:bg-red-500/5">
+              <p className="text-xs text-red-600 dark:text-red-400">
+                รายจ่าย {importStats.expense} รายการ
+              </p>
+              <p className="mt-1 text-lg font-bold text-red-700 dark:text-red-300">
+                {formatBaht(importStats.totalExpense)}
+              </p>
+            </div>
+          </div>
+
+          {importStats.skipped > 0 && (
+            <p className="mt-3 text-xs text-amber-500">
+              ข้ามรายการที่ไม่มีวันที่หรือจำนวนเงิน: {importStats.skipped} แถว
+            </p>
+          )}
+
+          <div className="mt-6 flex justify-center gap-3">
+            <Button variant="secondary" onClick={resetWizard}>
+              นำเข้าไฟล์อื่น
+            </Button>
+            <Button onClick={() => router.push("/transactions")}>
+              ดูรายการ
+              <ArrowRight size={16} />
+            </Button>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
