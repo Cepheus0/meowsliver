@@ -26,6 +26,18 @@
 - Added a public-style `README.md` even though the repo is private, so onboarding remains easy
 - Added `AGENTS.md`, `task_plan.md`, `findings.md`, and `progress.md` as first-class repo docs for ongoing private development
 
+### PostgreSQL + Drizzle Foundation
+- Added PostgreSQL dependencies via `pg` and `drizzle-orm`
+- Added Drizzle tooling via `drizzle-kit` and `tsx`
+- Added `drizzle.config.ts`, `.env.example`, and `docker-compose.yml`
+- Added database schema for `transactions`, `import_runs`, and `import_run_rows`
+- Generated the initial SQL migration in `drizzle/`
+- Added Bun scripts for schema generation, migrations, and Drizzle Studio
+- Verified `bun run typecheck`, `bun run lint`, and `bun run build`
+- Started local PostgreSQL with `docker compose up -d`
+- Ran `bun run db:migrate` successfully against the local Postgres instance
+- Verified the created tables directly in Postgres: `transactions`, `import_runs`, and `import_run_rows`
+
 ## Current Status
 
 | Area | Status |
@@ -35,14 +47,15 @@
 | Dashboard analytics | transaction-driven and working |
 | Reports | working |
 | Browser-local persistence | working |
+| PostgreSQL + Drizzle foundation | scaffolded |
 | Asset / liability model | partial |
 | Investment model | partial |
-| Backend / auth / database | not started |
+| Auth | not started |
+| Database-backed runtime flows | not started |
 
 ## Next Likely Milestones
 
-1. Add import-focused validation and edge-case handling.
-2. Improve category normalization and reporting accuracy.
-3. Define real models for assets, liabilities, and investments.
-4. Decide whether and when to introduce backend persistence.
-
+1. Wire the import flow into Postgres.
+2. Add duplicate preview and append-with-de-dup on top of `import_runs`.
+3. Improve category normalization and reporting accuracy.
+4. Expand real models for assets, liabilities, and investments.

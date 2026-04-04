@@ -18,9 +18,10 @@ Use this file as the primary operating guide for AI coding agents working in thi
 
 ## Project Status
 
-- Frontend-only Next.js application
-- No backend, database, auth provider, or API routes yet
+- Next.js application with PostgreSQL + Drizzle foundation scaffolded
+- No auth provider or production API routes wired yet
 - Imported transactions are persisted locally in the browser via Zustand persistence
+- Database schema and migration tooling exist for long-term persistence, but runtime import/dashboard flows are not yet reading and writing through Postgres
 - Assets, liabilities, buckets, and investment areas are still partially scaffolded
 
 ## Core Commands
@@ -31,6 +32,9 @@ bun run dev
 bun run build
 bun run lint
 bun run typecheck
+bun run db:generate
+bun run db:migrate
+bun run db:studio
 ```
 
 ## Code Areas
@@ -45,6 +49,8 @@ bun run typecheck
 | `src/lib/excel-parser.ts` | Spreadsheet parsing and column mapping |
 | `src/lib/finance-analytics.ts` | Derived analytics from imported transactions |
 | `src/store/finance-store.ts` | Zustand store and local persistence |
+| `src/db/` | Postgres client, schema, and migration entrypoint |
+| `drizzle/` | Generated SQL migrations and Drizzle metadata |
 
 ## Expectations For Agents
 
@@ -52,11 +58,13 @@ bun run typecheck
 
 - Read the relevant page/component/store files first
 - Confirm whether the change affects import flow, persisted state, or year-based filtering
+- Confirm whether the change should remain browser-local or move into the Postgres/Drizzle layer
 - Check whether the requested behavior should be transaction-driven or needs a new data model
 
 ### 2. When editing behavior
 
 - Preserve local persistence behavior unless explicitly changing it
+- Prefer database-backed persistence for new long-term data flows instead of expanding browser-only storage indefinitely
 - Avoid browser full reloads when client-side navigation is enough
 - Ensure dashboard and reports degrade gracefully with empty states
 - Keep import confirmation idempotent where practical
@@ -86,4 +94,4 @@ bun run typecheck
 - Do not assume assets / investments are fully wired unless the code clearly shows it
 - Do not add repo-specific secrets or machine-local credentials to tracked files
 - Do not replace SPA navigation with hard redirects unless absolutely necessary
-
+- Do not bypass migrations by hand-editing database state unless the change is explicitly migration-safe

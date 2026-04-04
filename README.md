@@ -13,6 +13,7 @@ It is designed for users who already track their money in a ledger or banking ap
 - Savings buckets, goals, reports, and investment-oriented screens
 - Dark mode support
 - Client-side persistence for imported data during local use
+- PostgreSQL + Drizzle foundation for long-term persistence and import history
 
 ## Tech Stack
 
@@ -25,16 +26,18 @@ It is designed for users who already track their money in a ledger or banking ap
 | State | Zustand |
 | Charts | Recharts |
 | Import Parsing | xlsx |
+| Database Foundation | PostgreSQL + Drizzle ORM |
 | Package Manager | Bun |
 
 ## Current Scope
 
 This project currently focuses on transaction-driven analytics.
 
-- Imported and manually added transactions drive the dashboard, transaction list, and reports
-- Imported data is persisted locally in the browser via Zustand persistence
+- Imported and manually added transactions currently drive the dashboard, transaction list, and reports
+- Imported data is still persisted locally in the browser for the active runtime today
+- PostgreSQL + Drizzle foundation is now scaffolded for long-term persistence, import runs, and duplicate-analysis workflows
 - Assets, liabilities, buckets, and investment holdings are still scaffolded as product surfaces and are not yet fully backed by real imported data models
-- There is no backend, database, authentication, or API layer in the current version
+- Authentication and production API workflows are not wired yet
 
 ## Key Features
 
@@ -78,6 +81,35 @@ This project currently focuses on transaction-driven analytics.
 bun install
 ```
 
+### Environment
+
+Copy the example file and set your Postgres connection:
+
+```bash
+cp .env.example .env.local
+```
+
+Default local development URL:
+
+```bash
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/meowsliver
+```
+
+### Local Postgres
+
+Start PostgreSQL with Docker Compose:
+
+```bash
+docker compose up -d
+```
+
+Generate and run migrations:
+
+```bash
+bun run db:generate
+bun run db:migrate
+```
+
 ### Run locally
 
 ```bash
@@ -100,6 +132,14 @@ bun run typecheck
 bun run lint
 ```
 
+### Database tooling
+
+```bash
+bun run db:generate
+bun run db:migrate
+bun run db:studio
+```
+
 ## Recommended Usage
 
 1. Open the import page
@@ -112,9 +152,11 @@ bun run lint
 ## Project Structure
 
 ```text
+drizzle/         Generated SQL migrations
 src/
   app/           Next.js routes
   components/    Charts, layout, forms, and reusable UI
+  db/            Postgres client, schema, and migration runner
   lib/           Parsing, analytics, types, and utilities
   store/         Zustand finance store
 ```
@@ -122,8 +164,8 @@ src/
 ## Limitations
 
 - Browser-local persistence only
-- No multi-user support
-- No cloud sync or backend storage
+- No multi-user support yet
+- Database foundation exists, but the app runtime is not fully DB-backed yet
 - Import pipeline currently emphasizes transaction rows rather than full portfolio reconciliation
 
 ## Roadmap Ideas
@@ -132,6 +174,7 @@ src/
 - Authentication and user profiles
 - Better asset / liability ingestion
 - Portfolio import support
+- DB-backed append + de-dup import flow with duplicate preview
 - Export and sharing flows
 - Production deployment configuration
 
@@ -140,4 +183,3 @@ src/
 Suggested GitHub repository description:
 
 > Thai personal finance dashboard for importing and analyzing Meowjot-style transaction data with Next.js, Zustand, and Recharts.
-

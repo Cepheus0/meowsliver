@@ -14,10 +14,13 @@ The most reliable working flow today is:
 ## Architecture Findings
 
 - The application is built with Next.js App Router, React, TypeScript, Tailwind CSS, Zustand, Recharts, and `xlsx`
-- The runtime is frontend-only
-- There is no API layer, server-side persistence, database, or auth stack in the current repo
+- The current user-facing runtime is still browser-driven
+- PostgreSQL + Drizzle foundation has now been added for long-term persistence and import history
+- There is still no auth stack, and no production import API flow is wired yet
 - Imported transaction data is persisted locally via Zustand middleware and browser storage
 - Charts are client-rendered with a hydration-safe wrapper to avoid SSR sizing issues
+- The initial Drizzle migration has been generated successfully
+- Local PostgreSQL was started with Docker Compose and the initial migration ran successfully
 
 ## Product Findings
 
@@ -34,21 +37,23 @@ The most reliable working flow today is:
 | Replace imported dataset on confirmation | Prevent accidental duplicate accumulation during repeated tests |
 | Use client-side navigation after import | Avoid wiping in-memory state during route changes |
 | Keep unsupported domains in empty-state mode | Better than showing synthetic values |
+| Add Postgres + Drizzle before implementing append + de-dup | Makes duplicate analysis durable and avoids tying import integrity to a single browser profile |
 
 ## Known Gaps
 
 - No automated test suite around import parsing yet
-- No backend persistence or cloud sync
+- Runtime still depends on browser-local persistence for active app behavior
 - No formal data model for assets, liabilities, or portfolio holdings beyond current scaffolding
 - No production deployment workflow captured in the repo yet
+- No database-backed import execution path is wired into the app yet, despite the new schema foundation
 
 ## Recommended Direction
 
 ### Short Term
 
 - Harden import reliability
-- Improve analytics confidence and visibility
-- Add more deterministic handling of malformed rows and duplicates
+- Move import execution into the new database foundation
+- Add deterministic duplicate preview and append-with-de-dup
 
 ### Medium Term
 
@@ -58,4 +63,3 @@ The most reliable working flow today is:
 ### Long Term
 
 - Add user accounts, cloud sync, and production deployment only after the import and analytics model is trustworthy
-

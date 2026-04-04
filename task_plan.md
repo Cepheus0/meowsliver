@@ -6,7 +6,7 @@ Evolve Meowsliver from a strong local transaction-analysis prototype into a more
 
 ## Current Phase
 
-Phase 4
+Phase 5
 
 ## Phases
 
@@ -36,14 +36,17 @@ Phase 4
 - [ ] Define real data model for investment holdings
 - [ ] Connect buckets and goals to imported or maintained financial data
 - [ ] Decide whether these domains remain client-side or move to a backend
+- [x] Add PostgreSQL + Drizzle schema foundation for transactions and import history
 - **Status:** in_progress
 
 ### Phase 5: Persistence and Multi-User Readiness
-- [ ] Evaluate database options
+- [x] Evaluate database direction and choose Postgres + Drizzle
+- [x] Add migration tooling and local Postgres bootstrap path
 - [ ] Introduce authentication if needed
 - [ ] Design per-user storage model
 - [ ] Add migration path from browser-local state to database-backed state
-- **Status:** pending
+- [ ] Move import flow from local persistence to database-backed append/replace workflows
+- **Status:** in_progress
 
 ### Phase 6: Production Readiness
 - [ ] Deployment configuration
@@ -57,15 +60,14 @@ Phase 4
 
 | Topic | Options | Current Lean |
 |---|---|---|
-| Persistence | Browser-local only vs backend storage | Browser-local for now, backend later |
+| Persistence | Browser-local only vs backend storage | Postgres + Drizzle foundation, staged migration from browser-local runtime |
 | Import semantics | Append imports vs replace current dataset | Replace current dataset |
 | Product scope | Transaction analytics only vs full portfolio system | Transaction analytics first |
 | Deployment | Local/private use vs hosted product | Keep local/private friendly first |
 
 ## Near-Term Priorities
 
-1. Harden the import pipeline.
-2. Improve trust in derived analytics.
+1. Move import persistence into Postgres without breaking the current UX.
+2. Implement duplicate preview plus append-with-de-dup on top of import run tables.
 3. Expand real models for assets, liabilities, and investments.
-4. Prepare for optional backend adoption without disrupting the current UX.
-
+4. Prepare for optional auth and multi-device sync.
