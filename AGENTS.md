@@ -18,10 +18,12 @@ Use this file as the primary operating guide for AI coding agents working in thi
 
 ## Project Status
 
-- Next.js application with PostgreSQL + Drizzle foundation scaffolded
+- Next.js application with PostgreSQL + Drizzle backing the import pipeline
 - No auth provider or production API routes wired yet
-- Imported transactions are persisted locally in the browser via Zustand persistence
-- Database schema and migration tooling exist for long-term persistence, but runtime import/dashboard flows are not yet reading and writing through Postgres
+- Import preview and commit now go through database-backed API routes with duplicate detection
+- Dashboard hydration can pull transactions from Postgres when local runtime state is empty
+- Imported transactions are still mirrored into Zustand persistence for a smooth local UX
+- Manual entry is still browser-local and has not yet been moved into Postgres
 - Assets, liabilities, buckets, and investment areas are still partially scaffolded
 
 ## Core Commands
@@ -47,9 +49,12 @@ bun run db:studio
 | `src/components/layout/` | App shell, sidebar, top bar, theming |
 | `src/components/ui/` | Reusable UI primitives |
 | `src/lib/excel-parser.ts` | Spreadsheet parsing and column mapping |
+| `src/lib/import-pipeline.ts` | Shared import normalization and preview request shapes |
+| `src/lib/server/import-db.ts` | Server-side fingerprinting and DB-to-UI adapters |
 | `src/lib/finance-analytics.ts` | Derived analytics from imported transactions |
 | `src/store/finance-store.ts` | Zustand store and local persistence |
 | `src/db/` | Postgres client, schema, and migration entrypoint |
+| `src/app/api/` | Import preview, import commit, and transaction hydration endpoints |
 | `drizzle/` | Generated SQL migrations and Drizzle metadata |
 
 ## Expectations For Agents
@@ -63,11 +68,12 @@ bun run db:studio
 
 ### 2. When editing behavior
 
-- Preserve local persistence behavior unless explicitly changing it
+- Preserve local persistence behavior for UX-critical state unless explicitly changing it
 - Prefer database-backed persistence for new long-term data flows instead of expanding browser-only storage indefinitely
 - Avoid browser full reloads when client-side navigation is enough
 - Ensure dashboard and reports degrade gracefully with empty states
 - Keep import confirmation idempotent where practical
+- Treat transaction fingerprints as the source of truth for de-dup behavior
 
 ### 3. When adding features
 

@@ -12,8 +12,8 @@ It is designed for users who already track their money in a ledger or banking ap
 - Transaction list with search and filters
 - Savings buckets, goals, reports, and investment-oriented screens
 - Dark mode support
-- Client-side persistence for imported data during local use
-- PostgreSQL + Drizzle foundation for long-term persistence and import history
+- PostgreSQL + Drizzle-backed import history, duplicate preview, and append-with-de-dup
+- Client-side persistence retained for local UX state and manual entry flow
 
 ## Tech Stack
 
@@ -34,8 +34,9 @@ It is designed for users who already track their money in a ledger or banking ap
 This project currently focuses on transaction-driven analytics.
 
 - Imported and manually added transactions currently drive the dashboard, transaction list, and reports
-- Imported data is still persisted locally in the browser for the active runtime today
-- PostgreSQL + Drizzle foundation is now scaffolded for long-term persistence, import runs, and duplicate-analysis workflows
+- Import preview and commit now run through PostgreSQL + Drizzle using `import_runs`, `import_run_rows`, and `transactions`
+- Dashboard and transaction pages can hydrate from the database on cold start when local state is empty
+- Local browser persistence is still retained for selected year, sidebar state, and manual-only entries
 - Assets, liabilities, buckets, and investment holdings are still scaffolded as product surfaces and are not yet fully backed by real imported data models
 - Authentication and production API workflows are not wired yet
 
@@ -46,8 +47,9 @@ This project currently focuses on transaction-driven analytics.
 - Upload `.csv`, `.xls`, or `.xlsx`
 - Auto-detect likely Meowjot exports
 - Map source columns to the app schema
-- Preview parsed transactions before confirming import
-- Replace the current working dataset with the confirmed import
+- Preview parsed transactions against existing database records before confirming import
+- Classify rows as `new`, `duplicate`, `conflict`, or `skipped`
+- Commit only `new` rows into Postgres with append + de-dup protection
 
 ### 2. Dashboard
 
@@ -165,16 +167,16 @@ src/
 
 - Browser-local persistence only
 - No multi-user support yet
-- Database foundation exists, but the app runtime is not fully DB-backed yet
+- Runtime is currently hybrid: import persistence is DB-backed, but manual entry still remains browser-local
 - Import pipeline currently emphasizes transaction rows rather than full portfolio reconciliation
 
 ## Roadmap Ideas
 
-- Database-backed persistence
+- Manual-entry persistence into Postgres
 - Authentication and user profiles
 - Better asset / liability ingestion
 - Portfolio import support
-- DB-backed append + de-dup import flow with duplicate preview
+- Real review workflow for `conflict` rows before import
 - Export and sharing flows
 - Production deployment configuration
 

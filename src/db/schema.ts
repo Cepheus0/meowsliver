@@ -103,7 +103,9 @@ export const transactions = pgTable(
     ),
     typeIdx: index("transactions_type_idx").on(table.type),
     categoryIdx: index("transactions_category_idx").on(table.category),
-    fingerprintIdx: index("transactions_fingerprint_idx").on(table.fingerprint),
+    fingerprintIdx: uniqueIndex("transactions_fingerprint_uidx").on(
+      table.fingerprint
+    ),
     importRunIdx: index("transactions_import_run_idx").on(table.importRunId),
   })
 );

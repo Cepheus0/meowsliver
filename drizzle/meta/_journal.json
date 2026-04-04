@@ -8,6 +8,13 @@
       "when": 1775318578407,
       "tag": "0000_clumsy_plazm",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775319843674,
+      "tag": "0001_famous_mathemanic",
+      "breakpoints": true
     }
   ]
 }

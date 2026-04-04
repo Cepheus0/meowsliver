@@ -19,21 +19,68 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { cn, formatBaht } from "@/lib/utils";
 import { useFinanceStore } from "@/store/finance-store";
-import type { Transaction } from "@/lib/types";
 import {
   parseFile,
   detectMeowjotFormat,
-  normalizeDate,
-  resolveTransactionType,
   EMPTY_MAPPING,
   type ParseResult,
   type ColumnMapping,
-  type RawRow,
 } from "@/lib/excel-parser";
+import {
+  prepareImportRows,
+  type ImportCommitResponse,
+  type ImportPreviewResponse,
+  type ImportPreviewRow,
+  type ImportPreviewSummary,
+} from "@/lib/import-pipeline";
 
 type ImportStep = "upload" | "mapping" | "preview" | "done";
 
 const STEP_LABELS = ["อัปโหลดไฟล์", "จับคู่คอลัมน์", "ตรวจสอบข้อมูล", "เสร็จสิ้น"];
+
+interface ImportStats extends ImportPreviewSummary {
+  committedRows: number;
+}
+
+const EMPTY_IMPORT_STATS: ImportStats = {
+  totalRows: 0,
+  readyRows: 0,
+  incomeRows: 0,
+  expenseRows: 0,
+  newRows: 0,
+  duplicateRows: 0,
+  conflictRows: 0,
+  skippedRows: 0,
+  totalIncome: 0,
+  totalExpense: 0,
+  committedRows: 0,
+};
+
+const PREVIEW_STATUS_META: Record<
+  ImportPreviewRow["previewStatus"],
+  { label: string; className: string }
+> = {
+  new: {
+    label: "ใหม่",
+    className:
+      "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
+  },
+  duplicate: {
+    label: "ซ้ำ",
+    className:
+      "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400",
+  },
+  conflict: {
+    label: "ต้องตรวจสอบ",
+    className:
+      "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
+  },
+  skipped: {
+    label: "ข้าม",
+    className:
+      "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
+  },
+};
 
 /** The mapping fields we need users to confirm */
 const MAPPING_FIELDS: {
@@ -71,15 +118,11 @@ export default function ImportPage() {
   const [mapping, setMapping] = useState<ColumnMapping>(EMPTY_MAPPING);
 
   // Preview data
-  const [previewTransactions, setPreviewTransactions] = useState<Transaction[]>([]);
-  const [importStats, setImportStats] = useState({
-    total: 0,
-    income: 0,
-    expense: 0,
-    skipped: 0,
-    totalIncome: 0,
-    totalExpense: 0,
-  });
+  const [previewRunId, setPreviewRunId] = useState<number | null>(null);
+  const [previewRows, setPreviewRows] = useState<ImportPreviewRow[]>([]);
+  const [importStats, setImportStats] = useState<ImportStats>(EMPTY_IMPORT_STATS);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [isCommitting, setIsCommitting] = useState(false);
 
   // === Step 1: File upload handlers ===
 
@@ -168,94 +211,89 @@ export default function ImportPage() {
 
   // === Step 2 → 3: Build preview from mapping ===
 
-  const buildPreview = useCallback(() => {
+  const buildPreview = useCallback(async () => {
     if (!parseResult) return;
 
-    const transactions: Transaction[] = [];
-    let incomeCount = 0;
-    let expenseCount = 0;
-    let skippedCount = 0;
-    let totalIncome = 0;
-    let totalExpense = 0;
+    setError(null);
+    setIsPreviewLoading(true);
 
-    for (let i = 0; i < parseResult.rows.length; i++) {
-      const row: RawRow = parseResult.rows[i];
-
-      // Get the date
-      const rawDate = mapping.date ? row[mapping.date] : "";
-      const date = normalizeDate(rawDate);
-      if (!date) {
-        skippedCount++;
-        continue;
-      }
-
-      // Get the amount
-      const rawAmount = mapping.amount ? row[mapping.amount] : "";
-      // Remove commas and whitespace, parse as float
-      const amount = parseFloat(rawAmount.replace(/[,\s]/g, ""));
-      if (isNaN(amount) || amount === 0) {
-        skippedCount++;
-        continue;
-      }
-
-      // Get transaction type
-      const rawType = mapping.type ? row[mapping.type] : "";
-      const txType = resolveTransactionType(rawType, amount);
-
-      // Get category
-      const category = mapping.category ? row[mapping.category] || "" : "";
-
-      // Build note from multiple fields
-      const noteParts: string[] = [];
-      if (mapping.note && row[mapping.note]) noteParts.push(row[mapping.note]);
-      if (mapping.recipient && row[mapping.recipient]) noteParts.push(row[mapping.recipient]);
-      const note = noteParts.join(" | ") || undefined;
-
-      // Build subcategory from payment info
-      const subParts: string[] = [];
-      if (mapping.paymentChannel && row[mapping.paymentChannel]) subParts.push(row[mapping.paymentChannel]);
-      if (mapping.payFrom && row[mapping.payFrom]) subParts.push(row[mapping.payFrom]);
-      const subcategory = subParts.join(" — ") || undefined;
-
-      const absAmount = Math.abs(amount);
-
-      if (txType === "income") {
-        incomeCount++;
-        totalIncome += absAmount;
-      } else {
-        expenseCount++;
-        totalExpense += absAmount;
-      }
-
-      transactions.push({
-        id: `import-${Date.now()}-${i}`,
-        date,
-        amount: absAmount,
-        category: category || (txType === "income" ? "รายรับ" : "รายจ่าย"),
-        subcategory,
-        type: txType,
-        note,
+    try {
+      const preparedRows = prepareImportRows(parseResult.rows, mapping);
+      const response = await fetch("/api/import/preview", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName,
+          mode: "append",
+          rows: preparedRows,
+        }),
       });
-    }
 
-    setPreviewTransactions(transactions);
-    setImportStats({
-      total: transactions.length,
-      income: incomeCount,
-      expense: expenseCount,
-      skipped: skippedCount,
-      totalIncome,
-      totalExpense,
-    });
-    setStep("preview");
-  }, [parseResult, mapping]);
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(payload?.error ?? "ไม่สามารถสร้าง preview import ได้");
+      }
+
+      const result = (await response.json()) as ImportPreviewResponse;
+
+      setPreviewRunId(result.importRunId);
+      setPreviewRows(result.previewRows);
+      setImportStats({
+        ...result.summary,
+        committedRows: 0,
+      });
+      setStep("preview");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "ไม่สามารถสร้าง preview import ได้");
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  }, [fileName, mapping, parseResult]);
 
   // === Step 3 → Done: Confirm import ===
 
-  const confirmImport = useCallback(() => {
-    replaceImportedTransactions(previewTransactions);
-    setStep("done");
-  }, [previewTransactions, replaceImportedTransactions]);
+  const confirmImport = useCallback(async () => {
+    if (!previewRunId) return;
+
+    setError(null);
+    setIsCommitting(true);
+
+    try {
+      const response = await fetch("/api/import/commit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          importRunId: previewRunId,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(payload?.error ?? "ไม่สามารถยืนยันการนำเข้าได้");
+      }
+
+      const result = (await response.json()) as ImportCommitResponse;
+
+      replaceImportedTransactions(result.transactions);
+      setImportStats({
+        ...result.summary,
+        committedRows: result.committedRows,
+      });
+      setStep("done");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "ไม่สามารถยืนยันการนำเข้าได้");
+    } finally {
+      setIsCommitting(false);
+    }
+  }, [previewRunId, replaceImportedTransactions]);
 
   // === Reset ===
 
@@ -266,13 +304,20 @@ export default function ImportPage() {
     setIsMeowjot(false);
     setConfidence(0);
     setMapping(EMPTY_MAPPING);
-    setPreviewTransactions([]);
+    setPreviewRunId(null);
+    setPreviewRows([]);
     setError(null);
-    setImportStats({ total: 0, income: 0, expense: 0, skipped: 0, totalIncome: 0, totalExpense: 0 });
+    setImportStats(EMPTY_IMPORT_STATS);
   }, []);
 
   // === Validation: can we proceed from mapping? ===
   const canProceedFromMapping = mapping.date !== "" && mapping.amount !== "";
+  const hasReviewExceptions =
+    importStats.duplicateRows > 0 || importStats.conflictRows > 0;
+  const confirmActionLabel =
+    importStats.newRows > 0
+      ? `ยืนยันเพิ่ม ${importStats.newRows.toLocaleString()} รายการใหม่`
+      : "บันทึกผลตรวจสอบ";
 
   // === Step indicator index ===
   const stepIndex = ["upload", "mapping", "preview", "done"].indexOf(step);
@@ -567,9 +612,21 @@ export default function ImportPage() {
               <ArrowLeft size={16} />
               เลือกไฟล์ใหม่
             </Button>
-            <Button onClick={buildPreview} disabled={!canProceedFromMapping}>
-              ดูตัวอย่าง
-              <ArrowRight size={16} />
+            <Button
+              onClick={() => void buildPreview()}
+              disabled={!canProceedFromMapping || isPreviewLoading}
+            >
+              {isPreviewLoading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  กำลังตรวจสอบกับฐานข้อมูล...
+                </>
+              ) : (
+                <>
+                  ดูตัวอย่าง
+                  <ArrowRight size={16} />
+                </>
+              )}
             </Button>
           </div>
         </Card>
@@ -579,16 +636,38 @@ export default function ImportPage() {
       {step === "preview" && (
         <>
           {/* Import summary cards */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-6">
             <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">รายการทั้งหมด</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">พร้อมตรวจสอบ</p>
               <p className="mt-1 text-2xl font-bold text-zinc-800 dark:text-zinc-100">
-                {importStats.total}
+                {importStats.readyRows}
+              </p>
+            </div>
+            <div className="rounded-xl bg-emerald-50 p-4 shadow-sm dark:bg-emerald-500/5">
+              <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                รายการใหม่
+              </p>
+              <p className="mt-1 text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+                {importStats.newRows}
+              </p>
+            </div>
+            <div className="rounded-xl bg-sky-50 p-4 shadow-sm dark:bg-sky-500/5">
+              <p className="text-xs text-sky-600 dark:text-sky-400">รายการซ้ำ</p>
+              <p className="mt-1 text-2xl font-bold text-sky-700 dark:text-sky-300">
+                {importStats.duplicateRows}
+              </p>
+            </div>
+            <div className="rounded-xl bg-amber-50 p-4 shadow-sm dark:bg-amber-500/5">
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                ต้องตรวจสอบ
+              </p>
+              <p className="mt-1 text-2xl font-bold text-amber-700 dark:text-amber-300">
+                {importStats.conflictRows}
               </p>
             </div>
             <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                รายรับ ({importStats.income})
+                รายรับ ({importStats.incomeRows})
               </p>
               <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {formatBaht(importStats.totalIncome)}
@@ -596,7 +675,7 @@ export default function ImportPage() {
             </div>
             <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                รายจ่าย ({importStats.expense})
+                รายจ่าย ({importStats.expenseRows})
               </p>
               <p className="mt-1 text-2xl font-bold text-red-500">
                 {formatBaht(importStats.totalExpense)}
@@ -605,7 +684,7 @@ export default function ImportPage() {
             <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
               <p className="text-xs text-zinc-500 dark:text-zinc-400">ข้ามรายการ</p>
               <p className="mt-1 text-2xl font-bold text-amber-500">
-                {importStats.skipped}
+                {importStats.skippedRows}
               </p>
             </div>
           </div>
@@ -613,7 +692,18 @@ export default function ImportPage() {
           {/* Preview table */}
           <Card>
             <CardHeader>
-              <CardTitle>ตัวอย่างข้อมูลที่จะนำเข้า (20 แถวแรก)</CardTitle>
+              <div className="space-y-2">
+                <CardTitle>ตัวอย่างข้อมูลหลังตรวจซ้ำกับฐานข้อมูล (20 แถวแรก)</CardTitle>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  ระบบจะเพิ่มเฉพาะรายการสถานะ <span className="font-medium text-emerald-600 dark:text-emerald-400">ใหม่</span>{" "}
+                  เท่านั้น ส่วนรายการซ้ำหรือรายการที่ใกล้เคียงจะถูกกันออกไว้ก่อน
+                </p>
+                {hasReviewExceptions && (
+                  <p className="text-sm text-amber-600 dark:text-amber-400">
+                    พบรายการซ้ำหรือรายการที่ควรตรวจสอบก่อนนำเข้า กรุณาเช็กแถวที่มีสถานะไม่ใช่ “ใหม่”
+                  </p>
+                )}
+              </div>
             </CardHeader>
 
             <div className="overflow-x-auto">
@@ -621,6 +711,7 @@ export default function ImportPage() {
                 <thead>
                   <tr className="border-b border-zinc-200 dark:border-zinc-800">
                     <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">#</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">สถานะ</th>
                     <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">วันที่</th>
                     <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">ประเภท</th>
                     <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">หมวดหมู่</th>
@@ -630,51 +721,79 @@ export default function ImportPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {previewTransactions.slice(0, 20).map((tx, i) => (
-                    <tr key={tx.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                      <td className="py-2 pr-3 text-xs text-zinc-400">{i + 1}</td>
-                      <td className="whitespace-nowrap py-2 pr-3 text-zinc-600 dark:text-zinc-300">
-                        {tx.date}
-                      </td>
-                      <td className="py-2 pr-3">
-                        <span
+                  {previewRows.slice(0, 20).map((row, i) => {
+                    const tx = row.transaction;
+
+                    return (
+                      <tr
+                        key={`${row.rowNumber}-${row.previewStatus}`}
+                        className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                      >
+                        <td className="py-2 pr-3 text-xs text-zinc-400">{i + 1}</td>
+                        <td className="py-2 pr-3">
+                          <span
+                            className={cn(
+                              "inline-block rounded-md px-2 py-0.5 text-xs font-medium",
+                              PREVIEW_STATUS_META[row.previewStatus].className
+                            )}
+                          >
+                            {PREVIEW_STATUS_META[row.previewStatus].label}
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap py-2 pr-3 text-zinc-600 dark:text-zinc-300">
+                          {tx?.date ?? "-"}
+                        </td>
+                        <td className="py-2 pr-3">
+                          {tx ? (
+                            <span
+                              className={cn(
+                                "inline-block rounded-md px-2 py-0.5 text-xs font-medium",
+                                tx.type === "income"
+                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+                                  : "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                              )}
+                            >
+                              {tx.type === "income" ? "รายรับ" : "รายจ่าย"}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-zinc-400">-</span>
+                          )}
+                        </td>
+                        <td className="py-2 pr-3 text-zinc-700 dark:text-zinc-200">
+                          {tx?.category || "-"}
+                        </td>
+                        <td
                           className={cn(
-                            "inline-block rounded-md px-2 py-0.5 text-xs font-medium",
-                            tx.type === "income"
-                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
-                              : "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                            "whitespace-nowrap py-2 pr-3 text-right font-medium",
+                            tx?.type === "income"
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-red-500",
+                            !tx && "text-zinc-400"
                           )}
                         >
-                          {tx.type === "income" ? "รายรับ" : "รายจ่าย"}
-                        </span>
-                      </td>
-                      <td className="py-2 pr-3 text-zinc-700 dark:text-zinc-200">
-                        {tx.category || "-"}
-                      </td>
-                      <td
-                        className={cn(
-                          "whitespace-nowrap py-2 pr-3 text-right font-medium",
-                          tx.type === "income"
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-red-500"
-                        )}
-                      >
-                        {tx.type === "income" ? "+" : "-"}
-                        {formatBaht(tx.amount)}
-                      </td>
-                      <td className="max-w-[200px] truncate py-2 pr-3 text-xs text-zinc-500 dark:text-zinc-400">
-                        {tx.note || "-"}
-                      </td>
-                      <td className="max-w-[150px] truncate py-2 text-xs text-zinc-500 dark:text-zinc-400">
-                        {tx.subcategory || "-"}
-                      </td>
-                    </tr>
-                  ))}
+                          {tx ? (
+                            <>
+                              {tx.type === "income" ? "+" : "-"}
+                              {formatBaht(tx.amount)}
+                            </>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td className="max-w-[240px] truncate py-2 pr-3 text-xs text-zinc-500 dark:text-zinc-400">
+                          {tx?.note || row.reason || "-"}
+                        </td>
+                        <td className="max-w-[150px] truncate py-2 text-xs text-zinc-500 dark:text-zinc-400">
+                          {tx?.subcategory || "-"}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
-              {previewTransactions.length > 20 && (
+              {previewRows.length > 20 && (
                 <p className="py-3 text-center text-xs text-zinc-400">
-                  ...และอีก {previewTransactions.length - 20} รายการ
+                  ...และอีก {previewRows.length - 20} รายการ
                 </p>
               )}
             </div>
@@ -685,9 +804,21 @@ export default function ImportPage() {
                 <ArrowLeft size={16} />
                 แก้ไขการจับคู่
               </Button>
-              <Button onClick={confirmImport}>
-                <CheckCircle size={16} />
-                ยืนยันนำเข้า {importStats.total.toLocaleString()} รายการ
+              <Button
+                onClick={() => void confirmImport()}
+                disabled={!previewRunId || isCommitting}
+              >
+                {isCommitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    กำลังบันทึกลงฐานข้อมูล...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={16} />
+                    {confirmActionLabel}
+                  </>
+                )}
               </Button>
             </div>
           </Card>
@@ -699,12 +830,12 @@ export default function ImportPage() {
         <Card className="py-10 text-center">
           <CheckCircle size={64} className="mx-auto mb-4 text-emerald-500" />
           <h2 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
-            นำเข้าสำเร็จ!
+            {importStats.committedRows > 0 ? "นำเข้าสำเร็จ!" : "ตรวจสอบข้อมูลเสร็จสิ้น"}
           </h2>
           <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            นำเข้า{" "}
+            เพิ่มใหม่{" "}
             <span className="font-bold text-zinc-800 dark:text-zinc-100">
-              {importStats.total.toLocaleString()}
+              {importStats.committedRows.toLocaleString()}
             </span>{" "}
             รายการจาก{" "}
             <span className="font-medium text-zinc-700 dark:text-zinc-200">
@@ -713,28 +844,59 @@ export default function ImportPage() {
           </p>
 
           {/* Summary */}
-          <div className="mx-auto mt-6 grid max-w-md grid-cols-2 gap-4">
+          <div className="mx-auto mt-6 grid max-w-3xl grid-cols-2 gap-4 lg:grid-cols-4">
             <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-500/5">
               <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                รายรับ {importStats.income} รายการ
+                เพิ่มสำเร็จ
               </p>
               <p className="mt-1 text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                {importStats.committedRows.toLocaleString()}
+              </p>
+            </div>
+            <div className="rounded-xl bg-sky-50 p-3 dark:bg-sky-500/5">
+              <p className="text-xs text-sky-600 dark:text-sky-400">รายการซ้ำ</p>
+              <p className="mt-1 text-lg font-bold text-sky-700 dark:text-sky-300">
+                {importStats.duplicateRows.toLocaleString()}
+              </p>
+            </div>
+            <div className="rounded-xl bg-amber-50 p-3 dark:bg-amber-500/5">
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                ต้องตรวจสอบ
+              </p>
+              <p className="mt-1 text-lg font-bold text-amber-700 dark:text-amber-300">
+                {importStats.conflictRows.toLocaleString()}
+              </p>
+            </div>
+            <div className="rounded-xl bg-zinc-100 p-3 dark:bg-zinc-800">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">ข้ามรายการ</p>
+              <p className="mt-1 text-lg font-bold text-zinc-700 dark:text-zinc-200">
+                {importStats.skippedRows.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="mx-auto mt-4 grid max-w-md grid-cols-2 gap-4">
+            <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-zinc-900">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                รายรับ ({importStats.incomeRows})
+              </p>
+              <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">
                 {formatBaht(importStats.totalIncome)}
               </p>
             </div>
-            <div className="rounded-xl bg-red-50 p-3 dark:bg-red-500/5">
-              <p className="text-xs text-red-600 dark:text-red-400">
-                รายจ่าย {importStats.expense} รายการ
+            <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-zinc-900">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                รายจ่าย ({importStats.expenseRows})
               </p>
-              <p className="mt-1 text-lg font-bold text-red-700 dark:text-red-300">
+              <p className="mt-1 text-lg font-bold text-red-500">
                 {formatBaht(importStats.totalExpense)}
               </p>
             </div>
           </div>
 
-          {importStats.skipped > 0 && (
-            <p className="mt-3 text-xs text-amber-500">
-              ข้ามรายการที่ไม่มีวันที่หรือจำนวนเงิน: {importStats.skipped} แถว
+          {(importStats.duplicateRows > 0 || importStats.conflictRows > 0) && (
+            <p className="mx-auto mt-3 max-w-2xl text-xs text-amber-600 dark:text-amber-400">
+              ระบบกันรายการซ้ำและรายการที่ใกล้เคียงออกจากการเพิ่มอัตโนมัติแล้ว เพื่อป้องกันข้อมูลซ้ำใน dashboard
             </p>
           )}
 

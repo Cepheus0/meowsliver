@@ -38,6 +38,15 @@
 - Ran `bun run db:migrate` successfully against the local Postgres instance
 - Verified the created tables directly in Postgres: `transactions`, `import_runs`, and `import_run_rows`
 
+### DB-Backed Import Preview and Commit
+- Added shared import normalization helpers in `src/lib/import-pipeline.ts`
+- Added server-side fingerprinting and DB adapters in `src/lib/server/import-db.ts`
+- Added API routes for import preview, import commit, and transaction hydration
+- Changed import flow to preview against existing Postgres transactions before confirmation
+- Added append-with-de-dup semantics backed by a unique transaction fingerprint index
+- Added hybrid hydration so dashboard and transaction pages can pull from Postgres on cold start when local state is empty
+- Verified smoke-test scenarios for `new`, `duplicate`, and `conflict` classification against the running local database
+
 ## Current Status
 
 | Area | Status |
@@ -47,15 +56,16 @@
 | Dashboard analytics | transaction-driven and working |
 | Reports | working |
 | Browser-local persistence | working |
-| PostgreSQL + Drizzle foundation | scaffolded |
+| PostgreSQL + Drizzle foundation | working |
+| DB-backed import preview + commit | working |
 | Asset / liability model | partial |
 | Investment model | partial |
 | Auth | not started |
-| Database-backed runtime flows | not started |
+| Database-backed runtime flows | partial / hybrid |
 
 ## Next Likely Milestones
 
-1. Wire the import flow into Postgres.
-2. Add duplicate preview and append-with-de-dup on top of `import_runs`.
+1. Move manual entry into the Postgres-backed transaction model.
+2. Add a real review workflow for `conflict` rows.
 3. Improve category normalization and reporting accuracy.
 4. Expand real models for assets, liabilities, and investments.
