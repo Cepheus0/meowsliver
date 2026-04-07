@@ -16,21 +16,21 @@ function useMounted() {
 }
 
 export function TopBar() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const mounted = useMounted();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-200 bg-white/80 px-6 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[color:var(--app-border)] bg-[color:var(--app-surface-muted)] px-6 backdrop-blur-xl">
       <YearPicker />
 
       <div className="flex items-center gap-3">
         {mounted && (
           <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="rounded-xl p-2.5 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            className="rounded-xl p-2.5 text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)]"
             title="สลับโหมดสว่าง/มืด"
           >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
         )}
       </div>

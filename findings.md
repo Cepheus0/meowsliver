@@ -23,6 +23,8 @@ The most reliable working flow today is:
 - There is still no auth stack or per-user isolation
 - Imported transaction data is still mirrored into Zustand middleware for a smoother client experience
 - Charts are client-rendered with a hydration-safe wrapper to avoid SSR sizing issues
+- Dark mode is now driven by semantic CSS theme variables and shared chart tokens rather than isolated page-level overrides
+- The repo now includes an automated test layer with Vitest unit coverage, smoke tests, and generated Markdown reporting
 - The initial Drizzle migration has been generated successfully
 - Local PostgreSQL was started with Docker Compose and migrations ran successfully, including the unique fingerprint constraint used for de-dup
 
@@ -49,23 +51,27 @@ The most reliable working flow today is:
 | Redesign buckets as explicit savings goals with entry history | The old bucket scaffolding could not support progress, gain %, or growth detail reliably |
 | Store savings movements as typed entries (`contribution`, `growth`, `withdrawal`, `adjustment`) | Makes portfolio progress and return calculations explainable and extensible |
 | Redirect `/goals` to `/buckets` | Removes duplicate product concepts and keeps one source of truth for savings planning |
+| Introduce semantic theme tokens before further UI polish | Keeps light/dark mode maintainable as more product surfaces are added |
+| Add report-generating test automation instead of relying on ad hoc verification | Makes larger changes easier to audit, share, and repeat |
 
 ## Known Gaps
 
-- No automated test suite around import parsing yet
 - Manual entry is still browser-local and not yet committed into Postgres
-- Savings goals do not yet support edit, delete, archive, or bulk import flows
+- Savings goals still do not support archive, delete, or bulk import flows
+- Entry-level edit/delete for savings movements is not implemented yet
 - No formal data model for assets, liabilities, or portfolio holdings beyond current scaffolding
 - No production deployment workflow captured in the repo yet
 - `conflict` rows are identified, but there is not yet a user review workflow to resolve them before import
+- There is still no visual regression layer for validating dark mode across main routes
 
 ## Recommended Direction
 
 ### Short Term
 
 - Harden import reliability
-- Add fixture-backed tests for parsing, fingerprinting, and duplicate classification
+- Keep expanding fixture-backed tests for parsing, fingerprinting, and duplicate classification
 - Add a resolution workflow for `conflict` rows
+- Add visual QA checkpoints for dark mode
 
 ### Medium Term
 

@@ -20,6 +20,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getExpenseBreakdownFromTransactions } from "@/lib/finance-analytics";
+import { chartTheme } from "@/lib/chart-theme";
 import { FileSpreadsheet } from "lucide-react";
 
 export default function ReportsPage() {
@@ -79,21 +80,15 @@ export default function ReportsPage() {
           <ClientOnlyChart className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={netWorthData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" opacity={0.3} />
-                <XAxis dataKey="year" tick={{ fontSize: 10, fill: "#a1a1aa" }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.3} />
+                <XAxis dataKey="year" tick={{ fontSize: 10, fill: chartTheme.axis }} />
                 <YAxis
-                  tick={{ fontSize: 10, fill: "#a1a1aa" }}
+                  tick={{ fontSize: 10, fill: chartTheme.axis }}
                   tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`}
                 />
                 <Tooltip
                   formatter={(value) => formatBaht(Number(value))}
-                  contentStyle={{
-                    borderRadius: "12px",
-                    border: "1px solid #27272a",
-                    backgroundColor: "#18181b",
-                    color: "#f4f4f5",
-                    fontSize: "12px",
-                  }}
+                  contentStyle={chartTheme.tooltipStyle}
                 />
                 <Line
                   type="monotone"
@@ -141,13 +136,7 @@ export default function ReportsPage() {
                     </Pie>
                     <Tooltip
                       formatter={(value) => formatBaht(Number(value))}
-                      contentStyle={{
-                        borderRadius: "12px",
-                        border: "1px solid #27272a",
-                        backgroundColor: "#18181b",
-                        color: "#f4f4f5",
-                        fontSize: "12px",
-                      }}
+                      contentStyle={chartTheme.tooltipStyle}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -181,21 +170,15 @@ export default function ReportsPage() {
             <ClientOnlyChart className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthly}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" opacity={0.3} />
-                  <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#a1a1aa" }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.3} />
+                  <XAxis dataKey="month" tick={{ fontSize: 10, fill: chartTheme.axis }} />
                   <YAxis
-                    tick={{ fontSize: 10, fill: "#a1a1aa" }}
+                    tick={{ fontSize: 10, fill: chartTheme.axis }}
                     tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
                   />
                   <Tooltip
                     formatter={(value) => formatBaht(Number(value))}
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "1px solid #27272a",
-                      backgroundColor: "#18181b",
-                      color: "#f4f4f5",
-                      fontSize: "12px",
-                    }}
+                    contentStyle={chartTheme.tooltipStyle}
                   />
                   <Bar dataKey="income" name="รายรับ" fill="#22c55e" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="expense" name="รายจ่าย" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -218,18 +201,12 @@ export default function ReportsPage() {
           <ClientOnlyChart className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={savingsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" opacity={0.3} />
-                <XAxis dataKey="year" tick={{ fontSize: 10, fill: "#a1a1aa" }} />
-                <YAxis tick={{ fontSize: 10, fill: "#a1a1aa" }} unit="%" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.3} />
+                <XAxis dataKey="year" tick={{ fontSize: 10, fill: chartTheme.axis }} />
+                <YAxis tick={{ fontSize: 10, fill: chartTheme.axis }} unit="%" />
                 <Tooltip
                   formatter={(value) => `${Number(value).toFixed(1)}%`}
-                  contentStyle={{
-                    borderRadius: "12px",
-                    border: "1px solid #27272a",
-                    backgroundColor: "#18181b",
-                    color: "#f4f4f5",
-                    fontSize: "12px",
-                  }}
+                  contentStyle={chartTheme.tooltipStyle}
                 />
                 <Bar dataKey="rate" name="Savings Rate" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
               </BarChart>

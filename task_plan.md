@@ -21,7 +21,7 @@ Phase 5
 - [ ] Add clearer post-import success summaries by year and category
 - [x] Add duplicate import safeguards with DB-backed preview and append-with-de-dup
 - [ ] Add better error messaging for invalid date / amount columns
-- [ ] Add fixture-based parsing tests for common spreadsheet variants
+- [x] Add automated unit tests for parsing, fingerprinting, normalization, and duplicate semantics
 - **Status:** in_progress
 
 ### Phase 3: Transaction Intelligence
@@ -49,6 +49,13 @@ Phase 5
 - [ ] Move manual entry and the rest of runtime persistence into Postgres
 - **Status:** in_progress
 
+### Phase 5.5: Experience Quality
+- [x] Formalize dark mode with semantic theme tokens and shared chart styling
+- [x] Add smoke-test automation for critical routes and API flows
+- [x] Add generated Markdown QA report output for engineering review
+- [ ] Add visual regression or screenshot-based checks for key routes
+- **Status:** in_progress
+
 ### Phase 6: Production Readiness
 - [ ] Deployment configuration
 - [ ] Environment variable strategy
@@ -72,3 +79,4 @@ Phase 5
 2. Add a user-facing review path for `conflict` rows before import.
 3. Add edit / archive / delete flows for savings goals and savings-goal entries.
 4. Expand real models for assets, liabilities, and investments.
+5. Add visual regression coverage for light/dark mode on core pages.

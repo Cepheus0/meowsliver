@@ -31,22 +31,22 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-zinc-200 bg-white transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-950",
+        "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-[color:var(--app-border)] bg-[color:var(--app-surface-muted)] backdrop-blur-xl transition-all duration-300",
         sidebarCollapsed ? "w-16" : "w-60"
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-zinc-200 px-4 dark:border-zinc-800">
+      <div className="flex h-16 items-center gap-3 border-b border-[color:var(--app-border)] px-4">
         <button
           onClick={toggleSidebar}
-          className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          className="rounded-lg p-1.5 text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)]"
         >
           <Menu size={20} />
         </button>
         {!sidebarCollapsed && (
           <div className="flex items-center gap-2">
             <Cat size={24} className="text-emerald-500" />
-            <span className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
+            <span className="text-lg font-bold text-[color:var(--app-text)]">
               เหมียวเงิน
             </span>
           </div>
@@ -68,7 +68,7 @@ export function Sidebar() {
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
-                  : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                  : "text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
               )}
             >
               <item.icon size={20} />
@@ -80,11 +80,11 @@ export function Sidebar() {
 
       {/* Footer */}
       {!sidebarCollapsed && (
-        <div className="border-t border-zinc-200 p-4 dark:border-zinc-800">
-          <p className="text-xs text-zinc-400 dark:text-zinc-600">
+        <div className="border-t border-[color:var(--app-border)] p-4">
+          <p className="text-xs text-[color:var(--app-text-subtle)]">
             MoneyCat Tracker v1.0
           </p>
-          <p className="text-xs text-zinc-400 dark:text-zinc-600">
+          <p className="text-xs text-[color:var(--app-text-subtle)]">
             🐱 เหมียวจดให้เรียบร้อย
           </p>
         </div>

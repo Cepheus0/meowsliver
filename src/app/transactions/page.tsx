@@ -57,10 +57,10 @@ export default function TransactionsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="ค้นหาหมวดหมู่ หมายเหตุ..."
-                className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] py-2.5 pl-9 pr-4 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
               />
             </div>
-            <div className="flex items-center gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800">
+            <div className="flex items-center gap-1 rounded-xl bg-[color:var(--app-surface-soft)] p-1">
               <Filter size={14} className="ml-2 text-zinc-400" />
               {(["all", "income", "expense"] as const).map((type) => (
                 <button
@@ -68,8 +68,8 @@ export default function TransactionsPage() {
                   onClick={() => setFilterType(type)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                     filterType === type
-                      ? "bg-white text-zinc-800 shadow dark:bg-zinc-700 dark:text-zinc-100"
-                      : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
+                      ? "bg-[color:var(--app-surface-strong)] text-[color:var(--app-text)] shadow-[var(--app-card-shadow)]"
+                      : "text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
                   }`}
                 >
                   {type === "all" ? "ทั้งหมด" : type === "income" ? "รายรับ" : "รายจ่าย"}

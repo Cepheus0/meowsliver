@@ -61,30 +61,30 @@ export function ManualEntryFAB() {
 
       {/* Modal overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
-          <div className="w-full max-w-lg rounded-t-3xl bg-white p-6 shadow-2xl dark:bg-zinc-900 sm:rounded-3xl">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[color:var(--app-overlay)] sm:items-center">
+          <div className="w-full max-w-lg rounded-t-3xl border border-[color:var(--app-border)] bg-[color:var(--app-surface-strong)] p-6 shadow-[var(--app-card-shadow)] sm:rounded-3xl">
             {/* Header */}
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
+              <h2 className="text-lg font-bold text-[color:var(--app-text)]">
                 บันทึกรายการใหม่
               </h2>
               <button
                 onClick={() => setIsOpen(false)}
-                className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="rounded-lg p-1.5 text-[color:var(--app-text-subtle)] hover:bg-[color:var(--app-surface-soft)]"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Income / Expense Toggle */}
-            <div className="mb-4 flex rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800">
+            <div className="mb-4 flex rounded-xl bg-[color:var(--app-surface-soft)] p-1">
               <button
                 onClick={() => setTxType("expense")}
                 className={cn(
                   "flex-1 rounded-lg py-2 text-sm font-medium transition-colors",
                   txType === "expense"
                     ? "bg-red-500 text-white shadow"
-                    : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
+                    : "text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
                 )}
               >
                 รายจ่าย
@@ -95,7 +95,7 @@ export function ManualEntryFAB() {
                   "flex-1 rounded-lg py-2 text-sm font-medium transition-colors",
                   txType === "income"
                     ? "bg-emerald-500 text-white shadow"
-                    : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
+                    : "text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
                 )}
               >
                 รายรับ
@@ -104,7 +104,7 @@ export function ManualEntryFAB() {
 
             {/* Quick Templates */}
             <div className="mb-4">
-              <p className="mb-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              <p className="mb-2 text-xs font-medium text-[color:var(--app-text-muted)]">
                 เทมเพลตด่วน
               </p>
               <div className="flex flex-wrap gap-2">
@@ -112,7 +112,7 @@ export function ManualEntryFAB() {
                   <button
                     key={tpl.label}
                     onClick={() => applyTemplate(tpl)}
-                    className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    className="rounded-lg border border-[color:var(--app-border)] px-3 py-1.5 text-xs font-medium text-[color:var(--app-text-muted)] transition-colors hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
                   >
                     {tpl.label}
                   </button>
@@ -123,7 +123,7 @@ export function ManualEntryFAB() {
             {/* Form */}
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                <label className="mb-1 block text-xs font-medium text-[color:var(--app-text-muted)]">
                   จำนวนเงิน (บาท)
                 </label>
                 <input
@@ -131,18 +131,18 @@ export function ManualEntryFAB() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0"
-                  className="w-full rounded-xl border border-zinc-200 bg-transparent px-4 py-2.5 text-lg font-bold text-zinc-800 outline-none focus:border-emerald-500 dark:border-zinc-700 dark:text-zinc-100"
+                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-lg font-bold text-[color:var(--app-text)] outline-none focus:border-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                <label className="mb-1 block text-xs font-medium text-[color:var(--app-text-muted)]">
                   หมวดหมู่
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-transparent px-4 py-2.5 text-sm text-zinc-800 outline-none focus:border-emerald-500 dark:border-zinc-700 dark:text-zinc-100"
+                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
                 >
                   <option value="">-- เลือกหมวด --</option>
                   {categories.map((cat) => (
@@ -155,18 +155,18 @@ export function ManualEntryFAB() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                  <label className="mb-1 block text-xs font-medium text-[color:var(--app-text-muted)]">
                     วันที่
                   </label>
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-200 bg-transparent px-4 py-2.5 text-sm text-zinc-800 outline-none focus:border-emerald-500 dark:border-zinc-700 dark:text-zinc-100"
+                    className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                  <label className="mb-1 block text-xs font-medium text-[color:var(--app-text-muted)]">
                     หมายเหตุ
                   </label>
                   <input
@@ -174,7 +174,7 @@ export function ManualEntryFAB() {
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="รายละเอียด..."
-                    className="w-full rounded-xl border border-zinc-200 bg-transparent px-4 py-2.5 text-sm text-zinc-800 outline-none focus:border-emerald-500 dark:border-zinc-700 dark:text-zinc-100"
+                    className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>

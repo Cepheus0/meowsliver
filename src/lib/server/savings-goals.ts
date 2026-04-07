@@ -2,27 +2,27 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { savingsGoalEntries, savingsGoals } from "@/db/schema";
 import {
+  buildSavingsBucketSummary,
+  buildSavingsGoalChartData,
+  buildSavingsGoalsOverview,
+  calculateSavingsGoalMetrics,
+} from "@/lib/savings-goal-analytics";
+import {
   getEntrySignedAmount,
   getGoalPreset,
   sanitizeGoalColor,
 } from "@/lib/savings-goals";
 import type {
-  SavingsBucket,
   SavingsGoal,
   SavingsGoalCategory,
   SavingsGoalDetail,
   SavingsGoalEntry,
   SavingsGoalEntryType,
-  SavingsGoalMetrics,
-  SavingsGoalSeriesPoint,
   SavingsGoalsPortfolio,
 } from "@/lib/types";
 
 type SavingsGoalRow = typeof savingsGoals.$inferSelect;
 type SavingsGoalEntryRow = typeof savingsGoalEntries.$inferSelect;
-
-const DAY_IN_MS = 24 * 60 * 60 * 1000;
-const AVG_DAYS_PER_MONTH = 30.4375;
 
 function toSatang(amount: number) {
   return Math.round(amount * 100);
@@ -34,29 +34,6 @@ function fromSatang(amountSatang: number) {
 
 function toIsoString(value: Date) {
   return value.toISOString();
-}
-
-function formatChartLabel(dateString: string) {
-  return new Intl.DateTimeFormat("th-TH", {
-    day: "numeric",
-    month: "short",
-  }).format(new Date(`${dateString}T00:00:00`));
-}
-
-function getDaysRemaining(targetDate?: string) {
-  if (!targetDate) {
-    return null;
-  }
-
-  const today = new Date();
-  const startOfToday = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate()
-  );
-  const target = new Date(`${targetDate}T00:00:00`);
-
-  return Math.ceil((target.getTime() - startOfToday.getTime()) / DAY_IN_MS);
 }
 
 function mapGoal(row: SavingsGoalRow): SavingsGoal {
@@ -87,122 +64,6 @@ function mapEntry(row: SavingsGoalEntryRow): SavingsGoalEntry {
   };
 }
 
-function calculateMetrics(
-  goal: SavingsGoal,
-  entries: SavingsGoalEntry[]
-): SavingsGoalMetrics {
-  let totalContributions = 0;
-  let totalGrowth = 0;
-  let totalWithdrawals = 0;
-  let totalAdjustments = 0;
-
-  for (const entry of entries) {
-    if (entry.type === "contribution") {
-      totalContributions += entry.amount;
-      continue;
-    }
-
-    if (entry.type === "growth") {
-      totalGrowth += entry.amount;
-      continue;
-    }
-
-    if (entry.type === "withdrawal") {
-      totalWithdrawals += entry.amount;
-      continue;
-    }
-
-    totalAdjustments += entry.amount;
-  }
-
-  const currentAmount =
-    totalContributions + totalGrowth + totalAdjustments - totalWithdrawals;
-  const netContributions =
-    totalContributions + totalAdjustments - totalWithdrawals;
-  const progressPercent =
-    goal.targetAmount > 0 ? (currentAmount / goal.targetAmount) * 100 : 0;
-  const remainingAmount = Math.max(goal.targetAmount - currentAmount, 0);
-  const growthPercent =
-    netContributions > 0 ? (totalGrowth / netContributions) * 100 : 0;
-  const daysRemaining = getDaysRemaining(goal.targetDate);
-
-  let monthlyPaceNeeded: number | null = null;
-  if (daysRemaining !== null && daysRemaining > 0 && remainingAmount > 0) {
-    monthlyPaceNeeded =
-      remainingAmount / Math.max(daysRemaining / AVG_DAYS_PER_MONTH, 1);
-  }
-
-  return {
-    currentAmount,
-    totalContributions,
-    totalGrowth,
-    totalWithdrawals,
-    totalAdjustments,
-    netContributions,
-    progressPercent,
-    growthPercent,
-    remainingAmount,
-    daysRemaining,
-    monthlyPaceNeeded,
-    entryCount: entries.length,
-  };
-}
-
-function buildChartData(entries: SavingsGoalEntry[]): SavingsGoalSeriesPoint[] {
-  const sortedEntries = [...entries].sort(
-    (left, right) =>
-      left.date.localeCompare(right.date) || left.id - right.id
-  );
-
-  let balance = 0;
-  let netContributions = 0;
-  let cumulativeGrowth = 0;
-
-  return sortedEntries.map((entry) => {
-    const movement = getEntrySignedAmount(entry.type, entry.amount);
-    balance += movement;
-
-    if (entry.type === "growth") {
-      cumulativeGrowth += entry.amount;
-    } else if (entry.type === "withdrawal") {
-      netContributions -= entry.amount;
-    } else {
-      netContributions += movement;
-    }
-
-    return {
-      date: entry.date,
-      label: formatChartLabel(entry.date),
-      balance,
-      netContributions,
-      cumulativeGrowth,
-      movement,
-    };
-  });
-}
-
-function buildGoalSummary(
-  goal: SavingsGoal,
-  metrics: SavingsGoalMetrics
-): SavingsBucket {
-  return {
-    id: goal.id,
-    name: goal.name,
-    category: goal.category,
-    icon: goal.icon,
-    color: goal.color,
-    targetAmount: goal.targetAmount,
-    targetDate: goal.targetDate,
-    strategyLabel: goal.strategyLabel,
-    currentAmount: metrics.currentAmount,
-    totalGrowth: metrics.totalGrowth,
-    growthPercent: metrics.growthPercent,
-    progressPercent: metrics.progressPercent,
-    remainingAmount: metrics.remainingAmount,
-    entryCount: metrics.entryCount,
-  };
-}
-
 function groupEntriesByGoal(entries: SavingsGoalEntry[]) {
   const grouped = new Map<number, SavingsGoalEntry[]>();
 
@@ -230,30 +91,13 @@ export async function getSavingsGoalsPortfolio(): Promise<SavingsGoalsPortfolio>
 
   const summaries = goals.map((goal) => {
     const goalEntries = entriesByGoal.get(goal.id) ?? [];
-    const metrics = calculateMetrics(goal, goalEntries);
-    return buildGoalSummary(goal, metrics);
+    const metrics = calculateSavingsGoalMetrics(goal, goalEntries);
+    return buildSavingsBucketSummary(goal, metrics);
   });
-
-  const totalSaved = summaries.reduce((sum, goal) => sum + goal.currentAmount, 0);
-  const totalTarget = summaries.reduce((sum, goal) => sum + goal.targetAmount, 0);
-  const totalGrowth = summaries.reduce((sum, goal) => sum + goal.totalGrowth, 0);
-  const remainingAmount = Math.max(totalTarget - totalSaved, 0);
-  const completedGoals = summaries.filter(
-    (goal) => goal.progressPercent >= 100
-  ).length;
 
   return {
     goals: summaries,
-    overview: {
-      goalCount: summaries.length,
-      completedGoals,
-      totalSaved,
-      totalTarget,
-      totalGrowth,
-      overallProgressPercent:
-        totalTarget > 0 ? (totalSaved / totalTarget) * 100 : 0,
-      remainingAmount,
-    },
+    overview: buildSavingsGoalsOverview(summaries),
   };
 }
 
@@ -278,13 +122,13 @@ export async function getSavingsGoalDetail(
 
   const goal = mapGoal(goalRow);
   const entries = entryRows.map(mapEntry);
-  const metrics = calculateMetrics(goal, entries);
+  const metrics = calculateSavingsGoalMetrics(goal, entries);
 
   return {
     goal,
     metrics,
     entries,
-    chartData: buildChartData(entries),
+    chartData: buildSavingsGoalChartData(entries),
   };
 }
 

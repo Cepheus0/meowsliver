@@ -17,6 +17,7 @@ import { formatBaht } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { chartTheme } from "@/lib/chart-theme";
 import { ChartColumnIncreasing, Table2 } from "lucide-react";
 
 export function CashflowChart() {
@@ -52,34 +53,26 @@ export function CashflowChart() {
           <ComposedChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="#27272a"
+              stroke={chartTheme.grid}
               opacity={0.3}
             />
             <XAxis
               dataKey="month"
-              tick={{ fontSize: 11, fill: "#a1a1aa" }}
+              tick={{ fontSize: 11, fill: chartTheme.axis }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: "#a1a1aa" }}
+              tick={{ fontSize: 11, fill: chartTheme.axis }}
               tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
               axisLine={false}
               tickLine={false}
             />
             <Tooltip
               formatter={(value) => formatBaht(Number(value))}
-              contentStyle={{
-                borderRadius: "12px",
-                border: "1px solid #27272a",
-                backgroundColor: "#18181b",
-                color: "#f4f4f5",
-                fontSize: "13px",
-              }}
+              contentStyle={chartTheme.tooltipStyle}
             />
-            <Legend
-              wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }}
-            />
+            <Legend wrapperStyle={{ ...chartTheme.legendStyle, paddingTop: "8px" }} />
             <Bar
               dataKey="income"
               name="รายรับ"

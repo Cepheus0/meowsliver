@@ -57,7 +57,7 @@ export function BucketsOverview() {
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="h-28 animate-pulse rounded-2xl bg-zinc-100 dark:bg-zinc-800"
+              className="h-28 animate-pulse rounded-2xl bg-[color:var(--app-surface-soft)]"
             />
           ))}
         </div>
@@ -123,7 +123,7 @@ export function BucketsOverview() {
           </div>
           <Link
             href="/buckets"
-            className="rounded-xl border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            className="rounded-xl border border-[color:var(--app-border)] px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
           >
             ดูทั้งหมด
           </Link>
@@ -138,7 +138,7 @@ export function BucketsOverview() {
             <Link
               key={goal.id}
               href={`/buckets/${goal.id}`}
-              className="rounded-2xl border border-zinc-200 p-4 transition-colors hover:border-zinc-300 hover:bg-zinc-50/70 dark:border-zinc-800 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
+              className="rounded-2xl border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)]/70 p-4 transition-colors hover:border-[color:var(--app-border-strong)] hover:bg-[color:var(--app-surface)]"
             >
               <div className="flex items-start gap-3">
                 <div
@@ -168,7 +168,7 @@ export function BucketsOverview() {
                     </span>
                   </div>
 
-                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-[color:var(--app-surface-soft)]">
                     <div
                       className="h-full rounded-full transition-all duration-500"
                       style={{

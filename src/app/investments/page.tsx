@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
 import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { chartTheme } from "@/lib/chart-theme";
 
 const TABS = [
   { key: "crypto", label: "Crypto", color: "#f59e0b" },
@@ -83,7 +84,7 @@ export default function InvestmentsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800">
+      <div className="flex gap-1 overflow-x-auto rounded-xl bg-[color:var(--app-surface-soft)] p-1">
         {TABS.map((tab) => (
           <button
             key={tab.key}
@@ -91,8 +92,8 @@ export default function InvestmentsPage() {
             className={cn(
               "whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors",
               activeTab === tab.key
-                ? "bg-white text-zinc-800 shadow dark:bg-zinc-700 dark:text-zinc-100"
-                : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
+                ? "bg-[color:var(--app-surface-strong)] text-[color:var(--app-text)] shadow-[var(--app-card-shadow)]"
+                : "text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
             )}
           >
             {tab.label}
@@ -233,13 +234,7 @@ export default function InvestmentsPage() {
                   </Pie>
                   <Tooltip
                     formatter={(value) => formatBaht(Number(value))}
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "1px solid #27272a",
-                      backgroundColor: "#18181b",
-                      color: "#f4f4f5",
-                      fontSize: "12px",
-                    }}
+                    contentStyle={chartTheme.tooltipStyle}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -252,12 +247,12 @@ export default function InvestmentsPage() {
             <ClientOnlyChart className="h-40">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barData} layout="vertical" margin={{ left: 0, right: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" opacity={0.2} />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: "#a1a1aa" }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.2} />
+                  <XAxis type="number" tick={{ fontSize: 10, fill: chartTheme.axis }} />
                   <YAxis
                     dataKey="name"
                     type="category"
-                    tick={{ fontSize: 10, fill: "#a1a1aa" }}
+                    tick={{ fontSize: 10, fill: chartTheme.axis }}
                     width={60}
                   />
                   <Bar dataKey="gainLoss" radius={[0, 4, 4, 0]}>

@@ -14,6 +14,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Landmark } from "lucide-react";
 import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { chartTheme } from "@/lib/chart-theme";
 
 export function AssetPieChart() {
   const { getAssets, getLiabilities, getNetWorth, getTotalAssets, getTotalLiabilities } = useFinanceStore();
@@ -109,13 +110,7 @@ export function AssetPieChart() {
             </Pie>
             <Tooltip
               formatter={(value) => formatBaht(Number(value))}
-              contentStyle={{
-                borderRadius: "12px",
-                border: "1px solid #27272a",
-                backgroundColor: "#18181b",
-                color: "#f4f4f5",
-                fontSize: "13px",
-              }}
+              contentStyle={chartTheme.tooltipStyle}
             />
           </PieChart>
         </ResponsiveContainer>

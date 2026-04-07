@@ -178,7 +178,7 @@ export default function BucketsPage() {
             key={preset.category}
             type="button"
             onClick={() => applyPreset(index)}
-            className="rounded-2xl border border-zinc-200 bg-white p-5 text-left transition-all hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-600"
+            className="rounded-2xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-5 text-left transition-all hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)] hover:shadow-[var(--app-card-shadow)]"
           >
             <div className="flex items-start justify-between gap-4">
               <div>

@@ -22,19 +22,19 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-zinc-50/80 px-6 py-10 text-center dark:border-zinc-700 dark:bg-zinc-900/50",
+        "flex flex-col items-center justify-center rounded-2xl border border-dashed border-[color:var(--app-border-strong)] bg-[color:var(--app-surface-soft)]/80 px-6 py-10 text-center backdrop-blur-sm",
         className
       )}
     >
       {icon ? (
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-zinc-500 shadow-sm dark:bg-zinc-800 dark:text-zinc-300">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:var(--app-surface-strong)] text-[color:var(--app-text-muted)] shadow-[var(--app-card-shadow)]">
           {icon}
         </div>
       ) : null}
-      <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+      <h3 className="text-sm font-semibold text-[color:var(--app-text)]">
         {title}
       </h3>
-      <p className="mt-2 max-w-md text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+      <p className="mt-2 max-w-md text-sm leading-relaxed text-[color:var(--app-text-muted)]">
         {description}
       </p>
       {actionHref && actionLabel ? (

@@ -15,7 +15,7 @@ export function YearPicker() {
       <button
         onClick={() => setSelectedYear(Math.max(minYear, selectedYear - 1))}
         disabled={selectedYear <= minYear}
-        className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-800"
+        className="rounded-lg p-1.5 text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] disabled:opacity-30"
       >
         <ChevronLeft size={18} />
       </button>
@@ -23,7 +23,7 @@ export function YearPicker() {
       <select
         value={selectedYear}
         onChange={(e) => setSelectedYear(Number(e.target.value))}
-        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-bold text-zinc-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+        className="rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2 text-sm font-bold text-[color:var(--app-text)] shadow-[var(--app-card-shadow)] focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
       >
         {years.map((y) => (
           <option key={y} value={y}>
@@ -35,7 +35,7 @@ export function YearPicker() {
       <button
         onClick={() => setSelectedYear(Math.min(maxYear, selectedYear + 1))}
         disabled={selectedYear >= maxYear}
-        className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-800"
+        className="rounded-lg p-1.5 text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] disabled:opacity-30"
       >
         <ChevronRight size={18} />
       </button>

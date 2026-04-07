@@ -26,6 +26,8 @@ Use this file as the primary operating guide for AI coding agents working in thi
 - Dashboard hydration can pull transactions from Postgres when local runtime state is empty
 - Imported transactions are still mirrored into Zustand persistence for a smooth local UX
 - Manual entry is still browser-local and has not yet been moved into Postgres
+- Dark mode now uses semantic theme tokens and shared chart-theme helpers instead of isolated page overrides
+- The repo now includes automated unit tests, smoke tests, and a Markdown test-report generator
 - Assets, liabilities, and investment areas are still partially scaffolded
 - Savings goals are now the source of truth for buckets-style goal tracking, and `/goals` is only an alias route
 
@@ -36,6 +38,8 @@ bun install
 bun run dev
 bun run build
 bun run lint
+bun run test
+bun run test:report
 bun run typecheck
 bun run db:generate
 bun run db:migrate
@@ -51,12 +55,15 @@ bun run db:studio
 | `src/components/forms/` | User input flows such as manual transaction entry |
 | `src/components/layout/` | App shell, sidebar, top bar, theming |
 | `src/components/ui/` | Reusable UI primitives |
+| `src/lib/chart-theme.ts` | Shared chart colors and tooltip styling for light/dark mode |
 | `src/lib/excel-parser.ts` | Spreadsheet parsing and column mapping |
 | `src/lib/import-pipeline.ts` | Shared import normalization and preview request shapes |
+| `src/lib/savings-goal-analytics.ts` | Pure savings-goal calculations used by both runtime and tests |
 | `src/lib/server/import-db.ts` | Server-side fingerprinting and DB-to-UI adapters |
 | `src/lib/server/savings-goals.ts` | Savings-goal metrics, DB adapters, and goal-detail assembly |
 | `src/lib/savings-goals.ts` | Goal presets, labels, and shared goal helpers |
 | `src/lib/finance-analytics.ts` | Derived analytics from imported transactions |
+| `scripts/` | Smoke-test and report automation |
 | `src/store/finance-store.ts` | Zustand store and local persistence |
 | `src/db/` | Postgres client, schema, and migration entrypoint |
 | `src/app/api/` | Import preview, import commit, transaction hydration, and savings-goal endpoints |
@@ -78,6 +85,7 @@ bun run db:studio
 - Avoid browser full reloads when client-side navigation is enough
 - Ensure dashboard and reports degrade gracefully with empty states
 - Keep import confirmation idempotent where practical
+- Extend semantic theme tokens instead of sprinkling new hard-coded light/dark colors
 - Treat transaction fingerprints as the source of truth for de-dup behavior
 - Treat typed savings-goal entries as the source of truth for goal balances, gain %, and progress
 
@@ -93,6 +101,8 @@ bun run db:studio
 - Run `bun run typecheck`
 - Run `bun run build`
 - Run `bun run lint` when the touched area may affect lint-sensitive code paths
+- Run `bun run test` when touching import logic, analytics, savings goals, or cross-page behavior
+- Run `bun run test:report` when you need an audit-friendly artifact for a larger change
 
 ## Recommended Documentation Workflow
 

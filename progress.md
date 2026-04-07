@@ -59,6 +59,21 @@
 - Updated dashboard to surface savings goals even when transaction data is still empty
 - Verified the new savings-goal flow with typecheck, lint, build, API smoke tests, and DB cleanup after verification
 
+## 2026-04-08
+
+### Dark Mode Systemization
+- Reworked theming from scattered page-level dark overrides into semantic theme tokens in `src/app/globals.css`
+- Changed theme runtime to default to system theme via `next-themes`
+- Updated shell, cards, buttons, year picker, empty states, and manual-entry modal to use shared theme tokens
+- Added shared chart-theme helpers and rolled them into dashboard, reports, investments, and savings-goal charts
+
+### Test Automation
+- Added Vitest with coverage reporting
+- Added unit tests for spreadsheet parsing, import normalization, import fingerprinting, dashboard analytics, and savings-goal analytics
+- Added smoke-test automation for route availability, savings-goal APIs, and import preview / commit flows
+- Added a Markdown test-report generator at `reports/test-report.md`
+- Verified unit tests and smoke tests pass against the running local app
+
 ## Current Status
 
 | Area | Status |
@@ -71,6 +86,10 @@
 | PostgreSQL + Drizzle foundation | working |
 | DB-backed import preview + commit | working |
 | DB-backed savings goals | working |
+| Dark mode system | working |
+| Automated unit tests | working |
+| Automated smoke tests | working |
+| Generated test reporting | working |
 | Asset / liability model | partial |
 | Investment model | partial |
 | Auth | not started |
@@ -82,3 +101,4 @@
 2. Add a real review workflow for `conflict` rows.
 3. Add edit / archive flows for savings goals and savings movements.
 4. Improve category normalization and reporting accuracy.
+5. Add visual regression checks for the main routes and dark mode.

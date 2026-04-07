@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
+import { chartTheme } from "@/lib/chart-theme";
 import {
   DEFAULT_GOAL_COLOR,
   DEFAULT_GOAL_ICON,
@@ -316,7 +317,7 @@ export default function SavingsGoalDetailPage() {
       <div className="flex flex-wrap items-center gap-3">
         <Link
           href="/buckets"
-          className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          className="inline-flex items-center gap-2 rounded-xl border border-[color:var(--app-border)] px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
         >
           <ArrowLeft size={16} />
           กลับไปหน้า Savings
@@ -586,15 +587,15 @@ export default function SavingsGoalDetailPage() {
             <ClientOnlyChart className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={detail.chartData} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#71717a" opacity={0.18} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.24} />
                   <XAxis
                     dataKey="label"
-                    tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                    tick={{ fontSize: 11, fill: chartTheme.axis }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                    tick={{ fontSize: 11, fill: chartTheme.axis }}
                     tickFormatter={(value) => `${Math.round(value / 1000)}k`}
                     axisLine={false}
                     tickLine={false}
@@ -606,15 +607,9 @@ export default function SavingsGoalDetailPage() {
                         ? formatGoalDate(payload[0].payload.date)
                         : ""
                     }
-                    contentStyle={{
-                      borderRadius: "16px",
-                      border: "1px solid #27272a",
-                      backgroundColor: "#18181b",
-                      color: "#fafafa",
-                      fontSize: "13px",
-                    }}
+                    contentStyle={chartTheme.tooltipStyle}
                   />
-                  <Legend wrapperStyle={{ fontSize: "12px" }} />
+                  <Legend wrapperStyle={chartTheme.legendStyle} />
                   <Line
                     type="monotone"
                     dataKey="balance"

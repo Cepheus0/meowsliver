@@ -11,9 +11,10 @@ It is designed for users who already track their money in a ledger or banking ap
 - Dashboard with yearly summaries, cashflow, and transaction-driven analytics
 - Transaction list with search and filters
 - DB-backed savings goals with per-goal progress, growth, and movement history
-- Dark mode support
+- Token-based dark mode across shell, charts, forms, and analytics surfaces
 - PostgreSQL + Drizzle-backed import history, duplicate preview, and append-with-de-dup
 - Client-side persistence retained for local UX state while long-lived savings goals now persist in Postgres
+- Automated unit tests, smoke tests, and Markdown test reporting
 
 ## Tech Stack
 
@@ -140,6 +141,8 @@ bun run start
 ```bash
 bun run typecheck
 bun run lint
+bun run test
+bun run test:report
 ```
 
 ### Database tooling
@@ -163,7 +166,10 @@ bun run db:studio
 ## Project Structure
 
 ```text
+docs/            Design and implementation notes
 drizzle/         Generated SQL migrations
+reports/         Generated QA / test reports
+scripts/         Smoke-test and report automation
 src/
   app/           Next.js routes
   components/    Charts, layout, forms, and reusable UI
@@ -172,12 +178,32 @@ src/
   store/         Zustand finance store
 ```
 
+## Dark Mode
+
+Dark mode now uses semantic theme tokens instead of isolated page-level overrides.
+
+- Theme variables live in [`src/app/globals.css`](/Users/woraweechanlongrat/Documents/projects/meowsliver-clean/src/app/globals.css)
+- The runtime theme switch lives in [`src/components/layout/ThemeProvider.tsx`](/Users/woraweechanlongrat/Documents/projects/meowsliver-clean/src/components/layout/ThemeProvider.tsx)
+- Shared chart colors and tooltip styling live in [`src/lib/chart-theme.ts`](/Users/woraweechanlongrat/Documents/projects/meowsliver-clean/src/lib/chart-theme.ts)
+
+Implementation notes are documented in [`docs/dark-mode-plan.md`](/Users/woraweechanlongrat/Documents/projects/meowsliver-clean/docs/dark-mode-plan.md)
+
+## Testing
+
+The project now includes:
+
+- Vitest-based unit coverage for parsing, import normalization, fingerprinting, analytics, and savings-goal math
+- Local smoke tests for route availability, savings-goal APIs, and import preview/commit flows
+- A generated Markdown report at [`reports/test-report.md`](/Users/woraweechanlongrat/Documents/projects/meowsliver-clean/reports/test-report.md)
+
+Detailed testing guidance is documented in [`TESTING.md`](/Users/woraweechanlongrat/Documents/projects/meowsliver-clean/TESTING.md)
+
 ## Limitations
 
 - No multi-user support yet
 - Runtime is currently hybrid: import persistence and savings goals are DB-backed, but manual entry still remains browser-local
 - Import pipeline currently emphasizes transaction rows rather than full portfolio reconciliation
-- Savings goals do not yet support edit, archive, or delete flows
+- Savings goals support editing, but do not yet support archive, delete, or entry-level editing flows
 
 ## Roadmap Ideas
 
