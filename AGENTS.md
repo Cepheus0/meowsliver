@@ -15,16 +15,19 @@ Use this file as the primary operating guide for AI coding agents working in thi
 - Keep the app honest: do not reintroduce fake demo data into runtime flows
 - Prefer transaction-driven analytics over fabricated placeholders
 - Treat import, dashboard, transactions, and reports as the current core product surface
+- Treat savings goals as a real persisted feature surface, not placeholder scaffolding
 
 ## Project Status
 
 - Next.js application with PostgreSQL + Drizzle backing the import pipeline
 - No auth provider or production API routes wired yet
 - Import preview and commit now go through database-backed API routes with duplicate detection
+- Savings goals now use database-backed API routes and Postgres persistence
 - Dashboard hydration can pull transactions from Postgres when local runtime state is empty
 - Imported transactions are still mirrored into Zustand persistence for a smooth local UX
 - Manual entry is still browser-local and has not yet been moved into Postgres
-- Assets, liabilities, buckets, and investment areas are still partially scaffolded
+- Assets, liabilities, and investment areas are still partially scaffolded
+- Savings goals are now the source of truth for buckets-style goal tracking, and `/goals` is only an alias route
 
 ## Core Commands
 
@@ -51,10 +54,12 @@ bun run db:studio
 | `src/lib/excel-parser.ts` | Spreadsheet parsing and column mapping |
 | `src/lib/import-pipeline.ts` | Shared import normalization and preview request shapes |
 | `src/lib/server/import-db.ts` | Server-side fingerprinting and DB-to-UI adapters |
+| `src/lib/server/savings-goals.ts` | Savings-goal metrics, DB adapters, and goal-detail assembly |
+| `src/lib/savings-goals.ts` | Goal presets, labels, and shared goal helpers |
 | `src/lib/finance-analytics.ts` | Derived analytics from imported transactions |
 | `src/store/finance-store.ts` | Zustand store and local persistence |
 | `src/db/` | Postgres client, schema, and migration entrypoint |
-| `src/app/api/` | Import preview, import commit, and transaction hydration endpoints |
+| `src/app/api/` | Import preview, import commit, transaction hydration, and savings-goal endpoints |
 | `drizzle/` | Generated SQL migrations and Drizzle metadata |
 
 ## Expectations For Agents
@@ -74,6 +79,7 @@ bun run db:studio
 - Ensure dashboard and reports degrade gracefully with empty states
 - Keep import confirmation idempotent where practical
 - Treat transaction fingerprints as the source of truth for de-dup behavior
+- Treat typed savings-goal entries as the source of truth for goal balances, gain %, and progress
 
 ### 3. When adding features
 

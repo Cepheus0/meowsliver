@@ -7,13 +7,11 @@ import type {
   InvestmentHolding,
   LiabilityItem,
   MonthlyCashflow,
-  SavingsBucket,
   Transaction,
   YearlySummary,
 } from "@/lib/types";
 import {
   EMPTY_ASSETS,
-  EMPTY_BUCKETS,
   EMPTY_INVESTMENTS,
   EMPTY_LIABILITIES,
   getMonthlyCashflowFromTransactions,
@@ -40,7 +38,6 @@ interface FinanceStore {
   // Data getters
   getAssets: () => AssetItem[];
   getLiabilities: () => LiabilityItem[];
-  getBuckets: () => SavingsBucket[];
   getInvestments: () => Record<string, InvestmentHolding[]>;
   getMonthlyCashflow: () => MonthlyCashflow[];
   getYearlySummaries: () => YearlySummary[];
@@ -74,7 +71,6 @@ export const useFinanceStore = create<FinanceStore>()(
 
       getAssets: () => EMPTY_ASSETS,
       getLiabilities: () => EMPTY_LIABILITIES,
-      getBuckets: () => EMPTY_BUCKETS,
       getInvestments: () => EMPTY_INVESTMENTS,
       getMonthlyCashflow: () =>
         getMonthlyCashflowFromTransactions(

@@ -10,10 +10,10 @@ It is designed for users who already track their money in a ledger or banking ap
 - Excel / CSV import flow with column mapping and preview
 - Dashboard with yearly summaries, cashflow, and transaction-driven analytics
 - Transaction list with search and filters
-- Savings buckets, goals, reports, and investment-oriented screens
+- DB-backed savings goals with per-goal progress, growth, and movement history
 - Dark mode support
 - PostgreSQL + Drizzle-backed import history, duplicate preview, and append-with-de-dup
-- Client-side persistence retained for local UX state and manual entry flow
+- Client-side persistence retained for local UX state while long-lived savings goals now persist in Postgres
 
 ## Tech Stack
 
@@ -35,9 +35,10 @@ This project currently focuses on transaction-driven analytics.
 
 - Imported and manually added transactions currently drive the dashboard, transaction list, and reports
 - Import preview and commit now run through PostgreSQL + Drizzle using `import_runs`, `import_run_rows`, and `transactions`
+- Savings goals now run through PostgreSQL + Drizzle using `savings_goals` and `savings_goal_entries`
 - Dashboard and transaction pages can hydrate from the database on cold start when local state is empty
 - Local browser persistence is still retained for selected year, sidebar state, and manual-only entries
-- Assets, liabilities, buckets, and investment holdings are still scaffolded as product surfaces and are not yet fully backed by real imported data models
+- Assets, liabilities, and investment holdings are still scaffolded as product surfaces and are not yet fully backed by real imported data models
 - Authentication and production API workflows are not wired yet
 
 ## Key Features
@@ -70,6 +71,13 @@ This project currently focuses on transaction-driven analytics.
 - Yearly trend analysis
 - Expense breakdown by category
 - Monthly income vs expense visualizations
+
+### 5. Savings Goals
+
+- Create multiple savings goals in parallel, such as wedding, retirement, home down payment, or custom goals
+- Track goal-specific balance, target progress, total growth, and return percentage
+- Record typed goal movements such as contributions, growth, withdrawals, and adjustments
+- Open each goal to inspect detailed progress, balance trajectory, and movement history
 
 ## Getting Started
 
@@ -149,7 +157,8 @@ bun run db:studio
 3. Confirm column mapping
 4. Review the preview
 5. Confirm the import
-6. Move to dashboard, transactions, and reports for analysis
+6. Create or update savings goals in `/buckets`
+7. Move to dashboard, transactions, and reports for analysis
 
 ## Project Structure
 
@@ -165,10 +174,10 @@ src/
 
 ## Limitations
 
-- Browser-local persistence only
 - No multi-user support yet
-- Runtime is currently hybrid: import persistence is DB-backed, but manual entry still remains browser-local
+- Runtime is currently hybrid: import persistence and savings goals are DB-backed, but manual entry still remains browser-local
 - Import pipeline currently emphasizes transaction rows rather than full portfolio reconciliation
+- Savings goals do not yet support edit, archive, or delete flows
 
 ## Roadmap Ideas
 

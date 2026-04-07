@@ -16,8 +16,10 @@ The most reliable working flow today is:
 
 - The application is built with Next.js App Router, React, TypeScript, Tailwind CSS, Zustand, Recharts, and `xlsx`
 - The application now has database-backed API routes for import preview, import commit, and transaction hydration
+- The application now also has database-backed API routes for savings goals and per-goal savings entries
 - PostgreSQL + Drizzle now back the transaction import pipeline and import history
-- The runtime is now hybrid: database-backed for imported transactions, browser-local for some UI and manual entry flows
+- PostgreSQL + Drizzle now also back the savings-goal subsystem via `savings_goals` and `savings_goal_entries`
+- The runtime is now hybrid: database-backed for imported transactions and savings goals, browser-local for some UI and manual entry flows
 - There is still no auth stack or per-user isolation
 - Imported transaction data is still mirrored into Zustand middleware for a smoother client experience
 - Charts are client-rendered with a hydration-safe wrapper to avoid SSR sizing issues
@@ -27,7 +29,9 @@ The most reliable working flow today is:
 ## Product Findings
 
 - Dashboard, transactions, and reports are the most mature user-facing surfaces
-- Savings buckets, goals, and investments exist as product scaffolding but are not yet fully connected to real imported financial models
+- Savings buckets were previously scaffolding, but are now redesigned as a real savings-goal portfolio system with overview and per-goal detail flows
+- The old `/goals` concept was duplicative and misleading; it now works better as an alias into the savings-goal experience
+- Savings goals are intentionally independent from imported transaction rows for now, which keeps the goal-tracking model explicit and auditable
 - The import experience is a central differentiator and should stay high-trust and low-friction
 
 ## Technical Decisions
@@ -42,11 +46,15 @@ The most reliable working flow today is:
 | Add Postgres + Drizzle before implementing append + de-dup | Makes duplicate analysis durable and avoids tying import integrity to a single browser profile |
 | Use a unique transaction fingerprint in Postgres | Makes append + de-dup enforceable at the database layer, not just in UI logic |
 | Hydrate transactions from Postgres when local state is empty | Preserves the lightweight client UX while letting DB-backed imports survive cold starts |
+| Redesign buckets as explicit savings goals with entry history | The old bucket scaffolding could not support progress, gain %, or growth detail reliably |
+| Store savings movements as typed entries (`contribution`, `growth`, `withdrawal`, `adjustment`) | Makes portfolio progress and return calculations explainable and extensible |
+| Redirect `/goals` to `/buckets` | Removes duplicate product concepts and keeps one source of truth for savings planning |
 
 ## Known Gaps
 
 - No automated test suite around import parsing yet
 - Manual entry is still browser-local and not yet committed into Postgres
+- Savings goals do not yet support edit, delete, archive, or bulk import flows
 - No formal data model for assets, liabilities, or portfolio holdings beyond current scaffolding
 - No production deployment workflow captured in the repo yet
 - `conflict` rows are identified, but there is not yet a user review workflow to resolve them before import
@@ -63,6 +71,7 @@ The most reliable working flow today is:
 
 - Expand the financial model to cover assets, liabilities, and investments properly
 - Move manual entry and per-user persistence fully into the backend layer
+- Add richer savings-goal operations such as editing targets, reconciling balances, and goal lifecycle states
 
 ### Long Term
 

@@ -51,14 +51,104 @@ export interface LiabilityItem {
 }
 
 // ===== Savings Bucket Types =====
-export interface SavingsBucket {
-  id: string;
+export type SavingsGoalCategory =
+  | "wedding"
+  | "retirement"
+  | "home_down_payment"
+  | "education"
+  | "emergency_fund"
+  | "travel"
+  | "custom";
+
+export type SavingsGoalEntryType =
+  | "contribution"
+  | "growth"
+  | "withdrawal"
+  | "adjustment";
+
+export interface SavingsGoal {
+  id: number;
   name: string;
+  category: SavingsGoalCategory;
   icon: string;
-  currentAmount: number;
-  targetAmount: number;
-  investmentType: string;
   color: string;
+  targetAmount: number;
+  targetDate?: string;
+  strategyLabel?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SavingsGoalEntry {
+  id: number;
+  goalId: number;
+  date: string;
+  type: SavingsGoalEntryType;
+  amount: number;
+  note?: string;
+  createdAt: string;
+}
+
+export interface SavingsGoalMetrics {
+  currentAmount: number;
+  totalContributions: number;
+  totalGrowth: number;
+  totalWithdrawals: number;
+  totalAdjustments: number;
+  netContributions: number;
+  progressPercent: number;
+  growthPercent: number;
+  remainingAmount: number;
+  daysRemaining: number | null;
+  monthlyPaceNeeded: number | null;
+  entryCount: number;
+}
+
+export interface SavingsGoalSeriesPoint {
+  date: string;
+  label: string;
+  balance: number;
+  netContributions: number;
+  cumulativeGrowth: number;
+  movement: number;
+}
+
+export interface SavingsBucket {
+  id: number;
+  name: string;
+  category: SavingsGoalCategory;
+  icon: string;
+  color: string;
+  targetAmount: number;
+  targetDate?: string;
+  strategyLabel?: string;
+  currentAmount: number;
+  totalGrowth: number;
+  growthPercent: number;
+  progressPercent: number;
+  remainingAmount: number;
+  entryCount: number;
+}
+
+export interface SavingsGoalsPortfolio {
+  goals: SavingsBucket[];
+  overview: {
+    goalCount: number;
+    completedGoals: number;
+    totalSaved: number;
+    totalTarget: number;
+    totalGrowth: number;
+    overallProgressPercent: number;
+    remainingAmount: number;
+  };
+}
+
+export interface SavingsGoalDetail {
+  goal: SavingsGoal;
+  metrics: SavingsGoalMetrics;
+  entries: SavingsGoalEntry[];
+  chartData: SavingsGoalSeriesPoint[];
 }
 
 // ===== Investment Types =====

@@ -36,15 +36,19 @@ export default function DashboardPage() {
       </div>
 
       {!hasTransactions ? (
-        <Card>
-          <EmptyState
-            icon={<FileSpreadsheet size={20} />}
-            title="ยังไม่มีข้อมูลธุรกรรมจริง"
-            description="แดชบอร์ดจะเริ่มแสดงผลทันทีเมื่อมีการนำเข้าธุรกรรมจริง เมื่อพร้อมแล้วไปที่หน้าจัดการนำเข้าได้เลย"
-            actionHref="/import"
-            actionLabel="เริ่มนำเข้าไฟล์"
-          />
-        </Card>
+        <>
+          <Card>
+            <EmptyState
+              icon={<FileSpreadsheet size={20} />}
+              title="ยังไม่มีข้อมูลธุรกรรมจริง"
+              description="แดชบอร์ดฝั่ง cashflow จะเริ่มแสดงผลทันทีเมื่อมีการนำเข้าธุรกรรมจริง แต่คุณยังสามารถสร้าง Savings Goals และติดตาม progress ได้เลย"
+              actionHref="/import"
+              actionLabel="เริ่มนำเข้าไฟล์"
+            />
+          </Card>
+
+          <BucketsOverview />
+        </>
       ) : (
         <>
           {/* Section 1: Summary Cards */}

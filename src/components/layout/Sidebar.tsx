@@ -9,7 +9,6 @@ import {
   Wallet,
   TrendingUp,
   BarChart3,
-  Target,
   Menu,
   Cat,
 } from "lucide-react";
@@ -20,10 +19,9 @@ const NAV_ITEMS = [
   { href: "/", icon: LayoutDashboard, label: "แดชบอร์ด" },
   { href: "/transactions", icon: Receipt, label: "รายการ" },
   { href: "/import", icon: Upload, label: "นำเข้า" },
-  { href: "/buckets", icon: Wallet, label: "Buckets" },
+  { href: "/buckets", icon: Wallet, label: "ออมเป้า" },
   { href: "/investments", icon: TrendingUp, label: "การลงทุน" },
   { href: "/reports", icon: BarChart3, label: "รายงาน" },
-  { href: "/goals", icon: Target, label: "เป้าหมาย" },
 ];
 
 export function Sidebar() {

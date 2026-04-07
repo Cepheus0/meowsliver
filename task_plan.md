@@ -34,8 +34,9 @@ Phase 5
 ### Phase 4: Real Financial Model Expansion
 - [ ] Define real data model for assets and liabilities
 - [ ] Define real data model for investment holdings
-- [ ] Connect buckets and goals to imported or maintained financial data
-- [ ] Decide whether these domains remain client-side or move to a backend
+- [x] Redesign Savings Buckets as DB-backed savings goals with per-goal detail pages
+- [x] Move savings goals off placeholder client-only scaffolding and into Postgres
+- [x] Decide that new savings-goal persistence lives in the backend layer
 - [x] Add PostgreSQL + Drizzle schema foundation for transactions and import history
 - **Status:** in_progress
 
@@ -69,5 +70,5 @@ Phase 5
 
 1. Move manual entry and the remaining runtime state into Postgres without breaking the current UX.
 2. Add a user-facing review path for `conflict` rows before import.
-3. Expand real models for assets, liabilities, and investments.
-4. Prepare for optional auth and multi-device sync.
+3. Add edit / archive / delete flows for savings goals and savings-goal entries.
+4. Expand real models for assets, liabilities, and investments.

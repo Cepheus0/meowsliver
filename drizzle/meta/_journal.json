@@ -15,6 +15,13 @@
       "when": 1775319843674,
       "tag": "0001_famous_mathemanic",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775491320432,
+      "tag": "0002_strong_captain_universe",
+      "breakpoints": true
     }
   ]
 }

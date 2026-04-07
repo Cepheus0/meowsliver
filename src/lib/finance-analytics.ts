@@ -3,7 +3,6 @@ import type {
   InvestmentHolding,
   LiabilityItem,
   MonthlyCashflow,
-  SavingsBucket,
   Transaction,
   YearlySummary,
 } from "@/lib/types";
@@ -11,7 +10,6 @@ import { THAI_MONTHS } from "@/lib/utils";
 
 export const EMPTY_ASSETS: AssetItem[] = [];
 export const EMPTY_LIABILITIES: LiabilityItem[] = [];
-export const EMPTY_BUCKETS: SavingsBucket[] = [];
 export const EMPTY_INVESTMENTS: Record<string, InvestmentHolding[]> = {
   crypto: [],
   ssf: [],

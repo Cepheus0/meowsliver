@@ -39,6 +39,23 @@ export const importPreviewStatusEnum = pgEnum("import_preview_status", [
   "skipped",
 ]);
 
+export const savingsGoalCategoryEnum = pgEnum("savings_goal_category", [
+  "wedding",
+  "retirement",
+  "home_down_payment",
+  "education",
+  "emergency_fund",
+  "travel",
+  "custom",
+]);
+
+export const savingsGoalEntryTypeEnum = pgEnum("savings_goal_entry_type", [
+  "contribution",
+  "growth",
+  "withdrawal",
+  "adjustment",
+]);
+
 export const importRuns = pgTable(
   "import_runs",
   {
@@ -145,6 +162,58 @@ export const importRunRows = pgTable(
   })
 );
 
+export const savingsGoals = pgTable(
+  "savings_goals",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    name: text("name").notNull(),
+    category: savingsGoalCategoryEnum("category").notNull().default("custom"),
+    icon: text("icon").notNull(),
+    color: text("color").notNull(),
+    targetAmountSatang: bigint("target_amount_satang", { mode: "number" })
+      .notNull(),
+    targetDate: date("target_date", { mode: "string" }),
+    strategyLabel: text("strategy_label"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    categoryIdx: index("savings_goals_category_idx").on(table.category),
+    targetDateIdx: index("savings_goals_target_date_idx").on(table.targetDate),
+  })
+);
+
+export const savingsGoalEntries = pgTable(
+  "savings_goal_entries",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    savingsGoalId: bigint("savings_goal_id", { mode: "number" })
+      .notNull()
+      .references(() => savingsGoals.id, { onDelete: "cascade" }),
+    entryDate: date("entry_date", { mode: "string" }).notNull(),
+    entryType: savingsGoalEntryTypeEnum("entry_type").notNull(),
+    amountSatang: bigint("amount_satang", { mode: "number" }).notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    goalEntryDateIdx: index("savings_goal_entries_goal_entry_date_idx").on(
+      table.savingsGoalId,
+      table.entryDate
+    ),
+    entryTypeIdx: index("savings_goal_entries_entry_type_idx").on(
+      table.entryType
+    ),
+  })
+);
+
 export const importRunsRelations = relations(importRuns, ({ many }) => ({
   transactions: many(transactions),
   rows: many(importRunRows),
@@ -168,3 +237,17 @@ export const importRunRowsRelations = relations(importRunRows, ({ one }) => ({
     references: [transactions.id],
   }),
 }));
+
+export const savingsGoalsRelations = relations(savingsGoals, ({ many }) => ({
+  entries: many(savingsGoalEntries),
+}));
+
+export const savingsGoalEntriesRelations = relations(
+  savingsGoalEntries,
+  ({ one }) => ({
+    goal: one(savingsGoals, {
+      fields: [savingsGoalEntries.savingsGoalId],
+      references: [savingsGoals.id],
+    }),
+  })
+);

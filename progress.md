@@ -47,6 +47,18 @@
 - Added hybrid hydration so dashboard and transaction pages can pull from Postgres on cold start when local state is empty
 - Verified smoke-test scenarios for `new`, `duplicate`, and `conflict` classification against the running local database
 
+## 2026-04-06
+
+### Savings Goals Redesign
+- Replaced the non-functional Savings Buckets scaffolding with a DB-backed savings-goal system
+- Added PostgreSQL tables and Drizzle schema for `savings_goals` and `savings_goal_entries`
+- Added API routes to list goals, create goals, load goal detail, and add per-goal entries
+- Redesigned `/buckets` into a savings-goal portfolio overview with presets, KPIs, and multi-goal cards
+- Added `/buckets/[goalId]` with goal-specific progress, growth metrics, movement history, and balance trajectory chart
+- Redirected `/goals` to `/buckets` to remove duplicate product concepts
+- Updated dashboard to surface savings goals even when transaction data is still empty
+- Verified the new savings-goal flow with typecheck, lint, build, API smoke tests, and DB cleanup after verification
+
 ## Current Status
 
 | Area | Status |
@@ -58,6 +70,7 @@
 | Browser-local persistence | working |
 | PostgreSQL + Drizzle foundation | working |
 | DB-backed import preview + commit | working |
+| DB-backed savings goals | working |
 | Asset / liability model | partial |
 | Investment model | partial |
 | Auth | not started |
@@ -67,5 +80,5 @@
 
 1. Move manual entry into the Postgres-backed transaction model.
 2. Add a real review workflow for `conflict` rows.
-3. Improve category normalization and reporting accuracy.
-4. Expand real models for assets, liabilities, and investments.
+3. Add edit / archive flows for savings goals and savings movements.
+4. Improve category normalization and reporting accuracy.

@@ -1,93 +1,204 @@
 "use client";
 
-import { useFinanceStore } from "@/store/finance-store";
-import { formatBaht } from "@/lib/utils";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { PiggyBank, Sparkles } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { PiggyBank } from "lucide-react";
+import { formatBaht } from "@/lib/utils";
+import type { SavingsGoalsPortfolio } from "@/lib/types";
 
 export function BucketsOverview() {
-  const { getBuckets } = useFinanceStore();
-  const buckets = getBuckets();
+  const [portfolio, setPortfolio] = useState<SavingsGoalsPortfolio | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (buckets.length === 0) {
+  useEffect(() => {
+    let isCancelled = false;
+
+    void fetch("/api/savings-goals", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch savings goals");
+        }
+
+        return (await response.json()) as SavingsGoalsPortfolio;
+      })
+      .then((data) => {
+        if (!isCancelled) {
+          setPortfolio(data);
+          setError(null);
+        }
+      })
+      .catch((fetchError) => {
+        console.error("Failed to hydrate savings goals overview", fetchError);
+        if (!isCancelled) {
+          setError("ไม่สามารถโหลดข้อมูลกระปุกเป้าหมายได้");
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  if (isLoading) {
     return (
       <Card className="col-span-full">
         <CardHeader>
-          <CardTitle>Savings Buckets - กระปุกเป้าหมาย</CardTitle>
+          <CardTitle>Savings Goals Portfolio</CardTitle>
+        </CardHeader>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-28 animate-pulse rounded-2xl bg-zinc-100 dark:bg-zinc-800"
+            />
+          ))}
+        </div>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="col-span-full">
+        <CardHeader>
+          <CardTitle>Savings Goals Portfolio</CardTitle>
         </CardHeader>
         <EmptyState
-          icon={<PiggyBank size={20} />}
-          title="ยังไม่มี Savings Buckets"
-          description="ข้อมูลกระปุกเป้าหมายถูกล้างออกแล้ว ตอนนี้สามารถเริ่มต้นจากการนำเข้าธุรกรรมจริงก่อน"
-          actionHref="/import"
-          actionLabel="นำเข้าข้อมูล"
+          icon={<Sparkles size={20} />}
+          title="โหลดข้อมูลกระปุกไม่สำเร็จ"
+          description={error}
+          actionHref="/buckets"
+          actionLabel="เปิดหน้า Savings"
         />
       </Card>
     );
   }
 
+  if (!portfolio || portfolio.goals.length === 0) {
+    return (
+      <Card className="col-span-full">
+        <CardHeader>
+          <CardTitle>Savings Goals Portfolio</CardTitle>
+        </CardHeader>
+        <EmptyState
+          icon={<PiggyBank size={20} />}
+          title="ยังไม่มีเป้าหมายการออม"
+          description="เริ่มสร้างเป้าหมายหลายก้อน เช่น แต่งงาน เกษียณ หรือเงินดาวน์บ้าน แล้ว dashboard จะสรุป progress ให้ทันที"
+          actionHref="/buckets"
+          actionLabel="สร้างเป้าหมายแรก"
+        />
+      </Card>
+    );
+  }
+
+  const featuredGoals = portfolio.goals.slice(0, 3);
+  const overallProgress = Math.round(portfolio.overview.overallProgressPercent);
+
   return (
     <Card className="col-span-full">
-      <CardHeader>
-        <CardTitle>Savings Buckets - กระปุกเป้าหมาย</CardTitle>
+      <CardHeader className="items-start gap-3 sm:flex-row sm:items-center">
+        <div>
+          <CardTitle>Savings Goals Portfolio</CardTitle>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            สะสมแล้ว {formatBaht(portfolio.overview.totalSaved)} จากเป้ารวม{" "}
+            {formatBaht(portfolio.overview.totalTarget)}
+          </p>
+        </div>
+        <div className="ml-auto flex items-center gap-3">
+          <div className="rounded-2xl bg-emerald-50 px-3 py-2 text-right dark:bg-emerald-500/10">
+            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              ความคืบหน้ารวม
+            </p>
+            <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+              {overallProgress}%
+            </p>
+          </div>
+          <Link
+            href="/buckets"
+            className="rounded-xl border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          >
+            ดูทั้งหมด
+          </Link>
+        </div>
       </CardHeader>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {buckets.map((bucket) => {
-          const percent = Math.min(
-            100,
-            Math.round((bucket.currentAmount / bucket.targetAmount) * 100)
-          );
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+        {featuredGoals.map((goal) => {
+          const progressWidth = Math.min(goal.progressPercent, 100);
 
           return (
-            <div
-              key={bucket.id}
-              className="group rounded-xl border border-zinc-100 p-4 transition-colors hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-600"
+            <Link
+              key={goal.id}
+              href={`/buckets/${goal.id}`}
+              className="rounded-2xl border border-zinc-200 p-4 transition-colors hover:border-zinc-300 hover:bg-zinc-50/70 dark:border-zinc-800 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
             >
-              {/* Header */}
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{bucket.icon}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-                    {bucket.name}
-                  </p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {bucket.investmentType}
-                  </p>
-                </div>
-                <span
-                  className="rounded-lg px-2.5 py-1 text-xs font-bold"
-                  style={{
-                    backgroundColor: `${bucket.color}15`,
-                    color: bucket.color,
-                  }}
-                >
-                  {percent}%
-                </span>
-              </div>
-
-              {/* Progress bar */}
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+              <div className="flex items-start gap-3">
                 <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${percent}%`,
-                    backgroundColor: bucket.color,
-                  }}
-                />
-              </div>
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl text-2xl"
+                  style={{ backgroundColor: `${goal.color}18` }}
+                >
+                  {goal.icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                        {goal.name}
+                      </p>
+                      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                        {goal.strategyLabel || "ยังไม่ได้ระบุช่องทางออม"}
+                      </p>
+                    </div>
+                    <span
+                      className="rounded-xl px-2.5 py-1 text-xs font-semibold"
+                      style={{
+                        color: goal.color,
+                        backgroundColor: `${goal.color}15`,
+                      }}
+                    >
+                      {Math.round(goal.progressPercent)}%
+                    </span>
+                  </div>
 
-              {/* Amounts */}
-              <div className="mt-2 flex items-center justify-between text-xs">
-                <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                  {formatBaht(bucket.currentAmount)}
-                </span>
-                <span className="text-zinc-400 dark:text-zinc-500">
-                  / {formatBaht(bucket.targetAmount)}
-                </span>
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${progressWidth}%`,
+                        backgroundColor: goal.color,
+                      }}
+                    />
+                  </div>
+
+                  <div className="mt-3 flex items-end justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        ยอดปัจจุบัน
+                      </p>
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                        {formatBaht(goal.currentAmount)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        กำไรสะสม
+                      </p>
+                      <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                        {formatBaht(goal.totalGrowth)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
