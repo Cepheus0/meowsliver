@@ -145,6 +145,17 @@ bun run test
 bun run test:report
 ```
 
+### Playwright CLI fallback
+
+When Codex Playwright MCP is unavailable on this machine, use the local CLI fallback instead:
+
+```bash
+playwright-fallback --help
+bun run pw -- check http://localhost:3000 --screenshot
+```
+
+Detailed usage is documented in [`docs/playwright-cli-fallback.md`](/Users/woraweechanlongrat/Documents/projects/meowsliver-clean/docs/playwright-cli-fallback.md)
+
 ### Database tooling
 
 ```bash
@@ -195,6 +206,7 @@ The project now includes:
 - Vitest-based unit coverage for parsing, import normalization, fingerprinting, analytics, and savings-goal math
 - Local smoke tests for route availability, savings-goal APIs, and import preview/commit flows
 - A generated Markdown report at [`reports/test-report.md`](/Users/woraweechanlongrat/Documents/projects/meowsliver-clean/reports/test-report.md)
+- A CLI-first Playwright fallback for local browser inspection and screenshot capture when MCP browser tools are unstable
 
 Detailed testing guidance is documented in [`TESTING.md`](/Users/woraweechanlongrat/Documents/projects/meowsliver-clean/TESTING.md)
 

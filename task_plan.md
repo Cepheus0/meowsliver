@@ -53,6 +53,7 @@ Phase 5
 - [x] Formalize dark mode with semantic theme tokens and shared chart styling
 - [x] Add smoke-test automation for critical routes and API flows
 - [x] Add generated Markdown QA report output for engineering review
+- [x] Add a CLI-based Playwright fallback path for local browser QA on machines where MCP browser transport is unstable
 - [ ] Add visual regression or screenshot-based checks for key routes
 - **Status:** in_progress
 

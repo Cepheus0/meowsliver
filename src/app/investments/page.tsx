@@ -75,10 +75,10 @@ export default function InvestmentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
+        <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
           การลงทุน
         </h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
           รายละเอียดพอร์ตลงทุนแยกตามประเภท
         </p>
       </div>
@@ -138,7 +138,7 @@ export default function InvestmentsPage() {
           </CardHeader>
 
           <div className="mb-3 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
+            <span className="text-2xl font-bold text-[color:var(--app-text)]">
               {formatBaht(totalValue)}
             </span>
             <span
@@ -158,24 +158,24 @@ export default function InvestmentsPage() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 dark:border-zinc-800">
-                  <th className="py-2.5 pr-3 font-medium text-zinc-500 dark:text-zinc-400">ชื่อ</th>
-                  <th className="py-2.5 pr-3 text-right font-medium text-zinc-500 dark:text-zinc-400">มูลค่า</th>
-                  <th className="py-2.5 pr-3 text-right font-medium text-zinc-500 dark:text-zinc-400">กำไร/ขาดทุน</th>
-                  <th className="py-2.5 text-right font-medium text-zinc-500 dark:text-zinc-400">%</th>
+                  <th className="py-2.5 pr-3 font-medium text-[color:var(--app-text-muted)]">ชื่อ</th>
+                  <th className="py-2.5 pr-3 text-right font-medium text-[color:var(--app-text-muted)]">มูลค่า</th>
+                  <th className="py-2.5 pr-3 text-right font-medium text-[color:var(--app-text-muted)]">กำไร/ขาดทุน</th>
+                  <th className="py-2.5 text-right font-medium text-[color:var(--app-text-muted)]">%</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {holdings.map((h) => (
                   <tr key={h.id}>
                     <td className="py-2.5 pr-3">
-                      <p className="font-medium text-zinc-800 dark:text-zinc-100">
+                      <p className="font-medium text-[color:var(--app-text)]">
                         {h.name}
                       </p>
                       {h.ticker && (
                         <p className="text-xs text-zinc-400">{h.ticker}</p>
                       )}
                     </td>
-                    <td className="py-2.5 pr-3 text-right font-medium text-zinc-800 dark:text-zinc-100">
+                    <td className="py-2.5 pr-3 text-right font-medium text-[color:var(--app-text)]">
                       {formatBaht(h.totalValue)}
                     </td>
                     <td

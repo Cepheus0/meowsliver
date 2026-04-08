@@ -62,7 +62,7 @@ export function ManualEntryFAB() {
       {/* Modal overlay */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-[color:var(--app-overlay)] sm:items-center">
-          <div className="w-full max-w-lg rounded-t-3xl border border-[color:var(--app-border)] bg-[color:var(--app-surface-strong)] p-6 shadow-[var(--app-card-shadow)] sm:rounded-3xl">
+          <div className="theme-border theme-surface-strong w-full max-w-lg rounded-t-3xl border p-6 shadow-[var(--app-card-shadow)] sm:rounded-3xl">
             {/* Header */}
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-bold text-[color:var(--app-text)]">
@@ -112,7 +112,7 @@ export function ManualEntryFAB() {
                   <button
                     key={tpl.label}
                     onClick={() => applyTemplate(tpl)}
-                    className="rounded-lg border border-[color:var(--app-border)] px-3 py-1.5 text-xs font-medium text-[color:var(--app-text-muted)] transition-colors hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
+                    className="theme-border rounded-lg border px-3 py-1.5 text-xs font-medium text-[color:var(--app-text-muted)] transition-colors hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
                   >
                     {tpl.label}
                   </button>
@@ -131,7 +131,7 @@ export function ManualEntryFAB() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0"
-                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-lg font-bold text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+                  className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-lg font-bold text-[color:var(--app-text)] outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -142,7 +142,7 @@ export function ManualEntryFAB() {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+                  className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
                 >
                   <option value="">-- เลือกหมวด --</option>
                   {categories.map((cat) => (
@@ -162,7 +162,7 @@ export function ManualEntryFAB() {
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+                    className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -174,7 +174,7 @@ export function ManualEntryFAB() {
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="รายละเอียด..."
-                    className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+                    className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>

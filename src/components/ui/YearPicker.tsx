@@ -23,7 +23,7 @@ export function YearPicker() {
       <select
         value={selectedYear}
         onChange={(e) => setSelectedYear(Number(e.target.value))}
-        className="rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2 text-sm font-bold text-[color:var(--app-text)] shadow-[var(--app-card-shadow)] focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        className="theme-border theme-surface rounded-xl border px-4 py-2 text-sm font-bold text-[color:var(--app-text)] shadow-[var(--app-card-shadow)] focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
       >
         {years.map((y) => (
           <option key={y} value={y}>

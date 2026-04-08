@@ -28,10 +28,10 @@ export default function TransactionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
+        <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
           รายการทั้งหมด
         </h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
           ปี {selectedYear} — {transactions.length} รายการ
         </p>
       </div>
@@ -57,7 +57,7 @@ export default function TransactionsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="ค้นหาหมวดหมู่ หมายเหตุ..."
-                className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] py-2.5 pl-9 pr-4 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+                className="theme-border theme-surface w-full rounded-xl border py-2.5 pl-9 pr-4 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
               />
             </div>
             <div className="flex items-center gap-1 rounded-xl bg-[color:var(--app-surface-soft)] p-1">
@@ -90,10 +90,10 @@ export default function TransactionsPage() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 dark:border-zinc-800">
-                    <th className="py-3 pr-4 font-medium text-zinc-500 dark:text-zinc-400">วันที่</th>
-                    <th className="py-3 pr-4 font-medium text-zinc-500 dark:text-zinc-400">หมวด</th>
-                    <th className="py-3 pr-4 font-medium text-zinc-500 dark:text-zinc-400">หมายเหตุ</th>
-                    <th className="py-3 pr-4 text-right font-medium text-zinc-500 dark:text-zinc-400">จำนวน</th>
+                    <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">วันที่</th>
+                    <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">หมวด</th>
+                    <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">หมายเหตุ</th>
+                    <th className="py-3 pr-4 text-right font-medium text-[color:var(--app-text-muted)]">จำนวน</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -112,7 +112,7 @@ export default function TransactionsPage() {
                           {tx.category}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-4 text-zinc-500 dark:text-zinc-400">
+                      <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
                         {tx.note || "-"}
                       </td>
                       <td

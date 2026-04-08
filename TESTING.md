@@ -15,6 +15,7 @@ bun run test:unit
 bun run test:smoke
 bun run test
 bun run test:report
+bun run pw -- check http://localhost:3000 --screenshot
 ```
 
 ## Current Automated Coverage
@@ -50,6 +51,22 @@ The report captures:
 - pass/fail status per verification step
 - command run for each step
 - stdout/stderr excerpts for debugging and auditability
+
+## Playwright CLI Fallback
+
+When MCP browser tools are unstable on this machine, use the local Playwright CLI fallback for manual browser validation:
+
+```bash
+playwright-fallback --help
+bun run pw -- screenshot http://localhost:3000
+bun run pw -- snapshot http://localhost:3000
+```
+
+Artifacts default to:
+
+[`output/playwright/`](/Users/woraweechanlongrat/Documents/projects/meowsliver-clean/output/playwright)
+
+Detailed command usage lives in [`docs/playwright-cli-fallback.md`](/Users/woraweechanlongrat/Documents/projects/meowsliver-clean/docs/playwright-cli-fallback.md)
 
 ## Recommended Pre-Push Verification
 

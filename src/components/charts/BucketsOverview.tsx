@@ -107,14 +107,14 @@ export function BucketsOverview() {
       <CardHeader className="items-start gap-3 sm:flex-row sm:items-center">
         <div>
           <CardTitle>Savings Goals Portfolio</CardTitle>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
             สะสมแล้ว {formatBaht(portfolio.overview.totalSaved)} จากเป้ารวม{" "}
             {formatBaht(portfolio.overview.totalTarget)}
           </p>
         </div>
         <div className="ml-auto flex items-center gap-3">
           <div className="rounded-2xl bg-emerald-50 px-3 py-2 text-right dark:bg-emerald-500/10">
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs font-medium text-[color:var(--app-text-muted)]">
               ความคืบหน้ารวม
             </p>
             <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
@@ -123,7 +123,7 @@ export function BucketsOverview() {
           </div>
           <Link
             href="/buckets"
-            className="rounded-xl border border-[color:var(--app-border)] px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
+            className="theme-border rounded-xl border px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
           >
             ดูทั้งหมด
           </Link>
@@ -138,7 +138,7 @@ export function BucketsOverview() {
             <Link
               key={goal.id}
               href={`/buckets/${goal.id}`}
-              className="rounded-2xl border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)]/70 p-4 transition-colors hover:border-[color:var(--app-border-strong)] hover:bg-[color:var(--app-surface)]"
+              className="theme-border rounded-2xl border bg-[color:var(--app-surface-soft)]/70 p-4 transition-colors hover:bg-[color:var(--app-surface)]"
             >
               <div className="flex items-start gap-3">
                 <div
@@ -153,7 +153,7 @@ export function BucketsOverview() {
                       <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                         {goal.name}
                       </p>
-                      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                      <p className="mt-1 text-xs text-[color:var(--app-text-muted)]">
                         {goal.strategyLabel || "ยังไม่ได้ระบุช่องทางออม"}
                       </p>
                     </div>
@@ -180,7 +180,7 @@ export function BucketsOverview() {
 
                   <div className="mt-3 flex items-end justify-between gap-3">
                     <div>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      <p className="text-xs text-[color:var(--app-text-muted)]">
                         ยอดปัจจุบัน
                       </p>
                       <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
@@ -188,7 +188,7 @@ export function BucketsOverview() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      <p className="text-xs text-[color:var(--app-text-muted)]">
                         กำไรสะสม
                       </p>
                       <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">

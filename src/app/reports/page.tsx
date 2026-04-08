@@ -52,10 +52,10 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
+        <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
           รายงาน
         </h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
           วิเคราะห์ภาพรวมการเงินย้อนหลัง
         </p>
       </div>
@@ -148,7 +148,7 @@ export default function ReportsPage() {
                       className="inline-block h-2 w-2 rounded-full"
                       style={{ backgroundColor: item.color }}
                     />
-                    <span className="text-zinc-500 dark:text-zinc-400">
+                    <span className="text-[color:var(--app-text-muted)]">
                       {item.name}
                     </span>
                     <span className="ml-auto font-medium text-zinc-700 dark:text-zinc-200">

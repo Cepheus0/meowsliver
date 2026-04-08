@@ -74,6 +74,12 @@
 - Added a Markdown test-report generator at `reports/test-report.md`
 - Verified unit tests and smoke tests pass against the running local app
 
+### Local Browser Automation Fallback
+- Added a system-wide `playwright-fallback` command backed by `playwright-core`
+- Added a repository wrapper at `bun run pw -- ...` for project-local browser checks and screenshot capture
+- Standardized local browser artifacts into `output/playwright/`
+- Documented the fallback workflow so browser QA can continue even while Codex Playwright MCP remains unstable on this machine
+
 ## Current Status
 
 | Area | Status |

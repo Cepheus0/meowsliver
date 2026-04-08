@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "pw": "bash scripts/playwright-fallback.sh",
     "test": "bun run test:unit && bun run test:smoke",
     "test:report": "tsx scripts/generate-test-report.ts",
     "test:smoke": "tsx scripts/run-smoke-tests.ts",

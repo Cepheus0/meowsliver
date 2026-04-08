@@ -134,13 +134,13 @@ export function YearlyComparisonTable() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-zinc-200 dark:border-zinc-800">
-              <th className="py-3 pr-4 font-medium text-zinc-500 dark:text-zinc-400">
+              <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">
                 รายการ
               </th>
               {recent.map((s) => (
                 <th
                   key={s.year}
-                  className="py-3 pr-4 text-right font-medium text-zinc-500 dark:text-zinc-400"
+                  className="py-3 pr-4 text-right font-medium text-[color:var(--app-text-muted)]"
                 >
                   {s.year}
                 </th>
@@ -211,7 +211,7 @@ export function YearlyComparisonTable() {
               {recent.map((s) => (
                 <td
                   key={s.year}
-                  className="py-2.5 pr-4 text-right font-bold text-zinc-800 dark:text-zinc-100"
+                  className="py-2.5 pr-4 text-right font-bold text-[color:var(--app-text)]"
                 >
                   {formatBaht(s.netWorth)}
                 </td>

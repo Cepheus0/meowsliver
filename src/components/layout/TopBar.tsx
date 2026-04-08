@@ -20,14 +20,14 @@ export function TopBar() {
   const mounted = useMounted();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[color:var(--app-border)] bg-[color:var(--app-surface-muted)] px-6 backdrop-blur-xl">
+    <header className="theme-border theme-surface-muted sticky top-0 z-30 flex h-16 items-center justify-between border-b px-6 backdrop-blur-xl">
       <YearPicker />
 
       <div className="flex items-center gap-3">
         {mounted && (
           <button
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            className="rounded-xl p-2.5 text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)]"
+            className="rounded-xl p-2.5 text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
             title="สลับโหมดสว่าง/มืด"
           >
             {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}

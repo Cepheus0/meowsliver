@@ -28,6 +28,7 @@ Use this file as the primary operating guide for AI coding agents working in thi
 - Manual entry is still browser-local and has not yet been moved into Postgres
 - Dark mode now uses semantic theme tokens and shared chart-theme helpers instead of isolated page overrides
 - The repo now includes automated unit tests, smoke tests, and a Markdown test-report generator
+- This machine now has a system-wide `playwright-fallback` command plus `bun run pw -- ...` as the preferred browser-automation fallback when Codex Playwright MCP is unstable
 - Assets, liabilities, and investment areas are still partially scaffolded
 - Savings goals are now the source of truth for buckets-style goal tracking, and `/goals` is only an alias route
 
@@ -40,6 +41,7 @@ bun run build
 bun run lint
 bun run test
 bun run test:report
+bun run pw -- check http://localhost:3000 --screenshot
 bun run typecheck
 bun run db:generate
 bun run db:migrate
@@ -103,6 +105,7 @@ bun run db:studio
 - Run `bun run lint` when the touched area may affect lint-sensitive code paths
 - Run `bun run test` when touching import logic, analytics, savings goals, or cross-page behavior
 - Run `bun run test:report` when you need an audit-friendly artifact for a larger change
+- Prefer `bun run pw -- ...` or `playwright-fallback ...` for local browser inspection on this machine before attempting MCP browser tooling again
 
 ## Recommended Documentation Workflow
 

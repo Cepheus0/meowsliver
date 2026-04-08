@@ -63,13 +63,13 @@ function DetailStatCard({
 }) {
   return (
     <Card>
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
         {label}
       </p>
       <p className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">
         {value}
       </p>
-      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{helper}</p>
+      <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">{helper}</p>
     </Card>
   );
 }
@@ -317,7 +317,7 @@ export default function SavingsGoalDetailPage() {
       <div className="flex flex-wrap items-center gap-3">
         <Link
           href="/buckets"
-          className="inline-flex items-center gap-2 rounded-xl border border-[color:var(--app-border)] px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
+          className="theme-border inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
         >
           <ArrowLeft size={16} />
           กลับไปหน้า Savings
@@ -354,10 +354,10 @@ export default function SavingsGoalDetailPage() {
               <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                 {detail.goal.name}
               </h1>
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
                 {detail.goal.strategyLabel || "ยังไม่ได้ระบุกลยุทธ์การออม"}
               </p>
-              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-zinc-500 dark:text-zinc-400">
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[color:var(--app-text-muted)]">
                 <span>Target date: {formatGoalDate(detail.goal.targetDate)}</span>
                 <span>{formatDaysRemaining(detail.metrics.daysRemaining)}</span>
                 <span>{detail.metrics.entryCount} movements</span>
@@ -366,7 +366,7 @@ export default function SavingsGoalDetailPage() {
           </div>
 
           <div className="rounded-3xl bg-emerald-50 px-5 py-4 text-right dark:bg-emerald-500/10">
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
               Goal progress
             </p>
             <p className="mt-1 text-4xl font-bold text-emerald-600 dark:text-emerald-400">
@@ -745,16 +745,16 @@ export default function SavingsGoalDetailPage() {
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 dark:border-zinc-800">
-                  <th className="px-2 py-3 font-medium text-zinc-500 dark:text-zinc-400">
+                  <th className="px-2 py-3 font-medium text-[color:var(--app-text-muted)]">
                     วันที่
                   </th>
-                  <th className="px-2 py-3 font-medium text-zinc-500 dark:text-zinc-400">
+                  <th className="px-2 py-3 font-medium text-[color:var(--app-text-muted)]">
                     ประเภท
                   </th>
-                  <th className="px-2 py-3 font-medium text-zinc-500 dark:text-zinc-400">
+                  <th className="px-2 py-3 font-medium text-[color:var(--app-text-muted)]">
                     หมายเหตุ
                   </th>
-                  <th className="px-2 py-3 text-right font-medium text-zinc-500 dark:text-zinc-400">
+                  <th className="px-2 py-3 text-right font-medium text-[color:var(--app-text-muted)]">
                     จำนวนเงิน
                   </th>
                 </tr>
@@ -772,7 +772,7 @@ export default function SavingsGoalDetailPage() {
                         {ENTRY_TYPE_LABELS[entry.type]}
                       </span>
                     </td>
-                    <td className="px-2 py-3 text-zinc-500 dark:text-zinc-400">
+                    <td className="px-2 py-3 text-[color:var(--app-text-muted)]">
                       {entry.note || "-"}
                     </td>
                     <td className="px-2 py-3 text-right font-semibold text-zinc-900 dark:text-zinc-100">

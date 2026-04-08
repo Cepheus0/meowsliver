@@ -13,7 +13,7 @@ const variantStyles: Record<Variant, string> = {
   primary:
     "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400",
   secondary:
-    "border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] text-[color:var(--app-text)] hover:bg-[color:var(--app-surface-strong)]",
+    "theme-border theme-surface-soft border text-[color:var(--app-text)] hover:bg-[color:var(--app-surface-strong)]",
   ghost:
     "text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]",
   danger: "bg-red-600 text-white hover:bg-red-700",

@@ -30,13 +30,13 @@ function PortfolioStatCard({
 }) {
   return (
     <Card>
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
         {label}
       </p>
       <p className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">
         {value}
       </p>
-      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{helper}</p>
+      <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">{helper}</p>
     </Card>
   );
 }
@@ -155,7 +155,7 @@ export default function BucketsPage() {
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
             Savings Goals Portfolio
           </h1>
-          <p className="mt-1 max-w-3xl text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-1 max-w-3xl text-sm text-[color:var(--app-text-muted)]">
             จัดการหลายเป้าหมายพร้อมกันในที่เดียว ทั้งเงินแต่งงาน เกษียณ ดาวน์บ้าน
             หรือเป้าหมายเฉพาะทาง พร้อมดู progress, กำไร, growth และ pace การออมของแต่ละก้อนได้แบบแยกกัน
           </p>
@@ -178,7 +178,7 @@ export default function BucketsPage() {
             key={preset.category}
             type="button"
             onClick={() => applyPreset(index)}
-            className="rounded-2xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-5 text-left transition-all hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)] hover:shadow-[var(--app-card-shadow)]"
+            className="theme-border theme-surface rounded-2xl border p-5 text-left transition-all hover:-translate-y-0.5 hover:shadow-[var(--app-card-shadow)]"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -191,13 +191,13 @@ export default function BucketsPage() {
                 <p className="mt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">
                   {preset.name}
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+                <p className="mt-1 text-sm leading-relaxed text-[color:var(--app-text-muted)]">
                   {preset.description}
                 </p>
               </div>
               <Sparkles size={18} className="shrink-0 text-zinc-400" />
             </div>
-            <p className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+            <p className="mt-4 text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-subtle)]">
               Suggested vehicle
             </p>
             <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
@@ -480,10 +480,10 @@ export default function BucketsPage() {
                                 {GOAL_CATEGORY_LABELS[goal.category]}
                               </span>
                             </div>
-                            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                            <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
                               {goal.strategyLabel || "ยังไม่ได้ระบุช่องทางออม"}
                             </p>
-                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[color:var(--app-text-muted)]">
                               <span>Target date: {formatGoalDate(goal.targetDate)}</span>
                               <span>{goal.entryCount} movements</span>
                             </div>
@@ -493,7 +493,7 @@ export default function BucketsPage() {
                           <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                             {Math.round(goal.progressPercent)}%
                           </p>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                          <p className="text-xs text-[color:var(--app-text-muted)]">
                             ของเป้าหมาย
                           </p>
                         </div>
@@ -511,25 +511,25 @@ export default function BucketsPage() {
 
                       <div className="mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
                         <div>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">ยอดปัจจุบัน</p>
+                          <p className="text-xs text-[color:var(--app-text-muted)]">ยอดปัจจุบัน</p>
                           <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                             {formatBaht(goal.currentAmount)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">เป้าหมาย</p>
+                          <p className="text-xs text-[color:var(--app-text-muted)]">เป้าหมาย</p>
                           <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                             {formatBaht(goal.targetAmount)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">กำไรสะสม</p>
+                          <p className="text-xs text-[color:var(--app-text-muted)]">กำไรสะสม</p>
                           <p className="mt-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                             {formatBaht(goal.totalGrowth)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">% กำไร</p>
+                          <p className="text-xs text-[color:var(--app-text-muted)]">% กำไร</p>
                           <p className="mt-1 text-sm font-semibold text-blue-600 dark:text-blue-400">
                             {formatPercent(goal.growthPercent)}
                           </p>
@@ -537,7 +537,7 @@ export default function BucketsPage() {
                       </div>
 
                       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 pt-4 dark:border-zinc-800">
-                        <div className="flex flex-wrap gap-4 text-sm text-zinc-500 dark:text-zinc-400">
+                        <div className="flex flex-wrap gap-4 text-sm text-[color:var(--app-text-muted)]">
                           <span className="inline-flex items-center gap-2">
                             <Target size={16} />
                             เหลืออีก {formatBaht(goal.remainingAmount)}

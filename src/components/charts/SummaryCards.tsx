@@ -31,10 +31,10 @@ function StatCard({ label, value, subtext, icon, trend, color }: StatCardProps) 
         <span style={{ color }}>{icon}</span>
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+        <p className="text-xs font-medium text-[color:var(--app-text-muted)]">
           {label}
         </p>
-        <p className="mt-0.5 text-xl font-bold text-zinc-800 dark:text-zinc-100">
+        <p className="mt-0.5 text-xl font-bold text-[color:var(--app-text)]">
           {value}
         </p>
         {subtext && (
@@ -51,7 +51,7 @@ function StatCard({ label, value, subtext, icon, trend, color }: StatCardProps) 
                   ? "text-emerald-500"
                   : trend === "down"
                     ? "text-red-500"
-                    : "text-zinc-400"
+                    : "text-[color:var(--app-text-subtle)]"
               }
             >
               {subtext}

@@ -326,10 +326,10 @@ export default function ImportPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
+        <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
           นำเข้าข้อมูล
         </h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
           Import Excel / CSV จาก เหมียวจด หรือแอปบัญชีอื่นๆ
         </p>
       </div>
@@ -421,7 +421,7 @@ export default function ImportPage() {
                 <p className="mb-2 text-lg font-semibold text-zinc-700 dark:text-zinc-200">
                   ลากไฟล์มาวางที่นี่
                 </p>
-                <p className="mb-1 text-sm text-zinc-500 dark:text-zinc-400">
+                <p className="mb-1 text-sm text-[color:var(--app-text-muted)]">
                   รองรับ .xlsx, .xls, .csv (สูงสุด 10MB)
                 </p>
                 <p className="mb-6 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
@@ -493,20 +493,20 @@ export default function ImportPage() {
           {/* File info */}
           <div className="mb-4 grid grid-cols-3 gap-3">
             <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/50">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">จำนวนแถว</p>
-              <p className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
+              <p className="text-xs text-[color:var(--app-text-muted)]">จำนวนแถว</p>
+              <p className="text-lg font-bold text-[color:var(--app-text)]">
                 {parseResult.totalRows.toLocaleString()}
               </p>
             </div>
             <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/50">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">จำนวนคอลัมน์</p>
-              <p className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
+              <p className="text-xs text-[color:var(--app-text-muted)]">จำนวนคอลัมน์</p>
+              <p className="text-lg font-bold text-[color:var(--app-text)]">
                 {parseResult.columns.length}
               </p>
             </div>
             <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/50">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">ชีท</p>
-              <p className="truncate text-lg font-bold text-zinc-800 dark:text-zinc-100">
+              <p className="text-xs text-[color:var(--app-text-muted)]">ชีท</p>
+              <p className="truncate text-lg font-bold text-[color:var(--app-text)]">
                 {parseResult.sheetName}
               </p>
             </div>
@@ -528,7 +528,7 @@ export default function ImportPage() {
                         <span className="ml-1 text-red-500">*</span>
                       )}
                     </label>
-                    <p className="text-xs text-zinc-400 dark:text-zinc-500">
+                    <p className="text-xs text-[color:var(--app-text-subtle)]">
                       {field.description}
                     </p>
                   </div>
@@ -548,7 +548,7 @@ export default function ImportPage() {
                           : field.required
                             ? "border-red-300 dark:border-red-700"
                             : "border-zinc-200 dark:border-zinc-700",
-                        "text-zinc-800 dark:text-zinc-100"
+                        "text-[color:var(--app-text)]"
                       )}
                     >
                       <option value="">
@@ -638,8 +638,8 @@ export default function ImportPage() {
           {/* Import summary cards */}
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-6">
             <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">พร้อมตรวจสอบ</p>
-              <p className="mt-1 text-2xl font-bold text-zinc-800 dark:text-zinc-100">
+              <p className="text-xs text-[color:var(--app-text-muted)]">พร้อมตรวจสอบ</p>
+              <p className="mt-1 text-2xl font-bold text-[color:var(--app-text)]">
                 {importStats.readyRows}
               </p>
             </div>
@@ -666,7 +666,7 @@ export default function ImportPage() {
               </p>
             </div>
             <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-[color:var(--app-text-muted)]">
                 รายรับ ({importStats.incomeRows})
               </p>
               <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
@@ -674,7 +674,7 @@ export default function ImportPage() {
               </p>
             </div>
             <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-[color:var(--app-text-muted)]">
                 รายจ่าย ({importStats.expenseRows})
               </p>
               <p className="mt-1 text-2xl font-bold text-red-500">
@@ -682,7 +682,7 @@ export default function ImportPage() {
               </p>
             </div>
             <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">ข้ามรายการ</p>
+              <p className="text-xs text-[color:var(--app-text-muted)]">ข้ามรายการ</p>
               <p className="mt-1 text-2xl font-bold text-amber-500">
                 {importStats.skippedRows}
               </p>
@@ -694,7 +694,7 @@ export default function ImportPage() {
             <CardHeader>
               <div className="space-y-2">
                 <CardTitle>ตัวอย่างข้อมูลหลังตรวจซ้ำกับฐานข้อมูล (20 แถวแรก)</CardTitle>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                <p className="text-sm text-[color:var(--app-text-muted)]">
                   ระบบจะเพิ่มเฉพาะรายการสถานะ <span className="font-medium text-emerald-600 dark:text-emerald-400">ใหม่</span>{" "}
                   เท่านั้น ส่วนรายการซ้ำหรือรายการที่ใกล้เคียงจะถูกกันออกไว้ก่อน
                 </p>
@@ -780,10 +780,10 @@ export default function ImportPage() {
                             "-"
                           )}
                         </td>
-                        <td className="max-w-[240px] truncate py-2 pr-3 text-xs text-zinc-500 dark:text-zinc-400">
+                        <td className="max-w-[240px] truncate py-2 pr-3 text-xs text-[color:var(--app-text-muted)]">
                           {tx?.note || row.reason || "-"}
                         </td>
-                        <td className="max-w-[150px] truncate py-2 text-xs text-zinc-500 dark:text-zinc-400">
+                        <td className="max-w-[150px] truncate py-2 text-xs text-[color:var(--app-text-muted)]">
                           {tx?.subcategory || "-"}
                         </td>
                       </tr>
@@ -829,12 +829,12 @@ export default function ImportPage() {
       {step === "done" && (
         <Card className="py-10 text-center">
           <CheckCircle size={64} className="mx-auto mb-4 text-emerald-500" />
-          <h2 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
+          <h2 className="text-2xl font-bold text-[color:var(--app-text)]">
             {importStats.committedRows > 0 ? "นำเข้าสำเร็จ!" : "ตรวจสอบข้อมูลเสร็จสิ้น"}
           </h2>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-2 text-sm text-[color:var(--app-text-muted)]">
             เพิ่มใหม่{" "}
-            <span className="font-bold text-zinc-800 dark:text-zinc-100">
+            <span className="font-bold text-[color:var(--app-text)]">
               {importStats.committedRows.toLocaleString()}
             </span>{" "}
             รายการจาก{" "}
@@ -868,7 +868,7 @@ export default function ImportPage() {
               </p>
             </div>
             <div className="rounded-xl bg-zinc-100 p-3 dark:bg-zinc-800">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">ข้ามรายการ</p>
+              <p className="text-xs text-[color:var(--app-text-muted)]">ข้ามรายการ</p>
               <p className="mt-1 text-lg font-bold text-zinc-700 dark:text-zinc-200">
                 {importStats.skippedRows.toLocaleString()}
               </p>
@@ -877,7 +877,7 @@ export default function ImportPage() {
 
           <div className="mx-auto mt-4 grid max-w-md grid-cols-2 gap-4">
             <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-zinc-900">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-[color:var(--app-text-muted)]">
                 รายรับ ({importStats.incomeRows})
               </p>
               <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">
@@ -885,7 +885,7 @@ export default function ImportPage() {
               </p>
             </div>
             <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-zinc-900">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-[color:var(--app-text-muted)]">
                 รายจ่าย ({importStats.expenseRows})
               </p>
               <p className="mt-1 text-lg font-bold text-red-500">

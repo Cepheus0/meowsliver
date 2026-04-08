@@ -65,10 +65,10 @@ export function AssetPieChart() {
 
       {/* Net Worth big number */}
       <div className="mb-4 text-center">
-        <p className="text-3xl font-extrabold text-zinc-800 dark:text-zinc-100">
+        <p className="text-3xl font-extrabold text-[color:var(--app-text)]">
           {formatBaht(netWorth)}
         </p>
-        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-xs text-[color:var(--app-text-muted)]">
           สินทรัพย์ {formatBaht(totalAssets)} — หนี้สิน{" "}
           {formatBaht(totalLiabilities)}
         </p>

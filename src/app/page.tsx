@@ -27,10 +27,10 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Page title */}
       <div>
-        <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
+        <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
           แดชบอร์ด
         </h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
           ภาพรวมการเงินทั้งหมดของคุณ
         </p>
       </div>
@@ -60,7 +60,7 @@ export default function DashboardPage() {
 
             <Card className="flex flex-col justify-between">
               <div>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--app-text-muted)]">
                   สถานะข้อมูล
                 </p>
                 <EmptyState

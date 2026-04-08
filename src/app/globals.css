@@ -2,56 +2,56 @@
 
 :root {
   color-scheme: light;
-  --app-bg: #f4f7fb;
-  --app-bg-elevated: #fbfdff;
-  --app-glow-primary: rgba(16, 185, 129, 0.12);
-  --app-glow-secondary: rgba(14, 165, 233, 0.08);
-  --app-surface: rgba(255, 255, 255, 0.86);
+  --app-bg: #f6f8fb;
+  --app-bg-elevated: #fcfdff;
+  --app-glow-primary: rgba(16, 185, 129, 0.08);
+  --app-glow-secondary: rgba(14, 165, 233, 0.05);
+  --app-surface: rgba(255, 255, 255, 0.94);
   --app-surface-strong: #ffffff;
-  --app-surface-soft: #eef3f7;
-  --app-surface-muted: rgba(255, 255, 255, 0.72);
-  --app-border: rgba(148, 163, 184, 0.22);
-  --app-border-strong: rgba(148, 163, 184, 0.32);
+  --app-surface-soft: #f2f5f9;
+  --app-surface-muted: rgba(255, 255, 255, 0.84);
+  --app-border: rgba(15, 23, 42, 0.10);
+  --app-border-strong: rgba(15, 23, 42, 0.16);
   --app-overlay: rgba(15, 23, 42, 0.58);
   --app-text: #101828;
-  --app-text-muted: #667085;
-  --app-text-subtle: #98a2b3;
-  --app-card-shadow: 0 24px 60px -36px rgba(15, 23, 42, 0.28);
+  --app-text-muted: #475467;
+  --app-text-subtle: #667085;
+  --app-card-shadow: 0 24px 60px -40px rgba(15, 23, 42, 0.18);
   --app-selection: rgba(16, 185, 129, 0.2);
   --scrollbar-thumb: rgba(100, 116, 139, 0.45);
   --scrollbar-thumb-hover: rgba(71, 85, 105, 0.65);
-  --chart-grid: rgba(148, 163, 184, 0.22);
+  --chart-grid: rgba(148, 163, 184, 0.16);
   --chart-axis: #64748b;
   --chart-tooltip-bg: rgba(255, 255, 255, 0.96);
-  --chart-tooltip-border: rgba(148, 163, 184, 0.3);
+  --chart-tooltip-border: rgba(148, 163, 184, 0.22);
   --chart-tooltip-text: #0f172a;
 }
 
 .dark {
   color-scheme: dark;
-  --app-bg: #090d16;
-  --app-bg-elevated: #101828;
-  --app-glow-primary: rgba(16, 185, 129, 0.16);
-  --app-glow-secondary: rgba(56, 189, 248, 0.1);
-  --app-surface: rgba(13, 18, 32, 0.84);
-  --app-surface-strong: rgba(17, 24, 39, 0.96);
-  --app-surface-soft: rgba(15, 23, 42, 0.92);
-  --app-surface-muted: rgba(10, 15, 27, 0.72);
-  --app-border: rgba(148, 163, 184, 0.18);
-  --app-border-strong: rgba(148, 163, 184, 0.24);
-  --app-overlay: rgba(2, 6, 23, 0.72);
-  --app-text: #e5edf7;
-  --app-text-muted: #98a2b3;
-  --app-text-subtle: #667085;
+  --app-bg: #08101d;
+  --app-bg-elevated: #0c1628;
+  --app-glow-primary: rgba(16, 185, 129, 0.12);
+  --app-glow-secondary: rgba(56, 189, 248, 0.08);
+  --app-surface: rgba(15, 23, 42, 0.9);
+  --app-surface-strong: rgba(17, 25, 40, 0.98);
+  --app-surface-soft: rgba(30, 41, 59, 0.55);
+  --app-surface-muted: rgba(8, 16, 29, 0.84);
+  --app-border: rgba(226, 232, 240, 0.08);
+  --app-border-strong: rgba(226, 232, 240, 0.14);
+  --app-overlay: rgba(2, 6, 23, 0.76);
+  --app-text: #f8fbff;
+  --app-text-muted: #d7e2f0;
+  --app-text-subtle: #94a3b8;
   --app-card-shadow: 0 24px 70px -40px rgba(2, 6, 23, 0.88);
   --app-selection: rgba(52, 211, 153, 0.22);
   --scrollbar-thumb: rgba(100, 116, 139, 0.5);
   --scrollbar-thumb-hover: rgba(148, 163, 184, 0.62);
-  --chart-grid: rgba(148, 163, 184, 0.16);
-  --chart-axis: #94a3b8;
+  --chart-grid: rgba(203, 213, 225, 0.08);
+  --chart-axis: #cbd5e1;
   --chart-tooltip-bg: rgba(15, 23, 42, 0.96);
-  --chart-tooltip-border: rgba(148, 163, 184, 0.2);
-  --chart-tooltip-text: #e5edf7;
+  --chart-tooltip-border: rgba(226, 232, 240, 0.12);
+  --chart-tooltip-text: #f8fbff;
 }
 
 html {
@@ -62,10 +62,34 @@ html {
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, var(--app-glow-primary), transparent 30%),
-    radial-gradient(circle at top right, var(--app-glow-secondary), transparent 26%),
+    radial-gradient(circle at top left, var(--app-glow-primary), transparent 28%),
+    radial-gradient(circle at top right, var(--app-glow-secondary), transparent 24%),
     linear-gradient(180deg, var(--app-bg-elevated) 0%, var(--app-bg) 100%);
   color: var(--app-text);
+}
+
+.theme-surface {
+  background-color: var(--app-surface);
+}
+
+.theme-surface-strong {
+  background-color: var(--app-surface-strong);
+}
+
+.theme-surface-soft {
+  background-color: var(--app-surface-soft);
+}
+
+.theme-surface-muted {
+  background-color: var(--app-surface-muted);
+}
+
+.theme-border {
+  border-color: var(--app-border);
+}
+
+.theme-border-strong {
+  border-color: var(--app-border-strong);
 }
 
 ::selection {

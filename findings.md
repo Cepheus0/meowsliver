@@ -25,6 +25,7 @@ The most reliable working flow today is:
 - Charts are client-rendered with a hydration-safe wrapper to avoid SSR sizing issues
 - Dark mode is now driven by semantic CSS theme variables and shared chart tokens rather than isolated page-level overrides
 - The repo now includes an automated test layer with Vitest unit coverage, smoke tests, and generated Markdown reporting
+- Codex Playwright MCP remains unreliable on this machine, so local browser validation is now standardized around a CLI-first Playwright fallback
 - The initial Drizzle migration has been generated successfully
 - Local PostgreSQL was started with Docker Compose and migrations ran successfully, including the unique fingerprint constraint used for de-dup
 
@@ -53,6 +54,7 @@ The most reliable working flow today is:
 | Redirect `/goals` to `/buckets` | Removes duplicate product concepts and keeps one source of truth for savings planning |
 | Introduce semantic theme tokens before further UI polish | Keeps light/dark mode maintainable as more product surfaces are added |
 | Add report-generating test automation instead of relying on ad hoc verification | Makes larger changes easier to audit, share, and repeat |
+| Standardize on a CLI-first Playwright fallback for local browser checks on this machine | Keeps browser QA moving even while MCP browser transport remains unreliable |
 
 ## Known Gaps
 
