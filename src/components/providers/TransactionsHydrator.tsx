@@ -2,18 +2,34 @@
 
 import { useEffect, useRef } from "react";
 import { useFinanceStore } from "@/store/finance-store";
+import { useFinanceStoreHydrated } from "@/store/use-finance-store-hydrated";
 import type { Transaction } from "@/lib/types";
 
 export function TransactionsHydrator() {
   const { importedTransactions, replaceImportedTransactions } = useFinanceStore();
-  const hasAttemptedHydration = useRef(false);
+  const storeHydrated = useFinanceStoreHydrated();
+  const hasAttemptedLocalRehydration = useRef(false);
+  const hasAttemptedDbHydration = useRef(false);
 
   useEffect(() => {
-    if (hasAttemptedHydration.current || importedTransactions.length > 0) {
+    if (hasAttemptedLocalRehydration.current) {
       return;
     }
 
-    hasAttemptedHydration.current = true;
+    hasAttemptedLocalRehydration.current = true;
+    void useFinanceStore.persist.rehydrate();
+  }, []);
+
+  useEffect(() => {
+    if (
+      !storeHydrated ||
+      hasAttemptedDbHydration.current ||
+      importedTransactions.length > 0
+    ) {
+      return;
+    }
+
+    hasAttemptedDbHydration.current = true;
     let isCancelled = false;
 
     void fetch("/api/transactions", { cache: "no-store" })
@@ -36,7 +52,7 @@ export function TransactionsHydrator() {
     return () => {
       isCancelled = true;
     };
-  }, [importedTransactions.length, replaceImportedTransactions]);
+  }, [storeHydrated, importedTransactions.length, replaceImportedTransactions]);
 
   return null;
 }

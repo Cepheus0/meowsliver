@@ -88,6 +88,7 @@ export const useFinanceStore = create<FinanceStore>()(
     }),
     {
       name: "moneycat-finance-store",
+      skipHydration: true,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         importedTransactions: state.importedTransactions,

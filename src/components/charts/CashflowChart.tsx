@@ -133,7 +133,7 @@ export function YearlyComparisonTable() {
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-zinc-200 dark:border-zinc-800">
+            <tr className="border-b border-[color:var(--app-divider)]">
               <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">
                 รายการ
               </th>
@@ -147,9 +147,9 @@ export function YearlyComparisonTable() {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+          <tbody className="divide-y divide-[color:var(--app-divider-soft)]">
             <tr>
-              <td className="py-2.5 pr-4 text-zinc-600 dark:text-zinc-300">
+              <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
                 รายรับรวม
               </td>
               {recent.map((s) => (
@@ -162,7 +162,7 @@ export function YearlyComparisonTable() {
               ))}
             </tr>
             <tr>
-              <td className="py-2.5 pr-4 text-zinc-600 dark:text-zinc-300">
+              <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
                 รายจ่ายรวม
               </td>
               {recent.map((s) => (
@@ -175,7 +175,7 @@ export function YearlyComparisonTable() {
               ))}
             </tr>
             <tr>
-              <td className="py-2.5 pr-4 text-zinc-600 dark:text-zinc-300">
+              <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
                 เงินคงเหลือ
               </td>
               {recent.map((s) => (
@@ -192,7 +192,7 @@ export function YearlyComparisonTable() {
               ))}
             </tr>
             <tr>
-              <td className="py-2.5 pr-4 text-zinc-600 dark:text-zinc-300">
+              <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
                 Savings Rate
               </td>
               {recent.map((s) => (
@@ -205,7 +205,7 @@ export function YearlyComparisonTable() {
               ))}
             </tr>
             <tr>
-              <td className="py-2.5 pr-4 text-zinc-600 dark:text-zinc-300">
+              <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
                 ยอดสุทธิสะสม
               </td>
               {recent.map((s) => (
@@ -218,7 +218,7 @@ export function YearlyComparisonTable() {
               ))}
             </tr>
             <tr>
-              <td className="py-2.5 pr-4 text-zinc-600 dark:text-zinc-300">
+              <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
                 การเปลี่ยนแปลงสะสม
               </td>
               {recent.map((s) => (

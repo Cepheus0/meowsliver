@@ -31,12 +31,12 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "theme-border theme-surface-muted fixed left-0 top-0 z-40 flex h-screen flex-col border-r backdrop-blur-xl transition-all duration-300",
+        "theme-surface-muted fixed left-0 top-0 z-40 flex h-screen flex-col shadow-[inset_-1px_0_0_var(--app-shell-border)] backdrop-blur-xl transition-all duration-300",
         sidebarCollapsed ? "w-16" : "w-60"
       )}
     >
       {/* Logo */}
-      <div className="theme-border flex h-16 items-center gap-3 border-b px-4">
+      <div className="flex h-16 items-center gap-3 px-4 shadow-[inset_0_-1px_0_var(--app-shell-border)]">
         <button
           onClick={toggleSidebar}
           className="rounded-lg p-1.5 text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)]"
@@ -45,7 +45,7 @@ export function Sidebar() {
         </button>
         {!sidebarCollapsed && (
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 shadow-sm shadow-emerald-500/10 dark:bg-emerald-500/12 dark:text-emerald-300">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[color:var(--app-brand-border)] bg-[linear-gradient(135deg,var(--app-brand-soft-strong)_0%,var(--app-brand-soft)_100%)] text-[color:var(--app-brand-text)] shadow-[0_18px_36px_-26px_var(--app-brand-shadow)]">
               <Cat size={20} />
             </div>
             <span className="text-lg font-bold text-[color:var(--app-text)]">
@@ -69,7 +69,7 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-500/5 dark:bg-emerald-500/12 dark:text-emerald-300"
+                  ? "border border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)] shadow-[0_18px_32px_-28px_var(--app-brand-shadow)]"
                   : "text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
               )}
             >
@@ -82,7 +82,7 @@ export function Sidebar() {
 
       {/* Footer */}
       {!sidebarCollapsed && (
-        <div className="theme-border border-t p-4">
+        <div className="p-4 shadow-[inset_0_1px_0_var(--app-shell-border)]">
           <p className="text-xs text-[color:var(--app-text-subtle)]">
             MoneyCat Tracker v1.0
           </p>

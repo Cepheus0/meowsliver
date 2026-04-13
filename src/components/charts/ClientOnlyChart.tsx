@@ -1,18 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
-
-const emptySubscribe = () => () => {};
-
-function useMounted() {
-  return useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false
-  );
-}
+import { useMounted } from "@/lib/use-mounted";
 
 interface ClientOnlyChartProps {
   children: ReactNode;
