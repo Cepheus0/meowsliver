@@ -92,6 +92,7 @@ export const transactions = pgTable(
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
     transactionDate: date("transaction_date", { mode: "string" }).notNull(),
+    transactionTime: text("transaction_time"),
     amountSatang: bigint("amount_satang", { mode: "number" }).notNull(),
     type: transactionTypeEnum("type").notNull(),
     category: text("category").notNull(),

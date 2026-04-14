@@ -1,12 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { Client } from "pg";
 import { chromium } from "playwright-core";
 
 const appUrl = process.env.APP_URL ?? "http://localhost:3000";
 const currentYear = new Date().getFullYear();
 const outputDir = path.join(process.cwd(), "output", "playwright");
 const screenshotPath = path.join(outputDir, "transactions-browser-smoke.png");
+const databaseUrl =
+  process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/meowsliver";
+const smokeTag = `browser-smoke-db-${Date.now()}`;
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
@@ -18,18 +22,68 @@ function buildPersistedState() {
   return {
     state: {
       importedTransactions: Array.from({ length: 130 }, (_, index) => ({
-        id: `browser-smoke-${index + 1}`,
+        id: `browser-smoke-stale-${index + 1}`,
         date: `${currentYear}-03-${String((index % 28) + 1).padStart(2, "0")}`,
         amount: 1000 + index,
         category: index % 2 === 0 ? "อาหาร" : "เดินทาง",
         type: index % 5 === 0 ? "income" : "expense",
-        note: `Browser smoke transaction ${index + 1}`,
+        note: `Stale browser smoke transaction ${index + 1}`,
       })),
       selectedYear: currentYear,
       sidebarCollapsed: false,
     },
     version: 0,
   };
+}
+
+async function seedTransactions() {
+  const client = new Client({ connectionString: databaseUrl });
+  await client.connect();
+
+  try {
+    await client.query("DELETE FROM transactions WHERE fingerprint LIKE $1", [
+      `${smokeTag}%`,
+    ]);
+
+    for (let index = 0; index < 60; index += 1) {
+      const amount = 500 + index;
+      await client.query(
+        `INSERT INTO transactions (
+          transaction_date,
+          amount_satang,
+          type,
+          category,
+          note,
+          fingerprint,
+          source
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          `${currentYear}-04-${String((index % 28) + 1).padStart(2, "0")}`,
+          amount * 100,
+          index % 6 === 0 ? "income" : "expense",
+          index % 2 === 0 ? "อาหาร" : "เดินทาง",
+          `${smokeTag} transaction ${index + 1}`,
+          `${smokeTag}-${index + 1}`,
+          "manual",
+        ]
+      );
+    }
+  } finally {
+    await client.end();
+  }
+}
+
+async function cleanupTransactions() {
+  const client = new Client({ connectionString: databaseUrl });
+  await client.connect();
+
+  try {
+    await client.query("DELETE FROM transactions WHERE fingerprint LIKE $1", [
+      `${smokeTag}%`,
+    ]);
+  } finally {
+    await client.end();
+  }
 }
 
 function resolveExecutablePath() {
@@ -77,6 +131,7 @@ function resolveExecutablePath() {
 
 async function main() {
   fs.mkdirSync(outputDir, { recursive: true });
+  await seedTransactions();
 
   const browser = await chromium.launch({
     executablePath: resolveExecutablePath(),
@@ -100,7 +155,7 @@ async function main() {
 
     await page.waitForFunction(() => {
       const summary = document.body.innerText;
-      return summary.includes("130 รายการ");
+      return summary.includes("60 รายการ");
     });
 
     const pageText = await page.textContent("body");
@@ -112,6 +167,10 @@ async function main() {
     assert(
       !pageText.includes("Recoverable Error"),
       "Expected /transactions to avoid React recoverable error overlays"
+    );
+    assert(
+      !pageText.includes("130 รายการ"),
+      "Expected DB-backed hydration to override stale local browser cache"
     );
 
     const tableRows = page.locator("tbody tr");
@@ -130,11 +189,11 @@ async function main() {
     await page.getByRole("button", { name: "ถัดไป" }).click();
     const footerText = await page.textContent("body");
     assert(
-      footerText?.includes("หน้า 2 จาก 6"),
+      footerText?.includes("หน้า 2 จาก 3"),
       "Expected pagination to advance to page 2 after clicking next"
     );
     assert(
-      footerText?.includes("กำลังแสดงรายการที่ 26-50 จากทั้งหมด 130 รายการ"),
+      footerText?.includes("กำลังแสดงรายการที่ 26-50 จากทั้งหมด 60 รายการ"),
       "Expected page 2 range summary to be correct"
     );
 
@@ -143,6 +202,7 @@ async function main() {
   } finally {
     await context.close();
     await browser.close();
+    await cleanupTransactions();
   }
 }
 

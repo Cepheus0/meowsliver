@@ -27,6 +27,7 @@ function fromSatang(amountSatang: number): number {
 function buildExactFingerprintSeed(row: NormalizedImportRow): string {
   return [
     row.date,
+    canonicalize(row.time),
     toSatang(row.amount),
     row.type,
     canonicalize(row.category),
@@ -86,6 +87,7 @@ export function buildSkippedFingerprint(row: PreparedImportRow): string {
 export function dbTransactionToNormalized(row: DbTransaction): NormalizedImportRow {
   return {
     date: row.transactionDate,
+    time: row.transactionTime ?? undefined,
     amount: fromSatang(row.amountSatang),
     type: row.type,
     category: row.category,
@@ -111,6 +113,7 @@ export function normalizedRowToInsert(
 ): typeof transactions.$inferInsert {
   return {
     transactionDate: row.date,
+    transactionTime: row.time,
     amountSatang: toSatang(row.amount),
     type: row.type,
     category: row.category,

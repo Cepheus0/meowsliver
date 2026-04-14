@@ -137,6 +137,9 @@ export default function TransactionsPage() {
                       วันที่
                     </th>
                     <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">
+                      เวลา
+                    </th>
+                    <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">
                       หมวด
                     </th>
                     <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">
@@ -152,6 +155,9 @@ export default function TransactionsPage() {
                     <tr key={tx.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                       <td className="whitespace-nowrap py-2.5 pr-4 text-zinc-600 dark:text-zinc-300">
                         {tx.date}
+                      </td>
+                      <td className="whitespace-nowrap py-2.5 pr-4 text-zinc-500 dark:text-zinc-400">
+                        {tx.time ?? "-"}
                       </td>
                       <td className="py-2.5 pr-4">
                         <span className="inline-flex items-center gap-1.5 text-zinc-700 dark:text-zinc-200">

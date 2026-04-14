@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   detectMeowjotFormat,
   normalizeDate,
+  normalizeTime,
   resolveTransactionType,
 } from "@/lib/excel-parser";
 
@@ -12,7 +13,7 @@ describe("excel-parser", () => {
       "ประเภท",
       "หมวดหมู่",
       "จำนวน",
-      "โน้ต",
+      "โน๊ต",
       "ผู้รับ",
     ];
 
@@ -27,7 +28,16 @@ describe("excel-parser", () => {
   it("normalizes supported date formats into ISO strings", () => {
     expect(normalizeDate("2026-04-08T09:30:00")).toBe("2026-04-08");
     expect(normalizeDate("8/4/2026")).toBe("2026-04-08");
+    expect(normalizeDate("8/4/26")).toBe("2026-04-08");
+    expect(normalizeDate("13/4/26")).toBe("2026-04-13");
     expect(normalizeDate("08-04-2026")).toBe("2026-04-08");
+  });
+
+  it("normalizes supported time formats into HH:MM strings", () => {
+    expect(normalizeTime("7:54")).toBe("07:54");
+    expect(normalizeTime("07:54")).toBe("07:54");
+    expect(normalizeTime("07:54:19")).toBe("07:54");
+    expect(normalizeTime("")).toBe("");
   });
 
   it("keeps unknown values unchanged when date normalization cannot parse", () => {

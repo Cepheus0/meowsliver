@@ -90,6 +90,7 @@ const MAPPING_FIELDS: {
   description: string;
 }[] = [
   { key: "date", label: "วันที่", required: true, description: "คอลัมน์วันที่ของรายการ" },
+  { key: "time", label: "เวลา", required: false, description: "เวลาในแต่ละรายการ (ถ้ามี)" },
   { key: "amount", label: "จำนวนเงิน", required: true, description: "จำนวนเงินรายการ (ติดลบ = รายจ่าย)" },
   { key: "type", label: "ประเภท", required: false, description: "รายรับ / รายจ่าย (ถ้าไม่มี จะดูจากเครื่องหมาย +/-)" },
   { key: "category", label: "หมวดหมู่", required: false, description: "หมวดหมู่ เช่น อาหาร, ช้อปปิ้ง" },
@@ -713,6 +714,7 @@ export default function ImportPage() {
                     <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">#</th>
                     <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">สถานะ</th>
                     <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">วันที่</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">เวลา</th>
                     <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">ประเภท</th>
                     <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">หมวดหมู่</th>
                     <th className="py-2.5 pr-3 text-right text-xs font-medium text-zinc-500">จำนวน</th>
@@ -742,6 +744,9 @@ export default function ImportPage() {
                         </td>
                         <td className="whitespace-nowrap py-2 pr-3 text-zinc-600 dark:text-zinc-300">
                           {tx?.date ?? "-"}
+                        </td>
+                        <td className="whitespace-nowrap py-2 pr-3 text-zinc-500 dark:text-zinc-400">
+                          {tx?.time ?? "-"}
                         </td>
                         <td className="py-2 pr-3">
                           {tx ? (

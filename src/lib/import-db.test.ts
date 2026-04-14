@@ -9,6 +9,7 @@ import type { PreparedImportRow } from "@/lib/import-pipeline";
 
 const normalizedRow = {
   date: "2030-01-15",
+  time: "09:45",
   amount: 1234,
   type: "expense" as const,
   category: "อาหาร",
@@ -23,6 +24,16 @@ describe("import-db fingerprints", () => {
     const second = buildTransactionFingerprint({ ...normalizedRow });
 
     expect(first).toBe(second);
+  });
+
+  it("changes exact fingerprints when the transaction time changes", () => {
+    const first = buildTransactionFingerprint(normalizedRow);
+    const second = buildTransactionFingerprint({
+      ...normalizedRow,
+      time: "10:15",
+    });
+
+    expect(first).not.toBe(second);
   });
 
   it("keeps conflict keys stable even when non-identity details change", () => {

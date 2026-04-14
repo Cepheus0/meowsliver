@@ -32,6 +32,12 @@ function getTransactionYear(tx: Transaction) {
   return new Date(`${tx.date}T00:00:00`).getFullYear();
 }
 
+function compareTransactionsByDateTimeDesc(left: Transaction, right: Transaction) {
+  const leftDateTime = `${left.date}T${left.time ?? "00:00"}`;
+  const rightDateTime = `${right.date}T${right.time ?? "00:00"}`;
+  return rightDateTime.localeCompare(leftDateTime);
+}
+
 function roundToSingleDecimal(value: number) {
   return Math.round(value * 10) / 10;
 }
@@ -42,7 +48,7 @@ export function getTransactionsForYear(
 ): Transaction[] {
   return transactions
     .filter((tx) => getTransactionYear(tx) === year)
-    .sort((a, b) => b.date.localeCompare(a.date));
+    .sort(compareTransactionsByDateTimeDesc);
 }
 
 export function getMonthlyCashflowFromTransactions(

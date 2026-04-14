@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { importRunRows, importRuns, transactions } from "@/db/schema";
 import type {
@@ -61,21 +61,67 @@ export async function POST(request: Request) {
             .insert(transactions)
             .values(rowsToInsert)
             .onConflictDoNothing({ target: transactions.fingerprint })
-            .returning({ id: transactions.id })
+            .returning({ id: transactions.id, fingerprint: transactions.fingerprint })
         : [];
+
+    const insertedFingerprints = new Set(
+      insertedRows.map((row) => row.fingerprint)
+    );
+    const droppedFingerprints = rowsToInsert
+      .map((row) => row.fingerprint)
+      .filter((fingerprint) => !insertedFingerprints.has(fingerprint));
+
+    const uniqueDroppedFingerprints = Array.from(new Set(droppedFingerprints));
+
+    if (uniqueDroppedFingerprints.length > 0) {
+      const duplicateMatches = await db
+        .select({ id: transactions.id, fingerprint: transactions.fingerprint })
+        .from(transactions)
+        .where(inArray(transactions.fingerprint, uniqueDroppedFingerprints));
+
+      const duplicateByFingerprint = new Map(
+        duplicateMatches.map((transaction) => [transaction.fingerprint, transaction.id])
+      );
+
+      for (const fingerprint of uniqueDroppedFingerprints) {
+        await db
+          .update(importRunRows)
+          .set({
+            previewStatus: "duplicate",
+            duplicateTransactionId: duplicateByFingerprint.get(fingerprint),
+          })
+          .where(
+            and(
+              eq(importRunRows.importRunId, body.importRunId),
+              eq(importRunRows.fingerprint, fingerprint),
+              eq(importRunRows.previewStatus, "new")
+            )
+          );
+      }
+    }
+
+    const adjustedNewRows = Math.max(importRun.newRows - uniqueDroppedFingerprints.length, 0);
+    const adjustedDuplicateRows =
+      importRun.duplicateRows + uniqueDroppedFingerprints.length;
 
     await db
       .update(importRuns)
       .set({
         status: "completed",
         completedAt: new Date(),
+        newRows: adjustedNewRows,
+        duplicateRows: adjustedDuplicateRows,
       })
       .where(eq(importRuns.id, body.importRunId));
 
     const allTransactions = await db
       .select()
       .from(transactions)
-      .orderBy(desc(transactions.transactionDate), desc(transactions.id));
+      .orderBy(
+        desc(transactions.transactionDate),
+        desc(transactions.transactionTime),
+        desc(transactions.id)
+      );
 
     const metadata = (importRun.metadata ?? {}) as Record<string, number>;
     const summary: ImportPreviewSummary = {
@@ -83,8 +129,8 @@ export async function POST(request: Request) {
       readyRows: metadata.readyRows ?? 0,
       incomeRows: metadata.incomeRows ?? 0,
       expenseRows: metadata.expenseRows ?? 0,
-      newRows: importRun.newRows,
-      duplicateRows: importRun.duplicateRows,
+      newRows: adjustedNewRows,
+      duplicateRows: adjustedDuplicateRows,
       conflictRows: importRun.conflictRows,
       skippedRows: importRun.skippedRows,
       totalIncome: metadata.totalIncome ?? 0,

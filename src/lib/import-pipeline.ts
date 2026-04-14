@@ -1,11 +1,12 @@
 import type { ColumnMapping, RawRow } from "@/lib/excel-parser";
-import { normalizeDate, resolveTransactionType } from "@/lib/excel-parser";
+import { normalizeDate, normalizeTime, resolveTransactionType } from "@/lib/excel-parser";
 import type { Transaction, TransactionType } from "@/lib/types";
 
 export type ImportPreviewStatus = "new" | "duplicate" | "conflict" | "skipped";
 
 export interface NormalizedImportRow {
   date: string;
+  time?: string;
   amount: number;
   type: TransactionType;
   category: string;
@@ -70,7 +71,11 @@ export interface ImportCommitResponse {
 
 function sanitizeValue(value?: string | null): string | undefined {
   const trimmed = value?.trim();
-  return trimmed ? trimmed : undefined;
+  if (!trimmed || trimmed === "-" || trimmed === "—" || trimmed === "–") {
+    return undefined;
+  }
+
+  return trimmed;
 }
 
 function parseAmount(rawAmount: string): number | null {
@@ -105,6 +110,7 @@ export function buildTransactionFromNormalized(
   return {
     id,
     date: normalized.date,
+    time: normalized.time,
     amount: normalized.amount,
     category: normalized.category,
     subcategory: subcategory || undefined,
@@ -121,6 +127,8 @@ export function prepareImportRows(
     const rowNumber = index + 1;
     const rawDate = mapping.date ? row[mapping.date] : "";
     const date = normalizeDate(rawDate);
+    const rawTime = mapping.time ? row[mapping.time] : "";
+    const time = normalizeTime(rawTime);
 
     if (!date) {
       return {
@@ -157,6 +165,7 @@ export function prepareImportRows(
       rawRow: row,
       normalized: {
         date,
+        time: time || undefined,
         amount: Math.abs(amount),
         type,
         category: category || (type === "income" ? "รายรับ" : "รายจ่าย"),

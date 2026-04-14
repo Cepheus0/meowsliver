@@ -11,7 +11,11 @@ export async function GET() {
     const rows = await db
       .select()
       .from(transactions)
-      .orderBy(desc(transactions.transactionDate), desc(transactions.id));
+      .orderBy(
+        desc(transactions.transactionDate),
+        desc(transactions.transactionTime),
+        desc(transactions.id)
+      );
 
     return NextResponse.json({
       transactions: rows.map(dbTransactionToUiTransaction),

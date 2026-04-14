@@ -241,6 +241,103 @@ async function main() {
     );
     console.log("PASS import duplicate detection");
 
+    const batchDuplicateRows = [
+      {
+        rowNumber: 1,
+        rawRow: {
+          วันที่: "2030-01-20",
+          เวลา: "08:45",
+          ประเภท: "รายจ่าย",
+          จำนวน: "-345",
+          โน๊ต: `${smokeTag} batch`,
+        },
+        normalized: {
+          date: "2030-01-20",
+          time: "08:45",
+          amount: 345,
+          type: "expense",
+          category: "อาหาร",
+          note: `${smokeTag} batch`,
+          recipient: `${smokeTag} vendor`,
+          paymentChannel: "PromptPay",
+        },
+      },
+      {
+        rowNumber: 2,
+        rawRow: {
+          วันที่: "2030-01-20",
+          เวลา: "08:45",
+          ประเภท: "รายจ่าย",
+          จำนวน: "-345",
+          โน๊ต: `${smokeTag} batch`,
+        },
+        normalized: {
+          date: "2030-01-20",
+          time: "08:45",
+          amount: 345,
+          type: "expense",
+          category: "อาหาร",
+          note: `${smokeTag} batch`,
+          recipient: `${smokeTag} vendor`,
+          paymentChannel: "PromptPay",
+        },
+      },
+    ];
+
+    const batchDuplicateResponse = await request("/api/import/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: `${smokeTag}-batch-duplicate.csv`,
+        mode: "append",
+        rows: batchDuplicateRows,
+      }),
+    });
+    assert(
+      batchDuplicateResponse.ok,
+      `Expected intra-file duplicate preview to pass, received ${batchDuplicateResponse.status}`
+    );
+    const batchDuplicateJson = (await batchDuplicateResponse.json()) as {
+      importRunId: number;
+      summary: { newRows: number; duplicateRows: number };
+    };
+    createdImportRunIds.push(batchDuplicateJson.importRunId);
+    assert(
+      batchDuplicateJson.summary.newRows === 1,
+      "Expected intra-file duplicate preview to keep only one row as new"
+    );
+    assert(
+      batchDuplicateJson.summary.duplicateRows === 1,
+      "Expected intra-file duplicate preview to classify the second row as duplicate"
+    );
+    console.log("PASS import intra-file duplicate preview");
+
+    const batchDuplicateCommitResponse = await request("/api/import/commit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        importRunId: batchDuplicateJson.importRunId,
+      }),
+    });
+    assert(
+      batchDuplicateCommitResponse.ok,
+      `Expected intra-file duplicate commit to pass, received ${batchDuplicateCommitResponse.status}`
+    );
+    const batchDuplicateCommitJson = (await batchDuplicateCommitResponse.json()) as {
+      committedRows: number;
+      summary: { newRows: number; duplicateRows: number };
+    };
+    assert(
+      batchDuplicateCommitJson.committedRows === 1,
+      "Expected intra-file duplicate commit to insert only one row"
+    );
+    assert(
+      batchDuplicateCommitJson.summary.newRows === 1 &&
+        batchDuplicateCommitJson.summary.duplicateRows === 1,
+      "Expected commit summary to stay aligned with intra-file duplicate preview"
+    );
+    console.log("PASS import intra-file duplicate commit alignment");
+
     const conflictResponse = await request("/api/import/preview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

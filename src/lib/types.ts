@@ -4,6 +4,7 @@ export type TransactionType = "income" | "expense" | "transfer";
 export interface Transaction {
   id: string;
   date: string; // ISO date string
+  time?: string; // HH:MM local time when available
   amount: number;
   category: string;
   subcategory?: string;

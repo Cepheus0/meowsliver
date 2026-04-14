@@ -23,6 +23,7 @@ export const MEOWJOT_COLUMNS = [
   "แท็ก",
   "จำนวน",
   "โน้ต",
+  "โน๊ต",
   "ช่องทางจ่าย",
   "จ่ายจาก",
   "ธนาคารผู้รับ",
@@ -146,7 +147,7 @@ export function detectMeowjotFormat(columns: string[]): {
   autoMapping.category = findCol(["หมวดหมู่", "category", "Category", "หมวด"]);
   autoMapping.tag = findCol(["แท็ก", "tag", "Tag"]);
   autoMapping.amount = findCol(["จำนวน", "amount", "Amount", "จำนวนเงิน"]);
-  autoMapping.note = findCol(["โน้ต", "note", "Note", "หมายเหตุ"]);
+  autoMapping.note = findCol(["โน้ต", "โน๊ต", "note", "Note", "หมายเหตุ"]);
   autoMapping.paymentChannel = findCol(["ช่องทางจ่าย", "payment", "Payment"]);
   autoMapping.payFrom = findCol(["จ่ายจาก", "payFrom", "from"]);
   autoMapping.recipientBank = findCol(["ธนาคารผู้รับ", "bank"]);
@@ -159,35 +160,99 @@ export function detectMeowjotFormat(columns: string[]): {
  * Convert a date string from เหมียวจด format (DD/MM/YYYY) to ISO (YYYY-MM-DD).
  * Also handles YYYY-MM-DD if already in that format.
  */
+function normalizeYear(year: string): number {
+  if (year.length === 4) {
+    return Number.parseInt(year, 10);
+  }
+
+  const twoDigitYear = Number.parseInt(year, 10);
+  return twoDigitYear >= 70 ? 1900 + twoDigitYear : 2000 + twoDigitYear;
+}
+
+function buildIsoDate(day: string, month: string, year: string): string | null {
+  const isoYear = normalizeYear(year);
+  const isoMonth = Number.parseInt(month, 10);
+  const isoDay = Number.parseInt(day, 10);
+
+  if (
+    !Number.isInteger(isoYear) ||
+    !Number.isInteger(isoMonth) ||
+    !Number.isInteger(isoDay) ||
+    isoMonth < 1 ||
+    isoMonth > 12 ||
+    isoDay < 1 ||
+    isoDay > 31
+  ) {
+    return null;
+  }
+
+  const date = new Date(Date.UTC(isoYear, isoMonth - 1, isoDay));
+  if (
+    date.getUTCFullYear() !== isoYear ||
+    date.getUTCMonth() !== isoMonth - 1 ||
+    date.getUTCDate() !== isoDay
+  ) {
+    return null;
+  }
+
+  return `${isoYear}-${String(isoMonth).padStart(2, "0")}-${String(isoDay).padStart(2, "0")}`;
+}
+
 export function normalizeDate(dateStr: string): string {
-  if (!dateStr) return "";
+  const trimmed = dateStr.trim();
+  if (!trimmed) return "";
 
   // Already ISO format
-  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
-    return dateStr.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+    return trimmed.slice(0, 10);
   }
 
-  // DD/MM/YYYY format (common in Thai exports)
-  const slashMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  // Day-first formats from Thai exports, including xlsx-normalized short years like 1/4/26.
+  const slashMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
   if (slashMatch) {
     const [, day, month, year] = slashMatch;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    return buildIsoDate(day, month, year) ?? trimmed;
   }
 
-  // DD-MM-YYYY format
-  const dashMatch = dateStr.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  const dashMatch = trimmed.match(/^(\d{1,2})-(\d{1,2})-(\d{2}|\d{4})$/);
   if (dashMatch) {
     const [, day, month, year] = dashMatch;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    return buildIsoDate(day, month, year) ?? trimmed;
   }
 
-  // Fallback: try native Date parsing
-  const parsed = new Date(dateStr);
-  if (!isNaN(parsed.getTime())) {
+  // Fallback only for unambiguous, non day-first strings.
+  const parsed = new Date(trimmed);
+  if (!Number.isNaN(parsed.getTime())) {
     return parsed.toISOString().slice(0, 10);
   }
 
-  return dateStr;
+  return trimmed;
+}
+
+export function normalizeTime(timeStr: string): string {
+  const trimmed = timeStr.trim();
+  if (!trimmed) return "";
+
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!match) {
+    return trimmed;
+  }
+
+  const [, hours, minutes] = match;
+  const hourNumber = Number.parseInt(hours, 10);
+  const minuteNumber = Number.parseInt(minutes, 10);
+  if (
+    !Number.isInteger(hourNumber) ||
+    !Number.isInteger(minuteNumber) ||
+    hourNumber < 0 ||
+    hourNumber > 23 ||
+    minuteNumber < 0 ||
+    minuteNumber > 59
+  ) {
+    return trimmed;
+  }
+
+  return `${String(hourNumber).padStart(2, "0")}:${String(minuteNumber).padStart(2, "0")}`;
 }
 
 /**

@@ -21,11 +21,7 @@ export function TransactionsHydrator() {
   }, []);
 
   useEffect(() => {
-    if (
-      !storeHydrated ||
-      hasAttemptedDbHydration.current ||
-      importedTransactions.length > 0
-    ) {
+    if (!storeHydrated || hasAttemptedDbHydration.current) {
       return;
     }
 
@@ -41,7 +37,7 @@ export function TransactionsHydrator() {
         return (await response.json()) as { transactions: Transaction[] };
       })
       .then((data) => {
-        if (!isCancelled && data.transactions.length > 0) {
+        if (!isCancelled) {
           replaceImportedTransactions(data.transactions);
         }
       })
@@ -52,7 +48,7 @@ export function TransactionsHydrator() {
     return () => {
       isCancelled = true;
     };
-  }, [storeHydrated, importedTransactions.length, replaceImportedTransactions]);
+  }, [storeHydrated, replaceImportedTransactions]);
 
   return null;
 }

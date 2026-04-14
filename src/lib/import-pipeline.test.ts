@@ -13,7 +13,7 @@ const mapping: ColumnMapping = {
   category: "หมวดหมู่",
   tag: "แท็ก",
   amount: "จำนวน",
-  note: "โน้ต",
+  note: "โน๊ต",
   paymentChannel: "ช่องทางจ่าย",
   payFrom: "จ่ายจาก",
   recipientBank: "ธนาคารผู้รับ",
@@ -56,6 +56,7 @@ describe("import-pipeline", () => {
     expect(prepared).toHaveLength(2);
     expect(prepared[0].normalized).toMatchObject({
       date: "2026-04-08",
+      time: "09:00",
       amount: 120,
       type: "expense",
       category: "อาหาร",
@@ -71,6 +72,7 @@ describe("import-pipeline", () => {
     const transaction = buildTransactionFromNormalized(
       {
         date: "2026-04-08",
+        time: "09:00",
         amount: 120,
         type: "expense",
         category: "อาหาร",
@@ -83,6 +85,7 @@ describe("import-pipeline", () => {
     );
 
     expect(transaction.id).toBe("preview-7");
+    expect(transaction.time).toBe("09:00");
     expect(transaction.note).toBe("กาแฟ | Cafe A");
     expect(transaction.subcategory).toBe("PromptPay — KBank");
   });
