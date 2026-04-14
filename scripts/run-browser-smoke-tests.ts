@@ -5,7 +5,7 @@ import { Client } from "pg";
 import { chromium } from "playwright-core";
 
 const appUrl = process.env.APP_URL ?? "http://localhost:3000";
-const currentYear = new Date().getFullYear();
+const browserTestYear = 2030;
 const outputDir = path.join(process.cwd(), "output", "playwright");
 const screenshotPath = path.join(outputDir, "transactions-browser-smoke.png");
 const databaseUrl =
@@ -23,13 +23,13 @@ function buildPersistedState() {
     state: {
       importedTransactions: Array.from({ length: 130 }, (_, index) => ({
         id: `browser-smoke-stale-${index + 1}`,
-        date: `${currentYear}-03-${String((index % 28) + 1).padStart(2, "0")}`,
+        date: `${browserTestYear}-03-${String((index % 28) + 1).padStart(2, "0")}`,
         amount: 1000 + index,
         category: index % 2 === 0 ? "อาหาร" : "เดินทาง",
         type: index % 5 === 0 ? "income" : "expense",
         note: `Stale browser smoke transaction ${index + 1}`,
       })),
-      selectedYear: currentYear,
+      selectedYear: browserTestYear,
       sidebarCollapsed: false,
     },
     version: 0,
@@ -47,6 +47,8 @@ async function seedTransactions() {
 
     for (let index = 0; index < 60; index += 1) {
       const amount = 500 + index;
+      const type =
+        index % 10 === 0 ? "transfer" : index % 6 === 0 ? "income" : "expense";
       await client.query(
         `INSERT INTO transactions (
           transaction_date,
@@ -58,10 +60,10 @@ async function seedTransactions() {
           source
         ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
-          `${currentYear}-04-${String((index % 28) + 1).padStart(2, "0")}`,
+          `${browserTestYear}-04-${String((index % 28) + 1).padStart(2, "0")}`,
           amount * 100,
-          index % 6 === 0 ? "income" : "expense",
-          index % 2 === 0 ? "อาหาร" : "เดินทาง",
+          type,
+          type === "transfer" ? "ย้ายเงิน" : index % 2 === 0 ? "อาหาร" : "เดินทาง",
           `${smokeTag} transaction ${index + 1}`,
           `${smokeTag}-${index + 1}`,
           "manual",
@@ -178,6 +180,23 @@ async function main() {
     assert(
       (await tableRows.count()) === 50,
       "Expected /transactions to default to 50 rows per page"
+    );
+
+    await page.getByRole("button", { name: "ย้ายเงิน" }).click();
+    assert(
+      (await tableRows.count()) === 6,
+      "Expected transfer filter to show only transfer rows"
+    );
+    const transferFilterText = await page.textContent("body");
+    assert(
+      transferFilterText?.includes("จาก 6 รายการ"),
+      "Expected transfer filter summary to show the transfer row count"
+    );
+
+    await page.getByRole("button", { name: "ทั้งหมด" }).click();
+    assert(
+      (await tableRows.count()) === 50,
+      "Expected returning to all transactions to restore the default paginated row count"
     );
 
     await page.getByRole("button", { name: "25" }).click();

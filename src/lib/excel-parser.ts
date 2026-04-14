@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import type { TransactionType } from "@/lib/types";
 
 /** Raw row parsed from Excel/CSV — values are all strings */
 export type RawRow = Record<string, string>;
@@ -257,13 +258,13 @@ export function normalizeTime(timeStr: string): string {
 
 /**
  * Determine transaction type from เหมียวจด's ประเภท column and/or amount sign.
- * เหมียวจด uses: "รายจ่าย" (expense), "รายรับ" (income)
- * Amount is negative for expenses, positive for income.
+ * เหมียวจด uses: "รายจ่าย" (expense), "รายรับ" (income), "ย้ายเงิน" (transfer)
+ * Amount sign is only used as a fallback for income/expense when the type label is absent.
  */
 export function resolveTransactionType(
   typeStr: string,
   amount: number
-): "income" | "expense" {
+): TransactionType {
   const normalized = typeStr.trim().toLowerCase();
 
   if (normalized.includes("รายรับ") || normalized.includes("income")) {
@@ -271,6 +272,9 @@ export function resolveTransactionType(
   }
   if (normalized.includes("รายจ่าย") || normalized.includes("expense")) {
     return "expense";
+  }
+  if (normalized.includes("ย้ายเงิน") || normalized.includes("transfer")) {
+    return "transfer";
   }
 
   // Fallback: use amount sign

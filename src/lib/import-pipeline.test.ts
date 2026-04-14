@@ -89,4 +89,35 @@ describe("import-pipeline", () => {
     expect(transaction.note).toBe("กาแฟ | Cafe A");
     expect(transaction.subcategory).toBe("PromptPay — KBank");
   });
+
+  it("falls back to transfer defaults when the source row is money movement", () => {
+    const rows: RawRow[] = [
+      {
+        วันที่: "09/04/2026",
+        เวลา: "12:30",
+        ประเภท: "ย้ายเงิน",
+        หมวดหมู่: "",
+        แท็ก: "",
+        จำนวน: "3000",
+        โน้ต: "",
+        ช่องทางจ่าย: "บัญชี",
+        จ่ายจาก: "ไทยพาณิชย์",
+        ธนาคารผู้รับ: "",
+        ผู้รับ: "WORAVEE C",
+      },
+    ];
+
+    const prepared = prepareImportRows(rows, mapping);
+
+    expect(prepared[0].normalized).toMatchObject({
+      date: "2026-04-09",
+      time: "12:30",
+      amount: 3000,
+      type: "transfer",
+      category: "ย้ายเงิน",
+      paymentChannel: "บัญชี",
+      payFrom: "ไทยพาณิชย์",
+      recipient: "WORAVEE C",
+    });
+  });
 });

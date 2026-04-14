@@ -71,4 +71,52 @@ describe("import-preview", () => {
       })
     );
   });
+
+  it("counts transfer rows separately without classifying them as income or expense", () => {
+    const preparedRows: PreparedImportRow[] = [
+      {
+        rowNumber: 12,
+        rawRow: {
+          วันที่: "09/02/2026",
+          เวลา: "12:07",
+          ประเภท: "ย้ายเงิน",
+          จำนวน: "90000",
+          ผู้รับ: "MR. WORAVEE C",
+        },
+        normalized: {
+          date: "2026-02-09",
+          time: "12:07",
+          amount: 90000,
+          type: "transfer",
+          category: "ย้ายเงิน",
+          paymentChannel: "บัญชี",
+          payFrom: "ไทยพาณิชย์",
+          recipient: "MR. WORAVEE C",
+        },
+      },
+    ];
+
+    const result = buildImportPreviewResult(preparedRows, []);
+
+    expect(result.summary).toMatchObject({
+      readyRows: 1,
+      incomeRows: 0,
+      expenseRows: 0,
+      transferRows: 1,
+      newRows: 1,
+      totalIncome: 0,
+      totalExpense: 0,
+      totalTransfer: 90000,
+    });
+    expect(result.previewRows[0]).toEqual(
+      expect.objectContaining({
+        rowNumber: 12,
+        previewStatus: "new",
+        transaction: expect.objectContaining({
+          type: "transfer",
+          category: "ย้ายเงิน",
+        }),
+      })
+    );
+  });
 });

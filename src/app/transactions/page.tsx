@@ -4,12 +4,17 @@ import { useMemo, useState } from "react";
 import { useFinanceStore } from "@/store/finance-store";
 import { useFinanceStoreHydrated } from "@/store/use-finance-store-hydrated";
 import { formatBaht } from "@/lib/utils";
+import {
+  getTransactionAmountPrefix,
+  getTransactionTypeLabel,
+} from "@/lib/transaction-presentation";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import {
   Search,
   Filter,
   ArrowUpRight,
   ArrowDownRight,
+  ArrowRightLeft,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -27,7 +32,9 @@ export default function TransactionsPage() {
   );
 
   const [search, setSearch] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
+  const [filterType, setFilterType] = useState<"all" | "income" | "expense" | "transfer">(
+    "all"
+  );
   const [pageSize, setPageSize] = useState<(typeof PAGE_SIZE_OPTIONS)[number]>(50);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -103,7 +110,7 @@ export default function TransactionsPage() {
             </div>
             <div className="flex items-center gap-1 rounded-xl bg-[color:var(--app-surface-soft)] p-1">
               <Filter size={14} className="ml-2 text-zinc-400" />
-              {(["all", "income", "expense"] as const).map((type) => (
+              {(["all", "income", "expense", "transfer"] as const).map((type) => (
                 <button
                   key={type}
                   onClick={() => {
@@ -116,7 +123,7 @@ export default function TransactionsPage() {
                       : "text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
                   }`}
                 >
-                  {type === "all" ? "ทั้งหมด" : type === "income" ? "รายรับ" : "รายจ่าย"}
+                  {type === "all" ? "ทั้งหมด" : getTransactionTypeLabel(type)}
                 </button>
               ))}
             </div>
@@ -163,6 +170,8 @@ export default function TransactionsPage() {
                         <span className="inline-flex items-center gap-1.5 text-zinc-700 dark:text-zinc-200">
                           {tx.type === "income" ? (
                             <ArrowUpRight size={14} className="text-emerald-500" />
+                          ) : tx.type === "transfer" ? (
+                            <ArrowRightLeft size={14} className="text-sky-500" />
                           ) : (
                             <ArrowDownRight size={14} className="text-red-500" />
                           )}
@@ -176,10 +185,12 @@ export default function TransactionsPage() {
                         className={`whitespace-nowrap py-2.5 pr-4 text-right font-medium ${
                           tx.type === "income"
                             ? "text-emerald-600 dark:text-emerald-400"
+                            : tx.type === "transfer"
+                              ? "text-sky-600 dark:text-sky-400"
                             : "text-red-500"
                         }`}
                       >
-                        {tx.type === "income" ? "+" : "-"}
+                        {getTransactionAmountPrefix(tx.type)}
                         {formatBaht(tx.amount)}
                       </td>
                     </tr>

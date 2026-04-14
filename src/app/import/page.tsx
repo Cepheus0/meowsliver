@@ -33,6 +33,10 @@ import {
   type ImportPreviewRow,
   type ImportPreviewSummary,
 } from "@/lib/import-pipeline";
+import {
+  getTransactionAmountPrefix,
+  getTransactionTypeLabel,
+} from "@/lib/transaction-presentation";
 
 type ImportStep = "upload" | "mapping" | "preview" | "done";
 
@@ -47,13 +51,34 @@ const EMPTY_IMPORT_STATS: ImportStats = {
   readyRows: 0,
   incomeRows: 0,
   expenseRows: 0,
+  transferRows: 0,
   newRows: 0,
   duplicateRows: 0,
   conflictRows: 0,
   skippedRows: 0,
   totalIncome: 0,
   totalExpense: 0,
+  totalTransfer: 0,
   committedRows: 0,
+};
+
+const TRANSACTION_TYPE_BADGE_CLASS: Record<
+  "income" | "expense" | "transfer",
+  string
+> = {
+  income:
+    "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
+  expense: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400",
+  transfer: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400",
+};
+
+const TRANSACTION_TYPE_AMOUNT_CLASS: Record<
+  "income" | "expense" | "transfer",
+  string
+> = {
+  income: "text-emerald-600 dark:text-emerald-400",
+  expense: "text-red-500",
+  transfer: "text-sky-600 dark:text-sky-400",
 };
 
 const PREVIEW_STATUS_META: Record<
@@ -91,8 +116,18 @@ const MAPPING_FIELDS: {
 }[] = [
   { key: "date", label: "วันที่", required: true, description: "คอลัมน์วันที่ของรายการ" },
   { key: "time", label: "เวลา", required: false, description: "เวลาในแต่ละรายการ (ถ้ามี)" },
-  { key: "amount", label: "จำนวนเงิน", required: true, description: "จำนวนเงินรายการ (ติดลบ = รายจ่าย)" },
-  { key: "type", label: "ประเภท", required: false, description: "รายรับ / รายจ่าย (ถ้าไม่มี จะดูจากเครื่องหมาย +/-)" },
+  {
+    key: "amount",
+    label: "จำนวนเงิน",
+    required: true,
+    description: "จำนวนเงินรายการ (ติดลบ = รายจ่าย, บวก = รายรับ, ย้ายเงินควรมีคอลัมน์ประเภท)"
+  },
+  {
+    key: "type",
+    label: "ประเภท",
+    required: false,
+    description: "รายรับ / รายจ่าย / ย้ายเงิน (ถ้าไม่มี จะดูจากเครื่องหมาย +/- เฉพาะรายรับและรายจ่าย)"
+  },
   { key: "category", label: "หมวดหมู่", required: false, description: "หมวดหมู่ เช่น อาหาร, ช้อปปิ้ง" },
   { key: "note", label: "โน้ต / หมายเหตุ", required: false, description: "รายละเอียดเพิ่มเติม" },
   { key: "paymentChannel", label: "ช่องทางจ่าย", required: false, description: "บัตรเครดิต, บัญชี, เงินสด" },
@@ -637,7 +672,7 @@ export default function ImportPage() {
       {step === "preview" && (
         <>
           {/* Import summary cards */}
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-8">
             <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
               <p className="text-xs text-[color:var(--app-text-muted)]">พร้อมตรวจสอบ</p>
               <p className="mt-1 text-2xl font-bold text-[color:var(--app-text)]">
@@ -683,12 +718,25 @@ export default function ImportPage() {
               </p>
             </div>
             <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
+              <p className="text-xs text-[color:var(--app-text-muted)]">
+                ย้ายเงิน ({importStats.transferRows})
+              </p>
+              <p className="mt-1 text-2xl font-bold text-sky-600 dark:text-sky-400">
+                {formatBaht(importStats.totalTransfer)}
+              </p>
+            </div>
+            <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
               <p className="text-xs text-[color:var(--app-text-muted)]">ข้ามรายการ</p>
               <p className="mt-1 text-2xl font-bold text-amber-500">
                 {importStats.skippedRows}
               </p>
             </div>
           </div>
+          {importStats.transferRows > 0 && (
+            <p className="text-sm text-sky-700 dark:text-sky-300">
+              รายการประเภท “ย้ายเงิน” จะถูกบันทึกไว้เพื่อใช้ตามรอยการเคลื่อนเงิน แต่จะไม่ถูกรวมเป็นรายรับหรือรายจ่ายใน dashboard และ reports
+            </p>
+          )}
 
           {/* Preview table */}
           <Card>
@@ -753,12 +801,10 @@ export default function ImportPage() {
                             <span
                               className={cn(
                                 "inline-block rounded-md px-2 py-0.5 text-xs font-medium",
-                                tx.type === "income"
-                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
-                                  : "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                                TRANSACTION_TYPE_BADGE_CLASS[tx.type]
                               )}
                             >
-                              {tx.type === "income" ? "รายรับ" : "รายจ่าย"}
+                              {getTransactionTypeLabel(tx.type)}
                             </span>
                           ) : (
                             <span className="text-xs text-zinc-400">-</span>
@@ -770,15 +816,13 @@ export default function ImportPage() {
                         <td
                           className={cn(
                             "whitespace-nowrap py-2 pr-3 text-right font-medium",
-                            tx?.type === "income"
-                              ? "text-emerald-600 dark:text-emerald-400"
-                              : "text-red-500",
+                            tx && TRANSACTION_TYPE_AMOUNT_CLASS[tx.type],
                             !tx && "text-zinc-400"
                           )}
                         >
                           {tx ? (
                             <>
-                              {tx.type === "income" ? "+" : "-"}
+                              {getTransactionAmountPrefix(tx.type)}
                               {formatBaht(tx.amount)}
                             </>
                           ) : (
@@ -880,7 +924,7 @@ export default function ImportPage() {
             </div>
           </div>
 
-          <div className="mx-auto mt-4 grid max-w-md grid-cols-2 gap-4">
+          <div className="mx-auto mt-4 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-zinc-900">
               <p className="text-xs text-[color:var(--app-text-muted)]">
                 รายรับ ({importStats.incomeRows})
@@ -897,13 +941,28 @@ export default function ImportPage() {
                 {formatBaht(importStats.totalExpense)}
               </p>
             </div>
+            <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-zinc-900">
+              <p className="text-xs text-[color:var(--app-text-muted)]">
+                ย้ายเงิน ({importStats.transferRows})
+              </p>
+              <p className="mt-1 text-lg font-bold text-sky-600 dark:text-sky-400">
+                {formatBaht(importStats.totalTransfer)}
+              </p>
+            </div>
           </div>
 
-          {(importStats.duplicateRows > 0 || importStats.conflictRows > 0) && (
-            <p className="mx-auto mt-3 max-w-2xl text-xs text-amber-600 dark:text-amber-400">
-              ระบบกันรายการซ้ำและรายการที่ใกล้เคียงออกจากการเพิ่มอัตโนมัติแล้ว เพื่อป้องกันข้อมูลซ้ำใน dashboard
-            </p>
-          )}
+          <div className="mx-auto mt-3 max-w-2xl space-y-2">
+            {(importStats.duplicateRows > 0 || importStats.conflictRows > 0) && (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                ระบบกันรายการซ้ำและรายการที่ใกล้เคียงออกจากการเพิ่มอัตโนมัติแล้ว เพื่อป้องกันข้อมูลซ้ำใน dashboard
+              </p>
+            )}
+            {importStats.transferRows > 0 && (
+              <p className="text-xs text-sky-700 dark:text-sky-300">
+                รายการ “ย้ายเงิน” ถูกบันทึกไว้แยกต่างหากและจะไม่ถูกรวมในตัวเลขรายรับหรือรายจ่าย
+              </p>
+            )}
+          </div>
 
           <div className="mt-6 flex justify-center gap-3">
             <Button variant="secondary" onClick={resetWizard}>

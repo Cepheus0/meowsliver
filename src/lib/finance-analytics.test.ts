@@ -44,14 +44,21 @@ const transactions: Transaction[] = [
     category: "เดินทาง",
     type: "expense",
   },
+  {
+    id: "6",
+    date: "2026-02-12",
+    amount: 15000,
+    category: "ย้ายเงิน",
+    type: "transfer",
+  },
 ];
 
 describe("finance-analytics", () => {
   it("filters and sorts transactions by selected year", () => {
     const result = getTransactionsForYear(transactions, 2026);
 
-    expect(result).toHaveLength(3);
-    expect(result.map((item) => item.id)).toEqual(["5", "4", "3"]);
+    expect(result).toHaveLength(4);
+    expect(result.map((item) => item.id)).toEqual(["6", "5", "4", "3"]);
   });
 
   it("calculates monthly cashflow for a given year", () => {
@@ -115,6 +122,23 @@ describe("finance-analytics", () => {
       month: "ธ.ค.",
       netWorth: 84000,
       monthlyNet: 0,
+    });
+  });
+
+  it("ignores transfer rows when calculating cashflow-style metrics", () => {
+    const monthly = getMonthlyCashflowFromTransactions(transactions, 2026);
+    const yearly = getYearlySummariesFromTransactions(transactions);
+
+    expect(monthly[1]).toMatchObject({
+      income: 0,
+      expense: 2000,
+      net: -2000,
+    });
+    expect(yearly[1]).toMatchObject({
+      year: 2026,
+      totalIncome: 52000,
+      totalExpense: 6000,
+      netCashflow: 46000,
     });
   });
 });

@@ -1,5 +1,6 @@
 import type { ColumnMapping, RawRow } from "@/lib/excel-parser";
 import { normalizeDate, normalizeTime, resolveTransactionType } from "@/lib/excel-parser";
+import { getTransactionDefaultCategory } from "@/lib/transaction-presentation";
 import type { Transaction, TransactionType } from "@/lib/types";
 
 export type ImportPreviewStatus = "new" | "duplicate" | "conflict" | "skipped";
@@ -38,12 +39,14 @@ export interface ImportPreviewSummary {
   readyRows: number;
   incomeRows: number;
   expenseRows: number;
+  transferRows: number;
   newRows: number;
   duplicateRows: number;
   conflictRows: number;
   skippedRows: number;
   totalIncome: number;
   totalExpense: number;
+  totalTransfer: number;
 }
 
 export interface ImportPreviewRequest {
@@ -168,7 +171,7 @@ export function prepareImportRows(
         time: time || undefined,
         amount: Math.abs(amount),
         type,
-        category: category || (type === "income" ? "รายรับ" : "รายจ่าย"),
+        category: category || getTransactionDefaultCategory(type),
         subcategory: [paymentChannel, payFrom].filter(Boolean).join(" — ") || undefined,
         note,
         paymentChannel,

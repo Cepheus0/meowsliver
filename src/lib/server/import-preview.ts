@@ -51,12 +51,14 @@ export function buildImportPreviewResult(
   let readyRows = 0;
   let incomeRows = 0;
   let expenseRows = 0;
+  let transferRows = 0;
   let newRows = 0;
   let duplicateRows = 0;
   let conflictRows = 0;
   let skippedRows = 0;
   let totalIncome = 0;
   let totalExpense = 0;
+  let totalTransfer = 0;
 
   for (const row of rows) {
     if (!row.normalized) {
@@ -82,6 +84,9 @@ export function buildImportPreviewResult(
     } else if (row.normalized.type === "expense") {
       expenseRows += 1;
       totalExpense += row.normalized.amount;
+    } else {
+      transferRows += 1;
+      totalTransfer += row.normalized.amount;
     }
 
     const fingerprint = buildTransactionFingerprint(row.normalized);
@@ -143,12 +148,14 @@ export function buildImportPreviewResult(
       readyRows,
       incomeRows,
       expenseRows,
+      transferRows,
       newRows,
       duplicateRows,
       conflictRows,
       skippedRows,
       totalIncome,
       totalExpense,
+      totalTransfer,
     },
     previewRows,
     stagedRows,

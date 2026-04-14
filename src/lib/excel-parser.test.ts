@@ -48,6 +48,8 @@ describe("excel-parser", () => {
   it("resolves transaction type from labels before falling back to amount sign", () => {
     expect(resolveTransactionType("รายรับ", -500)).toBe("income");
     expect(resolveTransactionType("expense", 500)).toBe("expense");
+    expect(resolveTransactionType("ย้ายเงิน", 500)).toBe("transfer");
+    expect(resolveTransactionType("transfer", -500)).toBe("transfer");
     expect(resolveTransactionType("", 20)).toBe("income");
     expect(resolveTransactionType("", -20)).toBe("expense");
   });

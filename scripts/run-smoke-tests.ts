@@ -241,6 +241,102 @@ async function main() {
     );
     console.log("PASS import duplicate detection");
 
+    const transferPreviewRows = [
+      {
+        rowNumber: 1,
+        rawRow: {
+          วันที่: "2030-01-18",
+          เวลา: "14:15",
+          ประเภท: "ย้ายเงิน",
+          จำนวน: "2500",
+          ผู้รับ: `${smokeTag} self`,
+        },
+        normalized: {
+          date: "2030-01-18",
+          time: "14:15",
+          amount: 2500,
+          type: "transfer",
+          category: "ย้ายเงิน",
+          note: `${smokeTag} transfer`,
+          recipient: `${smokeTag} self`,
+          paymentChannel: "บัญชี",
+          payFrom: "ไทยพาณิชย์",
+        },
+      },
+    ];
+
+    const transferPreviewResponse = await request("/api/import/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: `${smokeTag}-transfer.csv`,
+        mode: "append",
+        rows: transferPreviewRows,
+      }),
+    });
+    assert(
+      transferPreviewResponse.ok,
+      `Expected transfer preview to pass, received ${transferPreviewResponse.status}`
+    );
+    const transferPreviewJson = (await transferPreviewResponse.json()) as {
+      importRunId: number;
+      summary: {
+        newRows: number;
+        incomeRows: number;
+        expenseRows: number;
+        transferRows: number;
+        totalTransfer: number;
+      };
+    };
+    createdImportRunIds.push(transferPreviewJson.importRunId);
+    assert(
+      transferPreviewJson.summary.newRows === 1,
+      "Expected transfer preview to stage one new row"
+    );
+    assert(
+      transferPreviewJson.summary.transferRows === 1 &&
+        transferPreviewJson.summary.incomeRows === 0 &&
+        transferPreviewJson.summary.expenseRows === 0 &&
+        transferPreviewJson.summary.totalTransfer === 2500,
+      "Expected transfer preview to classify transfer rows separately"
+    );
+    console.log("PASS import transfer preview");
+
+    const transferCommitResponse = await request("/api/import/commit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        importRunId: transferPreviewJson.importRunId,
+      }),
+    });
+    assert(
+      transferCommitResponse.ok,
+      `Expected transfer commit to pass, received ${transferCommitResponse.status}`
+    );
+    const transferCommitJson = (await transferCommitResponse.json()) as {
+      committedRows: number;
+      summary: { transferRows: number; totalTransfer: number };
+      transactions: Array<{ type: string; note?: string }>;
+    };
+    assert(
+      transferCommitJson.committedRows === 1,
+      "Expected transfer commit to insert one transfer row"
+    );
+    assert(
+      transferCommitJson.summary.transferRows === 1 &&
+        transferCommitJson.summary.totalTransfer === 2500,
+      "Expected transfer commit summary to preserve transfer totals"
+    );
+    assert(
+      transferCommitJson.transactions.some(
+        (transaction) =>
+          transaction.type === "transfer" &&
+          transaction.note?.includes(`${smokeTag} transfer`)
+      ),
+      "Expected committed transfer transaction to be returned"
+    );
+    console.log("PASS import transfer commit");
+
     const batchDuplicateRows = [
       {
         rowNumber: 1,

@@ -129,12 +129,14 @@ export async function POST(request: Request) {
       readyRows: metadata.readyRows ?? 0,
       incomeRows: metadata.incomeRows ?? 0,
       expenseRows: metadata.expenseRows ?? 0,
+      transferRows: metadata.transferRows ?? 0,
       newRows: adjustedNewRows,
       duplicateRows: adjustedDuplicateRows,
       conflictRows: importRun.conflictRows,
       skippedRows: importRun.skippedRows,
       totalIncome: metadata.totalIncome ?? 0,
       totalExpense: metadata.totalExpense ?? 0,
+      totalTransfer: metadata.totalTransfer ?? 0,
     };
 
     const response: ImportCommitResponse = {

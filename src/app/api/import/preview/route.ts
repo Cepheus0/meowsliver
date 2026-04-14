@@ -61,8 +61,10 @@ export async function POST(request: Request) {
           readyRows: summary.readyRows,
           incomeRows: summary.incomeRows,
           expenseRows: summary.expenseRows,
+          transferRows: summary.transferRows,
           totalIncome: summary.totalIncome,
           totalExpense: summary.totalExpense,
+          totalTransfer: summary.totalTransfer,
         },
       })
       .returning({ id: importRuns.id });
