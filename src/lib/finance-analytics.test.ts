@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getExpenseBreakdownFromTransactions,
   getMonthlyCashflowFromTransactions,
+  getMonthlyNetWorthTrendFromTransactions,
   getTransactionsForYear,
   getYearlySummariesFromTransactions,
 } from "@/lib/finance-analytics";
@@ -95,5 +96,25 @@ describe("finance-analytics", () => {
       expect.objectContaining({ name: "อาหาร", value: 4000 }),
       expect.objectContaining({ name: "เดินทาง", value: 2000 }),
     ]);
+  });
+
+  it("builds monthly net worth trend data with opening balance from prior years", () => {
+    const result = getMonthlyNetWorthTrendFromTransactions(transactions, 2026);
+
+    expect(result[0]).toMatchObject({
+      month: "ม.ค.",
+      netWorth: 86000,
+      monthlyNet: 48000,
+    });
+    expect(result[1]).toMatchObject({
+      month: "ก.พ.",
+      netWorth: 84000,
+      monthlyNet: -2000,
+    });
+    expect(result[11]).toMatchObject({
+      month: "ธ.ค.",
+      netWorth: 84000,
+      monthlyNet: 0,
+    });
   });
 });

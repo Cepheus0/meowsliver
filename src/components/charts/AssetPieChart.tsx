@@ -5,14 +5,13 @@ import {
   PieChart,
   Pie,
   Cell,
-  ResponsiveContainer,
   Tooltip,
 } from "recharts";
 import { useFinanceStore } from "@/store/finance-store";
 import { formatBaht } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Landmark } from "lucide-react";
-import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
+import { ChartViewport } from "@/components/charts/ChartViewport";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { chartTheme } from "@/lib/chart-theme";
 
@@ -75,9 +74,9 @@ export function AssetPieChart() {
       </div>
 
       {/* Pie Chart */}
-      <ClientOnlyChart className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+      <ChartViewport className="h-80">
+        {({ width, height }) => (
+          <PieChart width={width} height={height}>
             <Pie
               data={pieData}
               cx="50%"
@@ -87,6 +86,7 @@ export function AssetPieChart() {
               paddingAngle={2}
               dataKey="value"
               nameKey="label"
+              isAnimationActive={false}
               onMouseEnter={(_, index) =>
                 setHoveredItem(pieData[index]?.label ?? null)
               }
@@ -113,8 +113,8 @@ export function AssetPieChart() {
               contentStyle={chartTheme.tooltipStyle}
             />
           </PieChart>
-        </ResponsiveContainer>
-      </ClientOnlyChart>
+        )}
+      </ChartViewport>
 
       {/* Legend */}
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">

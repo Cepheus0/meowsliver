@@ -6,7 +6,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   CartesianGrid,
   Line,
   ComposedChart,
@@ -15,7 +14,7 @@ import {
 import { useFinanceStore } from "@/store/finance-store";
 import { formatBaht } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
-import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
+import { ChartViewport } from "@/components/charts/ChartViewport";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { chartTheme } from "@/lib/chart-theme";
 import { ChartColumnIncreasing, Table2 } from "lucide-react";
@@ -48,9 +47,14 @@ export function CashflowChart() {
         <CardTitle>กระแสเงินสด ปี {selectedYear}</CardTitle>
       </CardHeader>
 
-      <ClientOnlyChart className="h-72">
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+      <ChartViewport className="h-72">
+        {({ width, height }) => (
+          <ComposedChart
+            width={width}
+            height={height}
+            data={data}
+            margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+          >
             <CartesianGrid
               strokeDasharray="3 3"
               stroke={chartTheme.grid}
@@ -96,8 +100,8 @@ export function CashflowChart() {
               dot={{ fill: "#3b82f6", r: 3 }}
             />
           </ComposedChart>
-        </ResponsiveContainer>
-      </ClientOnlyChart>
+        )}
+      </ChartViewport>
     </Card>
   );
 }

@@ -4,20 +4,20 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useMounted } from "@/lib/use-mounted";
 
-interface ClientOnlyChartProps {
-  children: ReactNode;
+interface ChartViewportProps {
+  children: (size: { width: number; height: number }) => ReactNode;
   className?: string;
   fallbackClassName?: string;
 }
 
-export function ClientOnlyChart({
+export function ChartViewport({
   children,
   className,
   fallbackClassName,
-}: ClientOnlyChartProps) {
+}: ChartViewportProps) {
   const mounted = useMounted();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [hasMeasuredSize, setHasMeasuredSize] = useState(false);
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
 
   useEffect(() => {
     if (!mounted || !containerRef.current) {
@@ -27,10 +27,11 @@ export function ClientOnlyChart({
     const node = containerRef.current;
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        if (width > 0 && height > 0) {
-          setHasMeasuredSize(true);
-          return;
+        const nextWidth = Math.floor(entry.contentRect.width);
+        const nextHeight = Math.floor(entry.contentRect.height);
+
+        if (nextWidth > 0 && nextHeight > 0) {
+          setSize({ width: nextWidth, height: nextHeight });
         }
       }
     });
@@ -44,8 +45,8 @@ export function ClientOnlyChart({
 
   return (
     <div ref={containerRef} className={cn("min-w-0", className)}>
-      {mounted && hasMeasuredSize ? (
-        children
+      {mounted && size ? (
+        children(size)
       ) : (
         <div
           className={cn(

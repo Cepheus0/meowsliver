@@ -151,3 +151,34 @@ export function getExpenseBreakdownFromTransactions(
       color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
     }));
 }
+
+export function getMonthlyNetWorthTrendFromTransactions(
+  transactions: Transaction[],
+  year: number
+) {
+  const openingBalance = transactions
+    .filter((tx) => getTransactionYear(tx) < year)
+    .reduce((runningTotal, tx) => {
+      if (tx.type === "income") {
+        return runningTotal + tx.amount;
+      }
+      if (tx.type === "expense") {
+        return runningTotal - tx.amount;
+      }
+      return runningTotal;
+    }, 0);
+
+  const monthlyCashflow = getMonthlyCashflowFromTransactions(transactions, year);
+  let cumulativeNetWorth = openingBalance;
+
+  return monthlyCashflow.map((month) => {
+    cumulativeNetWorth += month.net;
+
+    return {
+      month: month.month,
+      monthIndex: month.monthIndex,
+      netWorth: cumulativeNetWorth,
+      monthlyNet: month.net,
+    };
+  });
+}

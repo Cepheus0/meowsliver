@@ -6,7 +6,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   CartesianGrid,
   LineChart,
   Line,
@@ -17,11 +16,28 @@ import {
 import { useFinanceStore } from "@/store/finance-store";
 import { formatBaht } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
-import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
+import { ChartViewport } from "@/components/charts/ChartViewport";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { getExpenseBreakdownFromTransactions } from "@/lib/finance-analytics";
+import {
+  getExpenseBreakdownFromTransactions,
+  getMonthlyNetWorthTrendFromTransactions,
+} from "@/lib/finance-analytics";
 import { chartTheme } from "@/lib/chart-theme";
 import { FileSpreadsheet } from "lucide-react";
+
+function formatCurrencyAxis(value: number) {
+  const absoluteValue = Math.abs(value);
+
+  if (absoluteValue >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1)}M`;
+  }
+
+  if (absoluteValue >= 1_000) {
+    return `${Math.round(value / 1_000)}k`;
+  }
+
+  return `${Math.round(value)}`;
+}
 
 export default function ReportsPage() {
   const { getYearlySummaries, getMonthlyCashflow, getTransactions, selectedYear, importedTransactions } =
@@ -31,10 +47,28 @@ export default function ReportsPage() {
   const selectedYearTransactions = getTransactions();
 
   // Net Worth over years
-  const netWorthData = summaries.map((s) => ({
-    year: String(s.year),
+  const yearlyNetWorthData = summaries.map((s) => ({
+    label: String(s.year),
     netWorth: s.netWorth,
   }));
+  const monthlyNetWorthData = getMonthlyNetWorthTrendFromTransactions(
+    importedTransactions,
+    selectedYear
+  ).map((point) => ({
+    label: point.month,
+    netWorth: point.netWorth,
+  }));
+  const shouldUseMonthlyNetWorthView =
+    summaries.length <= 1 && monthlyNetWorthData.some((point) => point.netWorth !== 0);
+  const netWorthChartData = shouldUseMonthlyNetWorthView
+    ? monthlyNetWorthData
+    : yearlyNetWorthData;
+  const netWorthChartTitle = shouldUseMonthlyNetWorthView
+    ? `ยอดสุทธิสะสมรายเดือน ปี ${selectedYear}`
+    : "ยอดสุทธิสะสมย้อนหลัง";
+  const netWorthChartDescription = shouldUseMonthlyNetWorthView
+    ? "ตอนนี้มีข้อมูลเพียงปีเดียว จึงแสดงเส้นสะสมรายเดือนของปีที่เลือกเพื่อให้เห็น momentum ภายในปี"
+    : "เปรียบเทียบยอดสุทธิสะสมข้ามปีจากธุรกรรมที่มีอยู่ในระบบ";
 
   const expenseBreakdown = getExpenseBreakdownFromTransactions(
     importedTransactions,
@@ -75,16 +109,26 @@ export default function ReportsPage() {
         {/* Net Worth Over Time */}
         <Card>
           <CardHeader>
-            <CardTitle>ยอดสุทธิสะสมย้อนหลัง</CardTitle>
+            <CardTitle>{netWorthChartTitle}</CardTitle>
           </CardHeader>
-          <ClientOnlyChart className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={netWorthData}>
+          <p className="-mt-1 mb-3 text-xs text-[color:var(--app-text-muted)]">
+            {netWorthChartDescription}
+          </p>
+          <ChartViewport className="h-64">
+            {({ width, height }) => (
+              <LineChart
+                width={width}
+                height={height}
+                data={netWorthChartData}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.3} />
-                <XAxis dataKey="year" tick={{ fontSize: 10, fill: chartTheme.axis }} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 10, fill: chartTheme.axis }}
+                />
                 <YAxis
                   tick={{ fontSize: 10, fill: chartTheme.axis }}
-                  tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`}
+                  tickFormatter={formatCurrencyAxis}
                 />
                 <Tooltip
                   formatter={(value) => formatBaht(Number(value))}
@@ -96,11 +140,11 @@ export default function ReportsPage() {
                   name="ยอดสุทธิสะสม"
                   stroke="#22c55e"
                   strokeWidth={3}
-                  dot={{ fill: "#22c55e", r: 4 }}
+                  dot={{ fill: "#22c55e", r: shouldUseMonthlyNetWorthView ? 2.5 : 4 }}
                 />
               </LineChart>
-            </ResponsiveContainer>
-          </ClientOnlyChart>
+            )}
+          </ChartViewport>
         </Card>
 
         {/* Expense Breakdown */}
@@ -117,9 +161,9 @@ export default function ReportsPage() {
             />
           ) : (
             <>
-              <ClientOnlyChart className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+            <ChartViewport className="h-64">
+                {({ width, height }) => (
+                  <PieChart width={width} height={height}>
                     <Pie
                       data={expenseBreakdown}
                       cx="50%"
@@ -129,6 +173,7 @@ export default function ReportsPage() {
                       dataKey="value"
                       nameKey="name"
                       paddingAngle={2}
+                      isAnimationActive={false}
                     >
                       {expenseBreakdown.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -139,8 +184,8 @@ export default function ReportsPage() {
                       contentStyle={chartTheme.tooltipStyle}
                     />
                   </PieChart>
-                </ResponsiveContainer>
-              </ClientOnlyChart>
+                )}
+              </ChartViewport>
               <div className="mt-2 grid grid-cols-2 gap-1.5">
                 {expenseBreakdown.map((item) => (
                   <div key={item.name} className="flex items-center gap-2 text-xs">
@@ -167,9 +212,9 @@ export default function ReportsPage() {
             <CardTitle>รายรับ vs รายจ่าย รายเดือน ปี {selectedYear}</CardTitle>
           </CardHeader>
           {hasSelectedYearData ? (
-            <ClientOnlyChart className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthly}>
+            <ChartViewport className="h-64">
+              {({ width, height }) => (
+                <BarChart width={width} height={height} data={monthly}>
                   <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.3} />
                   <XAxis dataKey="month" tick={{ fontSize: 10, fill: chartTheme.axis }} />
                   <YAxis
@@ -183,8 +228,8 @@ export default function ReportsPage() {
                   <Bar dataKey="income" name="รายรับ" fill="#22c55e" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="expense" name="รายจ่าย" fill="#ef4444" radius={[4, 4, 0, 0]} />
                 </BarChart>
-              </ResponsiveContainer>
-            </ClientOnlyChart>
+              )}
+            </ChartViewport>
           ) : (
             <EmptyState
               title={`ยังไม่มีข้อมูลปี ${selectedYear}`}
@@ -198,9 +243,9 @@ export default function ReportsPage() {
           <CardHeader>
             <CardTitle>อัตราการออม % ย้อนหลัง</CardTitle>
           </CardHeader>
-          <ClientOnlyChart className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={savingsData}>
+          <ChartViewport className="h-64">
+            {({ width, height }) => (
+              <BarChart width={width} height={height} data={savingsData}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.3} />
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: chartTheme.axis }} />
                 <YAxis tick={{ fontSize: 10, fill: chartTheme.axis }} unit="%" />
@@ -210,8 +255,8 @@ export default function ReportsPage() {
                 />
                 <Bar dataKey="rate" name="Savings Rate" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
-          </ClientOnlyChart>
+            )}
+          </ChartViewport>
         </Card>
       </div>
       )}
