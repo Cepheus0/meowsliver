@@ -109,7 +109,11 @@ export function dbTransactionToUiTransaction(row: DbTransaction) {
 
 export function normalizedRowToInsert(
   row: NormalizedImportRow,
-  importRunId: number
+  importRunId: number,
+  // Optional override — preview pipeline already computed an occurrence-aware
+  // fingerprint (e.g. "base#2") so duplicates within the same file stay distinct.
+  // Fallback to the bare field-based fingerprint for legacy callers.
+  fingerprint?: string
 ): typeof transactions.$inferInsert {
   return {
     transactionDate: row.date,
@@ -123,7 +127,7 @@ export function normalizedRowToInsert(
     payFrom: row.payFrom,
     recipient: row.recipient,
     tag: row.tag,
-    fingerprint: buildTransactionFingerprint(row),
+    fingerprint: fingerprint ?? buildTransactionFingerprint(row),
     source: "import",
     importRunId,
   };

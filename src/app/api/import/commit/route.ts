@@ -51,7 +51,11 @@ export async function POST(request: Request) {
       .map((row) =>
         normalizedRowToInsert(
           row.normalizedRow as unknown as NormalizedImportRow,
-          body.importRunId
+          body.importRunId,
+          // Use the occurrence-aware fingerprint produced by the preview pipeline
+          // so rows that are field-identical within the same file stay distinct
+          // under the unique(fingerprint) constraint.
+          row.fingerprint
         )
       );
 

@@ -3,7 +3,11 @@ import { buildImportPreviewResult } from "@/lib/server/import-preview";
 import type { PreparedImportRow } from "@/lib/import-pipeline";
 
 describe("import-preview", () => {
-  it("marks exact duplicates inside the same upload as duplicate rows", () => {
+  it("keeps field-identical rows inside the same upload as distinct new rows", () => {
+    // Two rows can legitimately be identical in every field (e.g. two Grab
+    // orders placed at the same minute for the same amount). Occurrence-aware
+    // fingerprints must treat them as two separate transactions rather than
+    // collapsing the second into a duplicate.
     const preparedRows: PreparedImportRow[] = [
       {
         rowNumber: 229,
@@ -51,24 +55,16 @@ describe("import-preview", () => {
 
     const result = buildImportPreviewResult(preparedRows, []);
 
-    expect(result.summary.newRows).toBe(1);
-    expect(result.summary.duplicateRows).toBe(1);
+    expect(result.summary.newRows).toBe(2);
+    expect(result.summary.duplicateRows).toBe(0);
     expect(result.previewRows).toEqual([
-      expect.objectContaining({
-        rowNumber: 229,
-        previewStatus: "new",
-      }),
-      expect.objectContaining({
-        rowNumber: 232,
-        previewStatus: "duplicate",
-        reason: "รายการนี้ซ้ำกับแถวที่ 229 ในไฟล์ที่อัปโหลด",
-      }),
+      expect.objectContaining({ rowNumber: 229, previewStatus: "new" }),
+      expect.objectContaining({ rowNumber: 232, previewStatus: "new" }),
     ]);
-    expect(result.stagedRows[1]).toEqual(
-      expect.objectContaining({
-        rowNumber: 232,
-        previewStatus: "duplicate",
-      })
+    // Each row gets a distinct occurrence-aware fingerprint so the UNIQUE
+    // constraint on transactions.fingerprint will not collapse them on commit.
+    expect(result.stagedRows[0]?.fingerprint).not.toBe(
+      result.stagedRows[1]?.fingerprint
     );
   });
 
@@ -118,5 +114,59 @@ describe("import-preview", () => {
         }),
       })
     );
+  });
+
+  it("skips both copies of a duplicated-in-source row when re-importing overlapping months", () => {
+    // Simulates the user's real workflow:
+    //   Upload 1: Jan — mid-Feb (commits two identical Grab 75฿ rows)
+    //   Upload 2: Feb — March (same two Grab 75฿ rows are present again)
+    // Both copies must be recognised as duplicates against the DB, not just one.
+    const normalized = {
+      date: "2026-02-10",
+      time: "08:50",
+      amount: 75,
+      type: "expense" as const,
+      category: "อาหาร",
+      paymentChannel: "บัตรเครดิต",
+      payFrom: "CardX ULTRA PLATINUM",
+      recipient: "WWW.GRAB.COM",
+    };
+    const preparedRows: PreparedImportRow[] = [
+      { rowNumber: 100, rawRow: {}, normalized },
+      { rowNumber: 101, rawRow: {}, normalized },
+    ];
+
+    // First run — no DB rows yet.
+    const firstPass = buildImportPreviewResult(preparedRows, []);
+    expect(firstPass.summary.newRows).toBe(2);
+    expect(firstPass.summary.duplicateRows).toBe(0);
+
+    // Pretend the two rows have been committed to the DB with the occurrence-
+    // aware fingerprints the preview produced.
+    const now = new Date();
+    const existing = firstPass.stagedRows.map((staged, index) => ({
+      id: index + 1,
+      transactionDate: normalized.date,
+      transactionTime: normalized.time,
+      amountSatang: 7500,
+      type: normalized.type,
+      category: normalized.category,
+      subcategory: null,
+      note: null,
+      paymentChannel: normalized.paymentChannel,
+      payFrom: normalized.payFrom,
+      recipient: normalized.recipient,
+      tag: null,
+      fingerprint: staged.fingerprint,
+      source: "import" as const,
+      importRunId: 1,
+      createdAt: now,
+      updatedAt: now,
+    }));
+
+    // Second upload contains the same two rows again.
+    const secondPass = buildImportPreviewResult(preparedRows, existing);
+    expect(secondPass.summary.newRows).toBe(0);
+    expect(secondPass.summary.duplicateRows).toBe(2);
   });
 });

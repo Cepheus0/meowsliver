@@ -34,15 +34,51 @@ export function buildImportPreviewResult(
   rows: PreparedImportRow[],
   existingTransactions: DbTransaction[]
 ): ImportPreviewBuildResult {
-  const exactMatches = new Map(
-    existingTransactions.map((transaction) => [transaction.fingerprint, transaction])
+  // -----------------------------------------------------------------------------------
+  // Occurrence-aware fingerprint
+  //
+  // CSV อาจมี 2 แถวที่ทุก field เหมือนกันเป๊ะ (เช่น สั่ง Grab 75฿ 2 ออเดอร์ติดกัน)
+  // ถ้า fingerprint อิงจาก field เท่านั้น แถวที่ 2 จะถูก mark ว่า duplicate แล้วหายไป
+  // แก้โดยต่อท้าย fingerprint ด้วยลำดับการเจอ (#1, #2, ...) ทั้งฝั่ง DB และ CSV
+  // → ทำให้ "แถวซ้ำเชิงความหมาย" เก็บได้ครบ และ cross-file dedup ยังทำงานถูก
+  // -----------------------------------------------------------------------------------
+  const withOccurrence = (baseFp: string, counters: Map<string, number>): string => {
+    const next = (counters.get(baseFp) ?? 0) + 1;
+    counters.set(baseFp, next);
+    return `${baseFp}#${next}`;
+  };
+
+  // เรียง DB rows ให้ลำดับ #1, #2 คงที่ไม่ว่า DB จะคืน rows มาลำดับไหน
+  // tie-break ด้วย id (auto-increment) = ลำดับการ insert จริง
+  const sortedExisting = [...existingTransactions].sort((a, b) => {
+    if (a.transactionDate !== b.transactionDate) {
+      return a.transactionDate.localeCompare(b.transactionDate);
+    }
+    const timeA = a.transactionTime ?? "";
+    const timeB = b.transactionTime ?? "";
+    if (timeA !== timeB) {
+      return timeA.localeCompare(timeB);
+    }
+    return a.id - b.id;
+  });
+
+  const dbCounters = new Map<string, number>();
+  const exactMatches = new Map<string, DbTransaction>(
+    sortedExisting.map((transaction) => {
+      const base = buildTransactionFingerprint(dbTransactionToNormalized(transaction));
+      const fp = withOccurrence(base, dbCounters);
+      return [fp, transaction] as const;
+    })
   );
+
   const conflictMatches = new Map(
     existingTransactions.map((transaction) => [
       buildTransactionConflictKey(dbTransactionToNormalized(transaction)),
       transaction,
     ])
   );
+
+  const csvCounters = new Map<string, number>();
   const seenFingerprints = new Map<string, number>();
 
   const previewRows: ImportPreviewRow[] = [];
@@ -89,7 +125,8 @@ export function buildImportPreviewResult(
       totalTransfer += row.normalized.amount;
     }
 
-    const fingerprint = buildTransactionFingerprint(row.normalized);
+    const baseFingerprint = buildTransactionFingerprint(row.normalized);
+    const fingerprint = withOccurrence(baseFingerprint, csvCounters);
     const exactMatch = exactMatches.get(fingerprint);
     const duplicateSourceRowNumber = seenFingerprints.get(fingerprint);
     const conflictMatch =
