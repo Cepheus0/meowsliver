@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { useFinanceStore } from "@/store/finance-store";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, QUICK_TEMPLATES } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -139,18 +140,14 @@ export function ManualEntryFAB() {
                 <label className="mb-1 block text-xs font-medium text-[color:var(--app-text-muted)]">
                   หมวดหมู่
                 </label>
-                <select
+                <Select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
-                >
-                  <option value="">-- เลือกหมวด --</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setCategory}
+                  options={[
+                    { value: "", label: "-- เลือกหมวด --" },
+                    ...categories.map((cat) => ({ value: cat, label: cat })),
+                  ]}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">

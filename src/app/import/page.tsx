@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
 import { cn, formatBaht } from "@/lib/utils";
 import { useFinanceStore } from "@/store/finance-store";
 import {
@@ -569,37 +570,26 @@ export default function ImportPage() {
                     </p>
                   </div>
                   <div className="flex-1">
-                    <select
+                    <Select
                       value={value}
-                      onChange={(e) =>
-                        setMapping((prev) => ({
-                          ...prev,
-                          [field.key]: e.target.value,
-                        }))
+                      onChange={(v) =>
+                        setMapping((prev) => ({ ...prev, [field.key]: v }))
                       }
-                      className={cn(
-                        "w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm outline-none transition-colors focus:border-emerald-500",
-                        value
-                          ? "border-emerald-300 dark:border-emerald-700"
-                          : field.required
-                            ? "border-red-300 dark:border-red-700"
-                            : "border-zinc-200 dark:border-zinc-700",
-                        "text-[color:var(--app-text)]"
-                      )}
-                    >
-                      <option value="">
-                        {field.required ? "-- เลือก (จำเป็น) --" : "-- ไม่เลือก --"}
-                      </option>
-                      {parseResult.columns.map((col) => (
-                        <option key={col} value={col}>
-                          {col}
-                          {/* Show a sample value */}
-                          {parseResult.rows[0]?.[col]
-                            ? ` (ตัวอย่าง: ${parseResult.rows[0][col].slice(0, 30)})`
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
+                      options={[
+                        {
+                          value: "",
+                          label: field.required ? "-- เลือก (จำเป็น) --" : "-- ไม่เลือก --",
+                        },
+                        ...parseResult.columns.map((col) => ({
+                          value: col,
+                          label:
+                            col +
+                            (parseResult.rows[0]?.[col]
+                              ? ` (ตัวอย่าง: ${parseResult.rows[0][col].slice(0, 30)})`
+                              : ""),
+                        })),
+                      ]}
+                    />
                   </div>
                 </div>
               );

@@ -28,6 +28,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Select } from "@/components/ui/Select";
 import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
 import { chartTheme } from "@/lib/chart-theme";
 import {
@@ -414,13 +415,12 @@ export default function SavingsGoalDetailPage() {
                 <span className="font-medium text-zinc-700 dark:text-zinc-200">
                   ประเภทเป้าหมาย
                 </span>
-                <select
+                <Select
                   value={goalForm.category}
-                  onChange={(event) =>
+                  onChange={(v) =>
                     setGoalForm((currentForm) => {
-                      const category = event.target.value as SavingsGoalCategory;
+                      const category = v as SavingsGoalCategory;
                       const preset = getGoalPreset(category);
-
                       return {
                         ...currentForm,
                         category,
@@ -431,14 +431,11 @@ export default function SavingsGoalDetailPage() {
                       };
                     })
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
-                >
-                  {Object.entries(GOAL_CATEGORY_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
+                  options={Object.entries(GOAL_CATEGORY_LABELS).map(([value, label]) => ({
+                    value,
+                    label,
+                  }))}
+                />
               </label>
 
               <label className="space-y-2 text-sm">
@@ -661,22 +658,19 @@ export default function SavingsGoalDetailPage() {
               <span className="font-medium text-zinc-700 dark:text-zinc-200">
                 ประเภทรายการ
               </span>
-              <select
+              <Select
                 value={form.type}
-                onChange={(event) =>
+                onChange={(v) =>
                   setForm((currentForm) => ({
                     ...currentForm,
-                    type: event.target.value as SavingsGoalEntryType,
+                    type: v as SavingsGoalEntryType,
                   }))
                 }
-                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
-              >
-                {Object.entries(ENTRY_TYPE_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+                options={Object.entries(ENTRY_TYPE_LABELS).map(([value, label]) => ({
+                  value,
+                  label,
+                }))}
+              />
             </label>
 
             <label className="space-y-2 text-sm">

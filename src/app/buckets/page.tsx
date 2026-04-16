@@ -6,6 +6,7 @@ import { ArrowRight, PiggyBank, Plus, Sparkles, Target, TrendingUp } from "lucid
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Select } from "@/components/ui/Select";
 import {
   DEFAULT_GOAL_COLOR,
   DEFAULT_GOAL_ICON,
@@ -236,13 +237,12 @@ export default function BucketsPage() {
                 <span className="font-medium text-zinc-700 dark:text-zinc-200">
                   ประเภทเป้าหมาย
                 </span>
-                <select
+                <Select
                   value={form.category}
-                  onChange={(event) =>
+                  onChange={(v) =>
                     setForm((currentForm) => {
-                      const category = event.target.value as SavingsGoalCategory;
+                      const category = v as SavingsGoalCategory;
                       const preset = getGoalPreset(category);
-
                       return {
                         ...currentForm,
                         category,
@@ -253,14 +253,11 @@ export default function BucketsPage() {
                       };
                     })
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
-                >
-                  {Object.entries(GOAL_CATEGORY_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
+                  options={Object.entries(GOAL_CATEGORY_LABELS).map(([value, label]) => ({
+                    value,
+                    label,
+                  }))}
+                />
               </label>
 
               <label className="space-y-2 text-sm">

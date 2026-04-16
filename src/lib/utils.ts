@@ -12,7 +12,10 @@ export function formatBaht(amount: number): string {
     currency: "THB",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  })
+    .format(amount)
+    .replace("฿", "฿\u00A0")
+    .replace(/^-/, "-\u00A0");
 }
 
 /** Format number with commas */

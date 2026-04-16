@@ -53,12 +53,15 @@ export function CashflowChart() {
             width={width}
             height={height}
             data={data}
-            margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+            barCategoryGap="20%"
+            barGap={3}
+            margin={{ top: 8, right: 16, left: 4, bottom: 4 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
               stroke={chartTheme.grid}
-              opacity={0.3}
+              opacity={0.4}
+              vertical={false}
             />
             <XAxis
               dataKey="month"
@@ -71,25 +74,28 @@ export function CashflowChart() {
               tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
               axisLine={false}
               tickLine={false}
+              width={36}
+              domain={["auto", "auto"]}
             />
             <Tooltip
               formatter={(value) => formatBaht(Number(value))}
               contentStyle={chartTheme.tooltipStyle}
+              cursor={{ fill: "var(--app-surface-soft)", opacity: 0.6 }}
             />
             <Legend wrapperStyle={{ ...chartTheme.legendStyle, paddingTop: "8px" }} />
             <Bar
               dataKey="income"
               name="รายรับ"
               fill="#22c55e"
-              radius={[6, 6, 0, 0]}
-              barSize={20}
+              radius={[5, 5, 0, 0]}
+              maxBarSize={36}
             />
             <Bar
               dataKey="expense"
               name="รายจ่าย"
               fill="#ef4444"
-              radius={[6, 6, 0, 0]}
-              barSize={20}
+              radius={[5, 5, 0, 0]}
+              maxBarSize={36}
             />
             <Line
               type="monotone"
@@ -98,6 +104,7 @@ export function CashflowChart() {
               stroke="#3b82f6"
               strokeWidth={2.5}
               dot={{ fill: "#3b82f6", r: 3 }}
+              activeDot={{ r: 5 }}
             />
           </ComposedChart>
         )}

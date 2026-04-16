@@ -87,7 +87,7 @@ export function Sidebar() {
             MoneyCat Tracker v1.0
           </p>
           <p className="text-xs text-[color:var(--app-text-subtle)]">
-            🐱 เหมียวจดให้เรียบร้อย
+            เหมียวจดให้เรียบร้อย
           </p>
         </div>
       )}
