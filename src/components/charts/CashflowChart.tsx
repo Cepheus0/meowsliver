@@ -27,8 +27,8 @@ export function CashflowChart() {
   const hasData = data.some((month) => month.income > 0 || month.expense > 0);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleBarClick = (payload: any) => {
-    const monthIndex = payload?.activePayload?.[0]?.payload?.monthIndex;
+  const handleBarClick = (barData: any) => {
+    const monthIndex = barData?.monthIndex;
     if (monthIndex != null) {
       router.push(`/reports/${selectedYear}/${monthIndex + 1}`);
     }
@@ -60,7 +60,7 @@ export function CashflowChart() {
         </span>
       </CardHeader>
 
-      <ChartViewport className="h-72 cursor-pointer">
+      <ChartViewport className="h-72">
         {({ width, height }) => (
           <ComposedChart
             width={width}
@@ -69,7 +69,6 @@ export function CashflowChart() {
             barCategoryGap="20%"
             barGap={3}
             margin={{ top: 8, right: 16, left: 4, bottom: 4 }}
-            onClick={handleBarClick}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -103,6 +102,8 @@ export function CashflowChart() {
               fill="#22c55e"
               radius={[5, 5, 0, 0]}
               maxBarSize={36}
+              cursor="pointer"
+              onClick={handleBarClick}
             />
             <Bar
               dataKey="expense"
@@ -110,6 +111,8 @@ export function CashflowChart() {
               fill="#ef4444"
               radius={[5, 5, 0, 0]}
               maxBarSize={36}
+              cursor="pointer"
+              onClick={handleBarClick}
             />
             <Line
               type="monotone"
