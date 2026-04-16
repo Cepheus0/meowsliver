@@ -11,6 +11,7 @@ import {
   ComposedChart,
   Legend,
 } from "recharts";
+import { useRouter } from "next/navigation";
 import { useFinanceStore } from "@/store/finance-store";
 import { formatBaht } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -21,8 +22,17 @@ import { ChartColumnIncreasing, Table2 } from "lucide-react";
 
 export function CashflowChart() {
   const { getMonthlyCashflow, selectedYear } = useFinanceStore();
+  const router = useRouter();
   const data = getMonthlyCashflow();
   const hasData = data.some((month) => month.income > 0 || month.expense > 0);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleBarClick = (payload: any) => {
+    const monthIndex = payload?.activePayload?.[0]?.payload?.monthIndex;
+    if (monthIndex != null) {
+      router.push(`/reports/${selectedYear}/${monthIndex + 1}`);
+    }
+  };
 
   if (!hasData) {
     return (
@@ -45,9 +55,12 @@ export function CashflowChart() {
     <Card className="col-span-full">
       <CardHeader>
         <CardTitle>กระแสเงินสด ปี {selectedYear}</CardTitle>
+        <span className="text-xs text-[color:var(--app-text-subtle)]">
+          คลิกที่บาร์เพื่อดูรายละเอียดรายเดือน
+        </span>
       </CardHeader>
 
-      <ChartViewport className="h-72">
+      <ChartViewport className="h-72 cursor-pointer">
         {({ width, height }) => (
           <ComposedChart
             width={width}
@@ -56,6 +69,7 @@ export function CashflowChart() {
             barCategoryGap="20%"
             barGap={3}
             margin={{ top: 8, right: 16, left: 4, bottom: 4 }}
+            onClick={handleBarClick}
           >
             <CartesianGrid
               strokeDasharray="3 3"
