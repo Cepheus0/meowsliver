@@ -11,6 +11,14 @@ export interface Transaction {
   type: TransactionType;
   note?: string;
   bucket?: string; // which asset bucket
+  // Rich import fields preserved as separate dimensions so the UI can filter
+  // and group by them. `subcategory`/`note` keep their human-readable composite
+  // form for legacy views; the fields below are the canonical sources.
+  paymentChannel?: string;
+  payFrom?: string;
+  recipient?: string;
+  tag?: string;
+  importRunId?: number;
 }
 
 // ===== Asset Allocation Types =====

@@ -119,6 +119,11 @@ export function buildTransactionFromNormalized(
     subcategory: subcategory || undefined,
     type: normalized.type,
     note: note || undefined,
+    // Preserve raw fields so monthly views can filter/group by each dimension.
+    paymentChannel: normalized.paymentChannel,
+    payFrom: normalized.payFrom,
+    recipient: normalized.recipient,
+    tag: normalized.tag,
   };
 }
 

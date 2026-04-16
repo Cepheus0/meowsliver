@@ -101,10 +101,14 @@ export function dbTransactionToNormalized(row: DbTransaction): NormalizedImportR
 }
 
 export function dbTransactionToUiTransaction(row: DbTransaction) {
-  return buildTransactionFromNormalized(
+  // `buildTransactionFromNormalized` already preserves rich fields; here we
+  // additionally attach `importRunId` so the drill-down panel can show which
+  // upload produced this row.
+  const ui = buildTransactionFromNormalized(
     dbTransactionToNormalized(row),
     `txn-${row.id}`
   );
+  return { ...ui, importRunId: row.importRunId ?? undefined };
 }
 
 export function normalizedRowToInsert(

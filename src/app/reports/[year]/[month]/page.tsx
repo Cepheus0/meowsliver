@@ -1,0 +1,962 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  ArrowDownRight,
+  ArrowLeft,
+  ArrowRightLeft,
+  ArrowUpRight,
+  Search,
+  Sliders,
+} from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
+import { ChartViewport } from "@/components/charts/ChartViewport";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { FilterChips } from "@/components/transactions/FilterChips";
+import { TransactionDetailDrawer } from "@/components/transactions/TransactionDetailDrawer";
+import { chartTheme } from "@/lib/chart-theme";
+import {
+  applyMonthlyFilters,
+  buildBreakdown,
+  buildSubBreakdownByValue,
+  computeTotals,
+  EMPTY_FILTER_STATE,
+  getMonthlyDetailFromTransactions,
+  rollupDaily,
+  type DimensionSlice,
+  type Granularity,
+  type MonthlyFilterState,
+  type MonthlyTotals,
+} from "@/lib/monthly-detail-analytics";
+import {
+  getTransactionAmountPrefix,
+  getTransactionTypeLabel,
+} from "@/lib/transaction-presentation";
+import { useFinanceStore } from "@/store/finance-store";
+import { useFinanceStoreHydrated } from "@/store/use-finance-store-hydrated";
+import { formatBaht, THAI_MONTHS_FULL } from "@/lib/utils";
+import type { Transaction, TransactionType } from "@/lib/types";
+
+const PIE_COLORS = [
+  "#ef4444",
+  "#f59e0b",
+  "#8b5cf6",
+  "#ec4899",
+  "#3b82f6",
+  "#22c55e",
+  "#64748b",
+];
+
+export default function MonthlyReportPage() {
+  const router = useRouter();
+  const params = useParams<{ year: string; month: string }>();
+  const year = Number.parseInt(params.year ?? "", 10);
+  const monthIndex = Number.parseInt(params.month ?? "", 10) - 1;
+  const validParams =
+    Number.isFinite(year) && monthIndex >= 0 && monthIndex <= 11;
+
+  const { importedTransactions } = useFinanceStore();
+  const storeHydrated = useFinanceStoreHydrated();
+
+  const detail = useMemo(() => {
+    if (!validParams) return null;
+    return getMonthlyDetailFromTransactions(
+      storeHydrated ? importedTransactions : [],
+      year,
+      monthIndex
+    );
+  }, [importedTransactions, storeHydrated, validParams, year, monthIndex]);
+
+  const [filters, setFilters] = useState<MonthlyFilterState>(EMPTY_FILTER_STATE);
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [granularity, setGranularity] = useState<Granularity>("day");
+
+  const filtered = useMemo(() => {
+    if (!detail) return [];
+    return applyMonthlyFilters(detail.transactions, filters);
+  }, [detail, filters]);
+
+  // Subset of transactions inside the clicked chart range (date filter only,
+  // ignoring chip/search filters). Used by the drill-down panel so it always
+  // describes "what's in this slice of time" regardless of other filters.
+  const rangeSubset = useMemo(() => {
+    if (!detail || !filters.dateFrom || !filters.dateTo) return null;
+    return detail.transactions.filter(
+      (tx) => tx.date >= filters.dateFrom! && tx.date <= filters.dateTo!
+    );
+  }, [detail, filters.dateFrom, filters.dateTo]);
+
+  const rangeTotals = useMemo(
+    () => (rangeSubset ? computeTotals(rangeSubset) : null),
+    [rangeSubset]
+  );
+  const rangeCategoryBreakdown = useMemo(
+    () => (rangeSubset ? buildBreakdown(rangeSubset, "category") : []),
+    [rangeSubset]
+  );
+  const rangeTagBreakdown = useMemo(
+    () => (rangeSubset ? buildBreakdown(rangeSubset, "tag") : []),
+    [rangeSubset]
+  );
+
+  // category → tag sub-breakdown. Powers the "hover a category slice to see
+  // which tags live inside" tooltip. Computed once per dataset so the tooltip
+  // doesn't re-scan transactions on every mouse move.
+  const monthCategoryTagMap = useMemo(
+    () =>
+      detail
+        ? buildSubBreakdownByValue(detail.transactions, "category", "tag")
+        : new Map<string, DimensionSlice[]>(),
+    [detail]
+  );
+  const rangeCategoryTagMap = useMemo(
+    () =>
+      rangeSubset
+        ? buildSubBreakdownByValue(rangeSubset, "category", "tag")
+        : new Map<string, DimensionSlice[]>(),
+    [rangeSubset]
+  );
+
+  if (!validParams) {
+    return (
+      <div className="space-y-4">
+        <BackLink />
+        <Card>
+          <EmptyState
+            title="พารามิเตอร์ไม่ถูกต้อง"
+            description="URL ต้องอยู่ในรูปแบบ /reports/2026/2 (ปี/เลขเดือน 1-12)"
+          />
+        </Card>
+      </div>
+    );
+  }
+
+  if (!detail) return null;
+
+  const { totals, daily, breakdowns, monthLabelFull } = detail;
+  const hasData = totals.count > 0;
+
+  const toggleInSet = (key: keyof MonthlyFilterState, value: string) => {
+    setFilters((prev) => {
+      const current = prev[key];
+      if (!(current instanceof Set)) return prev;
+      const next = new Set(current as Set<string>);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return { ...prev, [key]: next };
+    });
+  };
+
+  const toggleType = (type: TransactionType) => {
+    setFilters((prev) => {
+      const next = new Set(prev.types);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return { ...prev, types: next };
+    });
+  };
+
+  const chartData = rollupDaily(daily, detail.monthLabelFull, granularity);
+
+  const handleBarClick = (state: { activeLabel?: unknown }) => {
+    const label = state?.activeLabel;
+    if (typeof label !== "string") return;
+    const bucket = chartData.find((row) => row.label === label);
+    if (!bucket) return;
+    // If user clicks the *same* range that's already active, clear it. Lets
+    // them un-filter by clicking the highlighted bar again — symmetry beats
+    // an extra "clear" button.
+    if (filters.dateFrom === bucket.dateFrom && filters.dateTo === bucket.dateTo) {
+      setFilters((prev) => ({
+        ...prev,
+        dateFrom: undefined,
+        dateTo: undefined,
+        dateRangeLabel: undefined,
+      }));
+      return;
+    }
+    setFilters((prev) => ({
+      ...prev,
+      dateFrom: bucket.dateFrom,
+      dateTo: bucket.dateTo,
+      dateRangeLabel: bucket.rangeLabel,
+    }));
+  };
+
+  const categoryPie = breakdowns.category
+    .filter((slice) => slice.amount > 0)
+    .slice(0, 7)
+    .map((slice, idx) => ({
+      name: slice.label,
+      value: slice.amount,
+      color: PIE_COLORS[idx % PIE_COLORS.length],
+      // Attach per-category tag breakdown so the custom tooltip can show
+      // "within this category, tags break down like this" without prop-drilling
+      // the whole map into the Tooltip render fn.
+      subSlices: slice.value ? monthCategoryTagMap.get(slice.value) ?? [] : [],
+    }));
+
+  const activeFilterCount =
+    filters.types.size +
+    filters.categories.size +
+    filters.subcategories.size +
+    filters.tags.size +
+    filters.paymentChannels.size +
+    filters.payFroms.size +
+    filters.recipients.size +
+    (filters.search ? 1 : 0) +
+    (filters.amountMin !== undefined ? 1 : 0) +
+    (filters.amountMax !== undefined ? 1 : 0) +
+    (filters.dateFrom !== undefined ? 1 : 0);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <BackLink />
+          <h1 className="mt-2 text-2xl font-bold text-[color:var(--app-text)]">
+            {monthLabelFull} {year}
+          </h1>
+          <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
+            {hasData
+              ? `${totals.count} รายการ — รายรับสุทธิ ${formatBaht(totals.net)}`
+              : "ยังไม่มีรายการในเดือนนี้"}
+          </p>
+        </div>
+        <MonthSwitcher year={year} monthIndex={monthIndex} router={router} />
+      </div>
+
+      {!hasData ? (
+        <Card>
+          <EmptyState
+            title={`ยังไม่มีข้อมูล ${monthLabelFull} ${year}`}
+            description="ลองเลือกเดือนอื่นจากปุ่มด้านบน หรือไปหน้านำเข้าเพื่อเพิ่มข้อมูลของเดือนนี้"
+            actionHref="/import"
+            actionLabel="ไปหน้านำเข้า"
+          />
+        </Card>
+      ) : (
+        <>
+          <SummaryCards totals={totals} />
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>รายรับ vs รายจ่าย</CardTitle>
+                <div className="flex items-center gap-1 rounded-xl bg-[color:var(--app-surface-soft)] p-1">
+                  {(
+                    [
+                      { value: "day", label: "รายวัน" },
+                      { value: "week", label: "รายอาทิตย์" },
+                      { value: "month", label: "รายเดือน" },
+                    ] as const
+                  ).map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setGranularity(opt.value)}
+                      className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+                        granularity === opt.value
+                          ? "bg-[color:var(--app-surface-strong)] text-[color:var(--app-text)] shadow-[var(--app-card-shadow)]"
+                          : "text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </CardHeader>
+              <p className="-mt-1 mb-2 text-xs text-[color:var(--app-text-muted)]">
+                คลิกที่แท่งเพื่อกรองตารางด้านล่างให้เหลือเฉพาะช่วงนั้น (คลิกซ้ำเพื่อล้าง)
+              </p>
+              <ChartViewport className="h-64">
+                {({ width, height }) => (
+                  <BarChart
+                    width={width}
+                    height={height}
+                    data={chartData}
+                    onClick={handleBarClick}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={chartTheme.grid}
+                      opacity={0.3}
+                    />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 10, fill: chartTheme.axis }}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: chartTheme.axis }}
+                      tickFormatter={(value) =>
+                        value >= 1000 ? `${(value / 1000).toFixed(0)}k` : `${value}`
+                      }
+                    />
+                    <Tooltip
+                      formatter={(value) => formatBaht(Number(value))}
+                      contentStyle={chartTheme.tooltipStyle}
+                      cursor={{ fill: "rgba(34,197,94,0.08)" }}
+                    />
+                    <Bar
+                      dataKey="income"
+                      name="รายรับ"
+                      radius={[4, 4, 0, 0]}
+                      cursor="pointer"
+                    >
+                      {chartData.map((entry) => {
+                        const active =
+                          filters.dateFrom === entry.dateFrom &&
+                          filters.dateTo === entry.dateTo;
+                        return (
+                          <Cell
+                            key={`income-${entry.label}`}
+                            fill={active ? "#16a34a" : "#22c55e"}
+                            opacity={
+                              filters.dateFrom && !active ? 0.35 : 1
+                            }
+                          />
+                        );
+                      })}
+                    </Bar>
+                    <Bar
+                      dataKey="expense"
+                      name="รายจ่าย"
+                      radius={[4, 4, 0, 0]}
+                      cursor="pointer"
+                    >
+                      {chartData.map((entry) => {
+                        const active =
+                          filters.dateFrom === entry.dateFrom &&
+                          filters.dateTo === entry.dateTo;
+                        return (
+                          <Cell
+                            key={`expense-${entry.label}`}
+                            fill={active ? "#dc2626" : "#ef4444"}
+                            opacity={
+                              filters.dateFrom && !active ? 0.35 : 1
+                            }
+                          />
+                        );
+                      })}
+                    </Bar>
+                  </BarChart>
+                )}
+              </ChartViewport>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>สัดส่วนรายจ่ายตามหมวด</CardTitle>
+              </CardHeader>
+              {categoryPie.length === 0 ? (
+                <EmptyState
+                  title="ไม่มีรายจ่าย"
+                  description="เดือนนี้มีแต่รายรับหรือย้ายเงิน"
+                />
+              ) : (
+                <>
+                  <ChartViewport className="h-48">
+                    {({ width, height }) => (
+                      <PieChart width={width} height={height}>
+                        <Pie
+                          data={categoryPie}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={80}
+                          dataKey="value"
+                          nameKey="name"
+                          paddingAngle={2}
+                          isAnimationActive={false}
+                        >
+                          {categoryPie.map((entry, idx) => (
+                            <Cell key={idx} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<CategoryTagTooltip />} />
+                      </PieChart>
+                    )}
+                  </ChartViewport>
+                  <ul className="mt-2 space-y-1.5 text-xs">
+                    {categoryPie.map((entry) => (
+                      <li key={entry.name} className="flex items-center gap-2">
+                        <span
+                          className="inline-block h-2 w-2 rounded-full"
+                          style={{ backgroundColor: entry.color }}
+                        />
+                        <span className="text-[color:var(--app-text-muted)]">
+                          {entry.name}
+                        </span>
+                        <span className="ml-auto font-medium text-[color:var(--app-text)]">
+                          {formatBaht(entry.value)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </Card>
+          </div>
+
+          {rangeSubset && rangeTotals && filters.dateRangeLabel && (
+            <RangeDetailSection
+              label={filters.dateRangeLabel}
+              totals={rangeTotals}
+              categoryBreakdown={rangeCategoryBreakdown}
+              tagBreakdown={rangeTagBreakdown}
+              categoryTagMap={rangeCategoryTagMap}
+            />
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                <span className="inline-flex items-center gap-2">
+                  <Sliders size={14} />
+                  ตัวกรอง {activeFilterCount > 0 && `(${activeFilterCount})`}
+                </span>
+              </CardTitle>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={() => setFilters(EMPTY_FILTER_STATE)}
+                  className="text-xs text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+                >
+                  ล้างทั้งหมด
+                </button>
+              )}
+            </CardHeader>
+
+            <div className="space-y-4">
+              {filters.dateRangeLabel && (
+                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/5 px-3 py-2 text-xs">
+                  <span className="text-emerald-700 dark:text-emerald-300">
+                    กรองจากกราฟ: <strong>{filters.dateRangeLabel}</strong>
+                  </span>
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        dateFrom: undefined,
+                        dateTo: undefined,
+                        dateRangeLabel: undefined,
+                      }))
+                    }
+                    className="ml-auto text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+                  >
+                    ล้างช่วงวันที่
+                  </button>
+                </div>
+              )}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative min-w-[220px] flex-1">
+                  <Search
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+                  />
+                  <input
+                    type="text"
+                    value={filters.search}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, search: e.target.value }))
+                    }
+                    placeholder="ค้นหา หมวด/ผู้รับ/หมายเหตุ..."
+                    className="theme-border theme-surface w-full rounded-xl border py-2 pl-9 pr-3 text-sm outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div className="flex items-center gap-1 rounded-xl bg-[color:var(--app-surface-soft)] p-1">
+                  {(["income", "expense", "transfer"] as const).map((type) => {
+                    const active = filters.types.has(type);
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => toggleType(type)}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                          active
+                            ? "bg-[color:var(--app-surface-strong)] text-[color:var(--app-text)] shadow-[var(--app-card-shadow)]"
+                            : "text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+                        }`}
+                      >
+                        {getTransactionTypeLabel(type)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <FilterChips
+                label="หมวด"
+                slices={breakdowns.category}
+                selected={filters.categories}
+                onToggle={(v) => toggleInSet("categories", v)}
+              />
+              <FilterChips
+                label="แท็ก"
+                slices={breakdowns.tag}
+                selected={filters.tags}
+                onToggle={(v) => toggleInSet("tags", v)}
+              />
+              <FilterChips
+                label="ช่องทางจ่าย"
+                slices={breakdowns.paymentChannel}
+                selected={filters.paymentChannels}
+                onToggle={(v) => toggleInSet("paymentChannels", v)}
+              />
+              <FilterChips
+                label="จากบัญชี"
+                slices={breakdowns.payFrom}
+                selected={filters.payFroms}
+                onToggle={(v) => toggleInSet("payFroms", v)}
+              />
+              <FilterChips
+                label="ผู้รับ"
+                slices={breakdowns.recipient}
+                selected={filters.recipients}
+                onToggle={(v) => toggleInSet("recipients", v)}
+              />
+            </div>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {filtered.length === totals.count
+                  ? `รายการทั้งหมด (${totals.count})`
+                  : `แสดง ${filtered.length} จาก ${totals.count} รายการ`}
+              </CardTitle>
+            </CardHeader>
+
+            {filtered.length === 0 ? (
+              <p className="py-8 text-center text-sm text-[color:var(--app-text-muted)]">
+                ไม่พบรายการที่ตรงกับตัวกรองที่เลือก
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-[color:var(--app-divider-soft)] text-[color:var(--app-text-muted)]">
+                      <th className="py-2 pr-3 font-medium">วันที่</th>
+                      <th className="py-2 pr-3 font-medium">เวลา</th>
+                      <th className="py-2 pr-3 font-medium">หมวด</th>
+                      <th className="py-2 pr-3 font-medium">ผู้รับ</th>
+                      <th className="py-2 pr-3 text-right font-medium">จำนวน</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[color:var(--app-divider-soft)]">
+                    {filtered.map((tx) => (
+                      <tr
+                        key={tx.id}
+                        onClick={() => setSelectedTx(tx)}
+                        className="cursor-pointer transition-colors hover:bg-[color:var(--app-surface-soft)]"
+                      >
+                        <td className="whitespace-nowrap py-2 pr-3 text-zinc-600 dark:text-zinc-300">
+                          {tx.date}
+                        </td>
+                        <td className="whitespace-nowrap py-2 pr-3 text-[color:var(--app-text-subtle)]">
+                          {tx.time ?? "-"}
+                        </td>
+                        <td className="py-2 pr-3">
+                          <span className="inline-flex items-center gap-1.5">
+                            {tx.type === "income" ? (
+                              <ArrowUpRight size={14} className="text-emerald-500" />
+                            ) : tx.type === "transfer" ? (
+                              <ArrowRightLeft size={14} className="text-sky-500" />
+                            ) : (
+                              <ArrowDownRight size={14} className="text-red-500" />
+                            )}
+                            <span className="text-[color:var(--app-text)]">
+                              {tx.category}
+                            </span>
+                            {tx.tag && (
+                              <span className="rounded bg-[color:var(--app-surface-soft)] px-1.5 py-0.5 text-[10px] text-[color:var(--app-text-muted)]">
+                                {tx.tag}
+                              </span>
+                            )}
+                          </span>
+                        </td>
+                        <td className="py-2 pr-3 text-[color:var(--app-text-muted)]">
+                          {tx.recipient ?? tx.note ?? "-"}
+                        </td>
+                        <td
+                          className={`whitespace-nowrap py-2 pr-3 text-right font-medium ${
+                            tx.type === "income"
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : tx.type === "transfer"
+                                ? "text-sky-600 dark:text-sky-400"
+                                : "text-red-500"
+                          }`}
+                        >
+                          {getTransactionAmountPrefix(tx.type)}
+                          {formatBaht(tx.amount)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </>
+      )}
+
+      <TransactionDetailDrawer
+        transaction={selectedTx}
+        scopeTransactions={detail.transactions}
+        scopeLabel={`เดือน ${monthLabelFull}`}
+        onClose={() => setSelectedTx(null)}
+      />
+    </div>
+  );
+}
+
+function BackLink() {
+  return (
+    <Link
+      href="/reports"
+      className="inline-flex items-center gap-1.5 text-xs text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+    >
+      <ArrowLeft size={14} />
+      กลับหน้ารายงาน
+    </Link>
+  );
+}
+
+function MonthSwitcher({
+  year,
+  monthIndex,
+  router,
+}: {
+  year: number;
+  monthIndex: number;
+  router: ReturnType<typeof useRouter>;
+}) {
+  const goto = (delta: number) => {
+    let nextMonth = monthIndex + delta;
+    let nextYear = year;
+    if (nextMonth < 0) {
+      nextMonth = 11;
+      nextYear -= 1;
+    } else if (nextMonth > 11) {
+      nextMonth = 0;
+      nextYear += 1;
+    }
+    router.push(`/reports/${nextYear}/${nextMonth + 1}`);
+  };
+
+  return (
+    <div className="flex items-center gap-1 rounded-xl bg-[color:var(--app-surface-soft)] p-1 text-sm">
+      <button
+        onClick={() => goto(-1)}
+        className="rounded-lg px-3 py-1.5 text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+        aria-label="เดือนก่อนหน้า"
+      >
+        ←
+      </button>
+      <span className="px-3 text-sm font-medium text-[color:var(--app-text)]">
+        {THAI_MONTHS_FULL[monthIndex]} {year}
+      </span>
+      <button
+        onClick={() => goto(1)}
+        className="rounded-lg px-3 py-1.5 text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+        aria-label="เดือนถัดไป"
+      >
+        →
+      </button>
+    </div>
+  );
+}
+
+function SummaryCards({
+  totals,
+}: {
+  totals: MonthlyTotals;
+}) {
+  const cells = [
+    {
+      label: "รายรับ",
+      amount: totals.income,
+      count: totals.incomeCount,
+      tone: "text-emerald-600 dark:text-emerald-400",
+    },
+    {
+      label: "รายจ่าย",
+      amount: totals.expense,
+      count: totals.expenseCount,
+      tone: "text-red-500",
+    },
+    {
+      label: "ย้ายเงิน",
+      amount: totals.transfer,
+      count: totals.transferCount,
+      tone: "text-sky-600 dark:text-sky-400",
+    },
+    {
+      label: "สุทธิ",
+      amount: totals.net,
+      count: totals.count,
+      tone:
+        totals.net >= 0
+          ? "text-emerald-600 dark:text-emerald-400"
+          : "text-red-500",
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {cells.map((cell) => (
+        <Card key={cell.label}>
+          <p className="text-xs text-[color:var(--app-text-muted)]">{cell.label}</p>
+          <p className={`mt-1 text-xl font-bold ${cell.tone}`}>
+            {formatBaht(cell.amount)}
+          </p>
+          <p className="mt-0.5 text-xs text-[color:var(--app-text-subtle)]">
+            {cell.count} รายการ
+          </p>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// Tag breakdowns are usually sparse — most rows have no tag, so the
+// "ไม่ระบุ" slice dwarfs everything. We hide that slice to keep the pie
+// readable; user can still see total tag-less spend in the legend later.
+//
+// `subBreakdownMap` is optional: when provided, each slice's `subSlices`
+// carries the nested breakdown keyed by slice.value. Used by the category pie
+// so hovering shows "tags inside this category".
+function dimensionsForPie(
+  slices: DimensionSlice[],
+  subBreakdownMap?: Map<string, DimensionSlice[]>
+) {
+  return slices
+    .filter((slice) => slice.value !== undefined && slice.amount > 0)
+    .slice(0, 7)
+    .map((slice, idx) => ({
+      name: slice.label,
+      value: slice.amount,
+      color: PIE_COLORS[idx % PIE_COLORS.length],
+      subSlices: slice.value ? subBreakdownMap?.get(slice.value) ?? [] : [],
+    }));
+}
+
+function RangeDetailSection({
+  label,
+  totals,
+  categoryBreakdown,
+  tagBreakdown,
+  categoryTagMap,
+}: {
+  label: string;
+  totals: MonthlyTotals;
+  categoryBreakdown: DimensionSlice[];
+  tagBreakdown: DimensionSlice[];
+  categoryTagMap: Map<string, DimensionSlice[]>;
+}) {
+  const categoryPie = dimensionsForPie(categoryBreakdown, categoryTagMap);
+  const tagPie = dimensionsForPie(tagBreakdown);
+  const noTaggedExpense = tagPie.length === 0;
+
+  return (
+    <section className="space-y-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.04] p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-sm font-semibold text-[color:var(--app-text)]">
+          สรุปของช่วง <span className="text-emerald-700 dark:text-emerald-300">{label}</span>
+        </h2>
+        <p className="text-xs text-[color:var(--app-text-muted)]">
+          ตัวเลขนี้คิดจากธุรกรรมทั้งหมดในช่วงที่เลือกเท่านั้น (ไม่ขึ้นกับ filter อื่น)
+        </p>
+      </div>
+
+      <SummaryCards totals={totals} />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <RangePieCard
+          title="สัดส่วนรายจ่ายตามหมวด"
+          slices={categoryPie}
+          emptyMessage="ช่วงนี้ไม่มีรายจ่าย"
+          useNestedTooltip
+        />
+        <RangePieCard
+          title="สัดส่วนรายจ่ายตาม tag"
+          slices={tagPie}
+          emptyMessage={
+            noTaggedExpense
+              ? "ช่วงนี้ไม่มีรายจ่ายที่ระบุ tag"
+              : "ช่วงนี้ไม่มีรายจ่าย"
+          }
+        />
+      </div>
+    </section>
+  );
+}
+
+// Custom tooltip for the category pie. When user hovers a slice we surface
+// the category's *tag* breakdown so they can see, e.g., "฿6,173 ใน 'บริจาค' —
+// 2,500 tag 'ทริป', 1,200 tag 'โอน', 2,473 ไม่ระบุ" without leaving the pie.
+//
+// Recharts calls this with `active` + `payload`; `payload[0].payload` is the
+// full data row we passed to <Pie data={...}>, including the custom subSlices.
+interface CategoryTagPayload {
+  name: string;
+  value: number;
+  color: string;
+  subSlices: DimensionSlice[];
+}
+
+function CategoryTagTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload?: CategoryTagPayload }>;
+}) {
+  if (!active || !payload || payload.length === 0) return null;
+  const row = payload[0]?.payload;
+  if (!row) return null;
+
+  // Show top-N tags so the tooltip stays compact even in categories with a
+  // long tail; the rest get rolled into "อื่นๆ". 5 is enough to catch the
+  // real story without shoving the tooltip off-screen on mobile.
+  const MAX_ROWS = 5;
+  const head = row.subSlices.slice(0, MAX_ROWS);
+  const tail = row.subSlices.slice(MAX_ROWS);
+  const tailAmount = tail.reduce((sum, slice) => sum + slice.amount, 0);
+
+  return (
+    <div
+      className="theme-border theme-surface rounded-xl border p-3 shadow-lg"
+      style={{ minWidth: 220 }}
+    >
+      <div className="flex items-center gap-2 text-sm font-semibold text-[color:var(--app-text)]">
+        <span
+          className="inline-block h-2.5 w-2.5 rounded-full"
+          style={{ backgroundColor: row.color }}
+        />
+        {row.name}
+      </div>
+      <p className="mt-0.5 text-xs text-[color:var(--app-text-muted)]">
+        {formatBaht(row.value)}
+      </p>
+
+      {row.subSlices.length === 0 ? (
+        <p className="mt-2 text-xs italic text-[color:var(--app-text-subtle)]">
+          ไม่มีข้อมูล tag
+        </p>
+      ) : (
+        <ul className="mt-2 space-y-1 border-t border-[color:var(--app-divider-soft)] pt-2 text-xs">
+          {head.map((slice) => (
+            <li
+              key={slice.label}
+              className="flex items-center justify-between gap-3"
+            >
+              <span className="truncate text-[color:var(--app-text-muted)]">
+                {slice.label}
+              </span>
+              <span className="flex shrink-0 items-baseline gap-1.5">
+                <span className="font-medium text-[color:var(--app-text)]">
+                  {formatBaht(slice.amount)}
+                </span>
+                <span className="text-[10px] text-[color:var(--app-text-subtle)]">
+                  {(slice.share * 100).toFixed(slice.share >= 0.1 ? 0 : 1)}%
+                </span>
+              </span>
+            </li>
+          ))}
+          {tail.length > 0 && (
+            <li className="flex items-center justify-between gap-3 text-[color:var(--app-text-subtle)]">
+              <span>อื่นๆ ({tail.length})</span>
+              <span className="font-medium">{formatBaht(tailAmount)}</span>
+            </li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function RangePieCard({
+  title,
+  slices,
+  emptyMessage,
+  useNestedTooltip = false,
+}: {
+  title: string;
+  slices: ReturnType<typeof dimensionsForPie>;
+  emptyMessage: string;
+  /** When true, use the category→tag tooltip that lists tag breakdown inside
+   *  the hovered slice. Only meaningful for the category pie. */
+  useNestedTooltip?: boolean;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      {slices.length === 0 ? (
+        <p className="py-6 text-center text-xs text-[color:var(--app-text-muted)]">
+          {emptyMessage}
+        </p>
+      ) : (
+        <>
+          <ChartViewport className="h-44">
+            {({ width, height }) => (
+              <PieChart width={width} height={height}>
+                <Pie
+                  data={slices}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={36}
+                  outerRadius={72}
+                  dataKey="value"
+                  nameKey="name"
+                  paddingAngle={2}
+                  isAnimationActive={false}
+                >
+                  {slices.map((entry, idx) => (
+                    <Cell key={idx} fill={entry.color} />
+                  ))}
+                </Pie>
+                {useNestedTooltip ? (
+                  <Tooltip content={<CategoryTagTooltip />} />
+                ) : (
+                  <Tooltip
+                    formatter={(value) => formatBaht(Number(value))}
+                    contentStyle={chartTheme.tooltipStyle}
+                  />
+                )}
+              </PieChart>
+            )}
+          </ChartViewport>
+          <ul className="mt-2 space-y-1 text-xs">
+            {slices.map((entry) => (
+              <li key={entry.name} className="flex items-center gap-2">
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="truncate text-[color:var(--app-text-muted)]">
+                  {entry.name}
+                </span>
+                <span className="ml-auto font-medium text-[color:var(--app-text)]">
+                  {formatBaht(entry.value)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </Card>
+  );
+}

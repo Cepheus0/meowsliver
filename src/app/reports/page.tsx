@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   BarChart,
   Bar,
@@ -14,7 +15,7 @@ import {
   Cell,
 } from "recharts";
 import { useFinanceStore } from "@/store/finance-store";
-import { formatBaht } from "@/lib/utils";
+import { formatBaht, THAI_MONTHS } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { ChartViewport } from "@/components/charts/ChartViewport";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -40,6 +41,7 @@ function formatCurrencyAxis(value: number) {
 }
 
 export default function ReportsPage() {
+  const router = useRouter();
   const { getYearlySummaries, getMonthlyCashflow, getTransactions, selectedYear, importedTransactions } =
     useFinanceStore();
   const summaries = getYearlySummaries();
@@ -212,24 +214,55 @@ export default function ReportsPage() {
             <CardTitle>รายรับ vs รายจ่าย รายเดือน ปี {selectedYear}</CardTitle>
           </CardHeader>
           {hasSelectedYearData ? (
-            <ChartViewport className="h-64">
-              {({ width, height }) => (
-                <BarChart width={width} height={height} data={monthly}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.3} />
-                  <XAxis dataKey="month" tick={{ fontSize: 10, fill: chartTheme.axis }} />
-                  <YAxis
-                    tick={{ fontSize: 10, fill: chartTheme.axis }}
-                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip
-                    formatter={(value) => formatBaht(Number(value))}
-                    contentStyle={chartTheme.tooltipStyle}
-                  />
-                  <Bar dataKey="income" name="รายรับ" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expense" name="รายจ่าย" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              )}
-            </ChartViewport>
+            <>
+              <p className="-mt-1 mb-2 text-xs text-[color:var(--app-text-muted)]">
+                คลิกที่แท่งเพื่อดูรายละเอียดของเดือนนั้น
+              </p>
+              <ChartViewport className="h-64">
+                {({ width, height }) => (
+                  <BarChart
+                    width={width}
+                    height={height}
+                    data={monthly}
+                    onClick={(state) => {
+                      const monthLabel = state?.activeLabel as string | undefined;
+                      if (!monthLabel) return;
+                      const monthIndex = THAI_MONTHS.indexOf(
+                        monthLabel as (typeof THAI_MONTHS)[number]
+                      );
+                      if (monthIndex < 0) return;
+                      router.push(`/reports/${selectedYear}/${monthIndex + 1}`);
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.3} />
+                    <XAxis dataKey="month" tick={{ fontSize: 10, fill: chartTheme.axis }} />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: chartTheme.axis }}
+                      tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip
+                      formatter={(value) => formatBaht(Number(value))}
+                      contentStyle={chartTheme.tooltipStyle}
+                      cursor={{ fill: "rgba(34,197,94,0.08)" }}
+                    />
+                    <Bar
+                      dataKey="income"
+                      name="รายรับ"
+                      fill="#22c55e"
+                      radius={[4, 4, 0, 0]}
+                      cursor="pointer"
+                    />
+                    <Bar
+                      dataKey="expense"
+                      name="รายจ่าย"
+                      fill="#ef4444"
+                      radius={[4, 4, 0, 0]}
+                      cursor="pointer"
+                    />
+                  </BarChart>
+                )}
+              </ChartViewport>
+            </>
           ) : (
             <EmptyState
               title={`ยังไม่มีข้อมูลปี ${selectedYear}`}

@@ -19,6 +19,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { TransactionDetailDrawer } from "@/components/transactions/TransactionDetailDrawer";
+import type { Transaction } from "@/lib/types";
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
@@ -37,6 +39,7 @@ export default function TransactionsPage() {
   );
   const [pageSize, setPageSize] = useState<(typeof PAGE_SIZE_OPTIONS)[number]>(50);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
   const filtered = useMemo(() => {
     return visibleTransactions.filter((tx) => {
@@ -159,7 +162,11 @@ export default function TransactionsPage() {
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                   {paginatedTransactions.map((tx) => (
-                    <tr key={tx.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                    <tr
+                      key={tx.id}
+                      onClick={() => setSelectedTx(tx)}
+                      className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                    >
                       <td className="whitespace-nowrap py-2.5 pr-4 text-zinc-600 dark:text-zinc-300">
                         {tx.date}
                       </td>
@@ -267,6 +274,13 @@ export default function TransactionsPage() {
           </Card>
         </>
       )}
+
+      <TransactionDetailDrawer
+        transaction={selectedTx}
+        scopeTransactions={filtered}
+        scopeLabel="ในมุมมองที่กำลังกรอง"
+        onClose={() => setSelectedTx(null)}
+      />
     </div>
   );
 }
