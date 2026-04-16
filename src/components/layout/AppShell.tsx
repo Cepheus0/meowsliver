@@ -4,6 +4,7 @@ import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { ManualEntryFAB } from "@/components/forms/ManualEntryFAB";
 import { TransactionsHydrator } from "@/components/providers/TransactionsHydrator";
+import { AccountsHydrator } from "@/components/providers/AccountsHydrator";
 import { useFinanceStore } from "@/store/finance-store";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +14,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[color:var(--app-bg)] text-[color:var(--app-text)]">
       <TransactionsHydrator />
+      <AccountsHydrator />
       <Sidebar />
       <main
         className={cn(

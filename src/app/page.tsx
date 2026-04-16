@@ -4,6 +4,7 @@ import { AssetPieChart } from "@/components/charts/AssetPieChart";
 import { SummaryCards } from "@/components/charts/SummaryCards";
 import { CashflowChart, YearlyComparisonTable } from "@/components/charts/CashflowChart";
 import { BucketsOverview } from "@/components/charts/BucketsOverview";
+import { AccountsOverview } from "@/components/accounts/AccountsOverview";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { DatabaseZap, FileSpreadsheet } from "lucide-react";
@@ -47,10 +48,15 @@ export default function DashboardPage() {
             />
           </Card>
 
+          <AccountsOverview />
+
           <BucketsOverview />
         </>
       ) : (
         <>
+          {/* Section 0: Accounts / Net Worth */}
+          <AccountsOverview />
+
           {/* Section 1: Summary Cards */}
           <SummaryCards />
 

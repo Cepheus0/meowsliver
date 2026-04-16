@@ -103,12 +103,17 @@ export function dbTransactionToNormalized(row: DbTransaction): NormalizedImportR
 export function dbTransactionToUiTransaction(row: DbTransaction) {
   // `buildTransactionFromNormalized` already preserves rich fields; here we
   // additionally attach `importRunId` so the drill-down panel can show which
-  // upload produced this row.
+  // upload produced this row, and `accountId` so the accounts feature can
+  // filter its detail views.
   const ui = buildTransactionFromNormalized(
     dbTransactionToNormalized(row),
     `txn-${row.id}`
   );
-  return { ...ui, importRunId: row.importRunId ?? undefined };
+  return {
+    ...ui,
+    importRunId: row.importRunId ?? undefined,
+    accountId: row.accountId ?? undefined,
+  };
 }
 
 export function normalizedRowToInsert(
@@ -117,7 +122,8 @@ export function normalizedRowToInsert(
   // Optional override — preview pipeline already computed an occurrence-aware
   // fingerprint (e.g. "base#2") so duplicates within the same file stay distinct.
   // Fallback to the bare field-based fingerprint for legacy callers.
-  fingerprint?: string
+  fingerprint?: string,
+  accountId?: number | null
 ): typeof transactions.$inferInsert {
   return {
     transactionDate: row.date,
@@ -134,5 +140,6 @@ export function normalizedRowToInsert(
     fingerprint: fingerprint ?? buildTransactionFingerprint(row),
     source: "import",
     importRunId,
+    accountId: accountId ?? null,
   };
 }

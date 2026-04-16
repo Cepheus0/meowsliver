@@ -11,12 +11,14 @@ import {
   BarChart3,
   Menu,
   Cat,
+  Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFinanceStore } from "@/store/finance-store";
 
 const NAV_ITEMS = [
   { href: "/", icon: LayoutDashboard, label: "แดชบอร์ด" },
+  { href: "/accounts", icon: Landmark, label: "บัญชี" },
   { href: "/transactions", icon: Receipt, label: "รายการ" },
   { href: "/import", icon: Upload, label: "นำเข้า" },
   { href: "/buckets", icon: Wallet, label: "ออมเป้า" },

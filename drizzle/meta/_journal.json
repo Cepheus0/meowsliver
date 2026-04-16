@@ -29,6 +29,13 @@
       "when": 1776108808814,
       "tag": "0003_familiar_cloak",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1776355242058,
+      "tag": "0004_cool_violations",
+      "breakpoints": true
     }
   ]
 }

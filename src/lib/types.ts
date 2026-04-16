@@ -19,7 +19,65 @@ export interface Transaction {
   recipient?: string;
   tag?: string;
   importRunId?: number;
+  accountId?: number;
 }
+
+// ===== Account Types =====
+export type AccountType =
+  | "cash"
+  | "bank_savings"
+  | "bank_fixed"
+  | "credit_card"
+  | "investment"
+  | "crypto"
+  | "other";
+
+export interface Account {
+  id: number;
+  name: string;
+  type: AccountType;
+  icon: string; // lucide icon name
+  color: string; // hex
+  currentBalance: number; // in baht
+  creditLimit?: number; // credit_card only
+  isArchived: boolean;
+  isDefault: boolean;
+  sortOrder: number;
+  notes?: string;
+  aliases: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
+  cash: "เงินสด",
+  bank_savings: "ออมทรัพย์",
+  bank_fixed: "ฝากประจำ",
+  credit_card: "บัตรเครดิต",
+  investment: "การลงทุน",
+  crypto: "คริปโต",
+  other: "อื่นๆ",
+};
+
+export const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
+  cash: "#10b981",
+  bank_savings: "#3b82f6",
+  bank_fixed: "#8b5cf6",
+  credit_card: "#ef4444",
+  investment: "#f59e0b",
+  crypto: "#f97316",
+  other: "#64748b",
+};
+
+export const ACCOUNT_TYPE_ICONS: Record<AccountType, string> = {
+  cash: "Wallet",
+  bank_savings: "Landmark",
+  bank_fixed: "PiggyBank",
+  credit_card: "CreditCard",
+  investment: "TrendingUp",
+  crypto: "Bitcoin",
+  other: "Circle",
+};
 
 // ===== Asset Allocation Types =====
 export type AssetCategory =

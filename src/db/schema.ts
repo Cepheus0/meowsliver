@@ -1,6 +1,7 @@
 import {
   bigint,
   bigserial,
+  boolean,
   date,
   integer,
   jsonb,
@@ -56,6 +57,52 @@ export const savingsGoalEntryTypeEnum = pgEnum("savings_goal_entry_type", [
   "adjustment",
 ]);
 
+export const accountTypeEnum = pgEnum("account_type", [
+  "cash",
+  "bank_savings",
+  "bank_fixed",
+  "credit_card",
+  "investment",
+  "crypto",
+  "other",
+]);
+
+export const accounts = pgTable(
+  "accounts",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    name: text("name").notNull(),
+    type: accountTypeEnum("type").notNull(),
+    icon: text("icon").notNull(),
+    color: text("color").notNull(),
+    currentBalanceSatang: bigint("current_balance_satang", { mode: "number" })
+      .notNull()
+      .default(0),
+    creditLimitSatang: bigint("credit_limit_satang", { mode: "number" }),
+    isArchived: boolean("is_archived").notNull().default(false),
+    isDefault: boolean("is_default").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    notes: text("notes"),
+    aliases: jsonb("aliases")
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    archivedSortIdx: index("accounts_archived_sort_idx").on(
+      table.isArchived,
+      table.sortOrder
+    ),
+    typeIdx: index("accounts_type_idx").on(table.type),
+  })
+);
+
 export const importRuns = pgTable(
   "import_runs",
   {
@@ -108,6 +155,10 @@ export const transactions = pgTable(
       () => importRuns.id,
       { onDelete: "set null" }
     ),
+    accountId: bigint("account_id", { mode: "number" }).references(
+      () => accounts.id,
+      { onDelete: "set null" }
+    ),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -125,6 +176,7 @@ export const transactions = pgTable(
       table.fingerprint
     ),
     importRunIdx: index("transactions_import_run_idx").on(table.importRunId),
+    accountIdx: index("transactions_account_idx").on(table.accountId),
   })
 );
 
@@ -225,7 +277,15 @@ export const transactionsRelations = relations(transactions, ({ one, many }) => 
     fields: [transactions.importRunId],
     references: [importRuns.id],
   }),
+  account: one(accounts, {
+    fields: [transactions.accountId],
+    references: [accounts.id],
+  }),
   duplicateMatches: many(importRunRows),
+}));
+
+export const accountsRelations = relations(accounts, ({ many }) => ({
+  transactions: many(transactions),
 }));
 
 export const importRunRowsRelations = relations(importRunRows, ({ one }) => ({

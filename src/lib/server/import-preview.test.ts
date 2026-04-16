@@ -160,6 +160,7 @@ describe("import-preview", () => {
       fingerprint: staged.fingerprint,
       source: "import" as const,
       importRunId: 1,
+      accountId: null,
       createdAt: now,
       updatedAt: now,
     }));
