@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Q3 – Account Types Scope</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    background: #0d1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+  .container { max-width: 780px; width: 100%; }
+
+  .badge {
+    display: inline-block;
+    background: rgba(16,185,129,0.15);
+    color: #6ee7b7;
+    border: 1px solid rgba(110,231,183,0.25);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 4px 12px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f7fbff;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  /* Progress */
+  .progress {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 36px;
+  }
+  .step {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(148,163,184,0.15);
+  }
+  .step.done { background: #10b981; }
+  .step.current { background: linear-gradient(90deg, #10b981, #3b82f6); }
+
+  /* Options grid */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: rgba(15,23,42,0.8);
+    border: 1.5px solid rgba(148,163,184,0.12);
+    border-radius: 14px;
+    padding: 20px;
+    transition: border-color 0.2s, transform 0.15s;
+    cursor: default;
+  }
+  .card:hover { border-color: rgba(99,102,241,0.45); transform: translateY(-2px); }
+  .card.recommended { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.05); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .option-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.05em;
+  }
+  .rec-badge {
+    font-size: 11px;
+    background: rgba(16,185,129,0.2);
+    color: #6ee7b7;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-weight: 600;
+  }
+
+  .card h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 8px;
+  }
+  .card p {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .tag {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  .tag.green { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+  .tag.blue  { background: rgba(59,130,246,0.15);  color: #93c5fd; }
+  .tag.amber { background: rgba(245,158,11,0.15);  color: #fcd34d; }
+  .tag.purple{ background: rgba(139,92,246,0.15);  color: #c4b5fd; }
+  .tag.red   { background: rgba(239,68,68,0.15);   color: #fca5a5; }
+
+  .pros-cons {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.7;
+  }
+  .pros-cons .pro::before { content: "✓ "; color: #22c55e; }
+  .pros-cons .con::before { content: "✗ "; color: #ef4444; }
+
+  /* Overlap callout */
+  .callout {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: #fcd34d;
+    line-height: 1.6;
+  }
+  .callout strong { color: #fde68a; }
+
+  .hint {
+    font-size: 13px;
+    color: #475569;
+    text-align: center;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="badge">Accounts Feature · Q3 of 5</div>
+  <h1>ขอบเขต Account Types ใน v1</h1>
+  <p class="subtitle">
+    รายการที่คุณมีตอนนี้: SCB, K-Bank, กระเป๋าเงินสด, SCB Credit Card (ยอดติดลบ)<br>
+    แต่ระบบ Investments ก็มีอยู่แล้ว — ต้องการรวมไว้ใน Accounts ด้วยไหม?
+  </p>
+
+  <div class="progress">
+    <div class="step done"></div>
+    <div class="step done"></div>
+    <div class="step current"></div>
+    <div class="step"></div>
+    <div class="step"></div>
+  </div>
+
+  <div class="callout">
+    <strong>⚠️ ข้อควรพิจารณา:</strong> ประเภท investment/crypto ซ้อนทับกับหน้า <strong>การลงทุน</strong> ที่มีอยู่แล้ว
+    ถ้าเพิ่มใน Accounts ก็ต้องตอบว่า — ทั้งสองหน้าแสดงข้อมูลเดียวกันหรือเปล่า?
+  </div>
+
+  <div class="grid">
+    <!-- Option A -->
+    <div class="card recommended">
+      <div class="card-header">
+        <span class="option-label">A)</span>
+        <span class="rec-badge">แนะนำสำหรับ v1</span>
+      </div>
+      <h3>Cash · Bank · Credit เท่านั้น</h3>
+      <p>เน้น daily transaction flow — เงินสด, ธนาคาร, บัตรเครดิต ไม่แตะ investment ใน v1</p>
+      <div class="tag-row">
+        <span class="tag green">cash</span>
+        <span class="tag green">bank_savings</span>
+        <span class="tag green">bank_fixed</span>
+        <span class="tag red">credit_card</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pro">cover 100% ของ transactions ที่มีอยู่</div>
+        <div class="pro">ไม่ซ้อนทับกับหน้า Investments</div>
+        <div class="pro">scope เล็ก → ship เร็ว</div>
+        <div class="con">ต้องทำ investment linking ทีหลัง</div>
+      </div>
+    </div>
+
+    <!-- Option B -->
+    <div class="card">
+      <div class="card-header">
+        <span class="option-label">B)</span>
+      </div>
+      <h3>รวม Investment/Crypto ด้วย</h3>
+      <p>Accounts เป็น single source of truth ของทุกสินทรัพย์ — Investments page ดึงข้อมูลจาก Account</p>
+      <div class="tag-row">
+        <span class="tag green">cash</span>
+        <span class="tag green">bank</span>
+        <span class="tag red">credit</span>
+        <span class="tag blue">stocks</span>
+        <span class="tag purple">crypto</span>
+        <span class="tag amber">gold</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pro">net worth ครบทุกประเภทตั้งแต่แรก</div>
+        <div class="pro">ไม่ต้องมี migration ทีหลัง</div>
+        <div class="con">scope ใหญ่ขึ้นมาก</div>
+        <div class="con">ต้อง refactor หน้า Investments ด้วย</div>
+        <div class="con">field เสริม (ROI, dividend, etc.) ซับซ้อน</div>
+      </div>
+    </div>
+
+    <!-- Option C -->
+    <div class="card" style="grid-column: 1 / -1;">
+      <div class="card-header">
+        <span class="option-label">C)</span>
+      </div>
+      <h3>A + placeholder สำหรับ Investment (ไม่มี field เสริม)</h3>
+      <p>v1 ใช้ Option A แต่เพิ่ม type <code>investment</code> / <code>crypto</code> ไว้ใน enum ได้เลย — แต่ UI สำหรับ field เสริม (ROI, dividend) รอ v2</p>
+      <div class="tag-row">
+        <span class="tag green">cash</span>
+        <span class="tag green">bank_savings</span>
+        <span class="tag green">bank_fixed</span>
+        <span class="tag red">credit_card</span>
+        <span class="tag blue">investment (balance only)</span>
+        <span class="tag purple">crypto (balance only)</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pro">schema ยืดหยุ่น — เพิ่ม type ได้ทีหลังโดยไม่ migrate</div>
+        <div class="pro">net worth dashboard รวม investment ได้ทันที</div>
+        <div class="con">ซ้อนทับกับ Investments page อยู่ดี (บางส่วน)</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint">พิมพ์ A / B / C ในแชท</p>
+</div>
+</body>
+</html>

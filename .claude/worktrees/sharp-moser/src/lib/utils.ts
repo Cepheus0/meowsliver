@@ -1,0 +1,50 @@
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+/** Format number as Thai Baht currency */
+export function formatBaht(amount: number): string {
+  return new Intl.NumberFormat("th-TH", {
+    style: "currency",
+    currency: "THB",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })
+    .format(amount)
+    .replace("฿", "฿\u00A0")
+    .replace(/^-/, "-\u00A0");
+}
+
+/** Format number with commas */
+export function formatNumber(num: number): string {
+  return new Intl.NumberFormat("th-TH").format(num);
+}
+
+/** Format percentage */
+export function formatPercent(num: number): string {
+  return `${num >= 0 ? "+" : ""}${num.toFixed(1)}%`;
+}
+
+/** Get array of years from 2015 to current year */
+export function getYearRange(): number[] {
+  const currentYear = new Date().getFullYear();
+  const years: number[] = [];
+  for (let y = currentYear; y >= 2015; y--) {
+    years.push(y);
+  }
+  return years;
+}
+
+/** Thai month names */
+export const THAI_MONTHS = [
+  "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+  "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
+] as const;
+
+export const THAI_MONTHS_FULL = [
+  "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+  "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
+] as const;

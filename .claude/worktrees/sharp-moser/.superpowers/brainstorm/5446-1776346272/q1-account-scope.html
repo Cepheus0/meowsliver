@@ -1,0 +1,77 @@
+<h2>Q1 — Account concept ทำงานยังไงกับ transaction เดิม?</h2>
+<p class="subtitle">นี่คือ fundamental decision ที่กระทบ schema, import, และ UX ทั้งหมด</p>
+
+<div class="section">
+  <p class="label">ตอนนี้ flow เป็นแบบนี้</p>
+  <div style="background:var(--surface-raised);border-radius:12px;padding:20px;margin-bottom:8px;font-family:monospace;font-size:13px;color:var(--text-secondary)">
+    Meowjot CSV → <strong style="color:var(--text)">Transaction</strong> (income/expense/transfer) → Analytics
+  </div>
+  <p style="font-size:13px;color:var(--text-secondary);margin-top:4px">Transaction ไม่รู้ว่า "เงินอยู่ในกระเป๋าไหน"</p>
+</div>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Linked — Transaction ผูก account</h3>
+      <p>แต่ละ transaction มี <code>accountId</code> (income → credited to, expense → debited from). Balance คำนวณจาก transaction จริง.</p>
+      <div class="pros-cons" style="margin-top:12px;font-size:12px">
+        <div class="pros"><h4>ข้อดี</h4><ul>
+          <li>Balance ถูกต้องเสมอ (derived from transactions)</li>
+          <li>Track เงินได้ว่าไหลจากไหนไปไหน</li>
+          <li>ตรงกับ CoinKeeper concept จริงๆ</li>
+        </ul></div>
+        <div class="cons"><h4>ข้อเสีย</h4><ul>
+          <li>ต้อง migration: transaction เดิม 771 รายการต้อง assign account</li>
+          <li>Import wizard ต้องเพิ่ม step เลือก account</li>
+          <li>ซับซ้อนกว่า Option B</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Parallel — Account เป็น snapshot อิสระ</h3>
+      <p>Account เก็บ balance ด้วยตัวเอง (manual entry หรือ bank statement sync) ไม่ต้องผูกกับ transaction เดิม. Transaction ยังคงเป็น flow analytics เหมือนเดิม.</p>
+      <div class="pros-cons" style="margin-top:12px;font-size:12px">
+        <div class="pros"><h4>ข้อดี</h4><ul>
+          <li>ไม่กระทบ transaction เดิมเลย — zero migration</li>
+          <li>ง่ายกว่า implement มาก</li>
+          <li>Balance อัปเดตได้ง่าย (แค่ใส่ตัวเลขล่าสุด)</li>
+        </ul></div>
+        <div class="cons"><h4>ข้อเสีย</h4><ul>
+          <li>Balance อาจไม่ sync กับ transactions (double truth)</li>
+          <li>ไม่รู้จริงๆ ว่า "transaction ไหนเข้าบัญชีไหน"</li>
+          <li>Net worth อาจนับซ้ำ (transactions + account balance)</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Hybrid — Account snapshot + soft link</h3>
+      <p>Account มี balance ของตัวเอง (snapshot) แต่ transaction มี optional <code>accountId</code>. ไม่ enforce, ไม่ compute balance from transactions — แต่ช่วย filter ได้.</p>
+      <div class="pros-cons" style="margin-top:12px;font-size:12px">
+        <div class="pros"><h4>ข้อดี</h4><ul>
+          <li>Migration ง่าย (accountId ใส่หรือไม่ใส่ก็ได้)</li>
+          <li>User เลือก granularity เองได้</li>
+          <li>Upgrade path: ทำ Option A ได้ในอนาคต</li>
+        </ul></div>
+        <div class="cons"><h4>ข้อเสีย</h4><ul>
+          <li>Balance ยัง "manual" อยู่ ไม่ self-consistent</li>
+          <li>Design ซับซ้อนกว่า B เล็กน้อย</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="font-size:13px;color:var(--text-secondary);margin-top:20px">
+  💡 <strong>คำแนะนำของผม:</strong> Option C (Hybrid) — เริ่มง่าย ไม่ break ของเดิม แต่มี upgrade path ไป Option A เมื่อ user พร้อม
+</p>

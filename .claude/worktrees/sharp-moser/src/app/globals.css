@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --app-bg: #f7f9fc;
+  --app-bg-elevated: #fcfdff;
+  --app-glow-primary: rgba(16, 185, 129, 0.08);
+  --app-glow-secondary: rgba(14, 165, 233, 0.05);
+  --app-surface: rgba(255, 255, 255, 0.92);
+  --app-surface-strong: #ffffff;
+  --app-surface-soft: #f5f8fc;
+  --app-surface-muted: rgba(252, 253, 255, 0.84);
+  --app-border: rgba(15, 23, 42, 0.08);
+  --app-border-strong: rgba(15, 23, 42, 0.11);
+  --app-shell-border: rgba(15, 23, 42, 0.09);
+  --app-divider: rgba(15, 23, 42, 0.10);
+  --app-divider-soft: rgba(15, 23, 42, 0.06);
+  --app-dashed-border: rgba(100, 116, 139, 0.32);
+  --app-overlay: rgba(15, 23, 42, 0.58);
+  --app-text: #101828;
+  --app-text-muted: #344054;
+  --app-text-subtle: #667085;
+  --app-card-shadow: 0 24px 60px -42px rgba(15, 23, 42, 0.14);
+  --app-brand-soft: rgba(16, 185, 129, 0.12);
+  --app-brand-soft-strong: rgba(16, 185, 129, 0.2);
+  --app-brand-text: #047857;
+  --app-brand-border: rgba(16, 185, 129, 0.18);
+  --app-brand-shadow: rgba(16, 185, 129, 0.2);
+  --app-selection: rgba(16, 185, 129, 0.2);
+  --scrollbar-thumb: rgba(100, 116, 139, 0.45);
+  --scrollbar-thumb-hover: rgba(71, 85, 105, 0.65);
+  --chart-grid: rgba(148, 163, 184, 0.16);
+  --chart-axis: #64748b;
+  --chart-tooltip-bg: rgba(255, 255, 255, 0.96);
+  --chart-tooltip-border: rgba(148, 163, 184, 0.22);
+  --chart-tooltip-text: #0f172a;
+}
+
+.dark {
+  color-scheme: dark;
+  --app-bg: #09111f;
+  --app-bg-elevated: #0f192c;
+  --app-glow-primary: rgba(16, 185, 129, 0.16);
+  --app-glow-secondary: rgba(56, 189, 248, 0.1);
+  --app-surface: rgba(16, 24, 39, 0.92);
+  --app-surface-strong: rgba(19, 30, 48, 0.98);
+  --app-surface-soft: rgba(20, 32, 52, 0.94);
+  --app-surface-muted: rgba(8, 14, 26, 0.88);
+  --app-border: rgba(148, 163, 184, 0.1);
+  --app-border-strong: rgba(148, 163, 184, 0.14);
+  --app-shell-border: rgba(148, 163, 184, 0.11);
+  --app-divider: rgba(148, 163, 184, 0.14);
+  --app-divider-soft: rgba(148, 163, 184, 0.1);
+  --app-dashed-border: rgba(148, 163, 184, 0.26);
+  --app-overlay: rgba(2, 6, 23, 0.76);
+  --app-text: #f7fbff;
+  --app-text-muted: #e2ebf6;
+  --app-text-subtle: #bcc8d8;
+  --app-card-shadow: 0 24px 70px -40px rgba(2, 6, 23, 0.88);
+  --app-brand-soft: rgba(16, 185, 129, 0.16);
+  --app-brand-soft-strong: rgba(16, 185, 129, 0.24);
+  --app-brand-text: #9ef2cb;
+  --app-brand-border: rgba(110, 231, 183, 0.22);
+  --app-brand-shadow: rgba(16, 185, 129, 0.36);
+  --app-selection: rgba(52, 211, 153, 0.22);
+  --scrollbar-thumb: rgba(100, 116, 139, 0.5);
+  --scrollbar-thumb-hover: rgba(148, 163, 184, 0.62);
+  --chart-grid: rgba(203, 213, 225, 0.08);
+  --chart-axis: #cbd5e1;
+  --chart-tooltip-bg: rgba(15, 23, 42, 0.96);
+  --chart-tooltip-border: rgba(226, 232, 240, 0.12);
+  --chart-tooltip-text: #f8fbff;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--app-bg);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, var(--app-glow-primary), transparent 28%),
+    radial-gradient(circle at top right, var(--app-glow-secondary), transparent 24%),
+    linear-gradient(180deg, var(--app-bg-elevated) 0%, var(--app-bg) 100%);
+  color: var(--app-text);
+}
+
+.theme-surface {
+  background-color: var(--app-surface);
+}
+
+.theme-surface-strong {
+  background-color: var(--app-surface-strong);
+}
+
+.theme-surface-soft {
+  background-color: var(--app-surface-soft);
+}
+
+.theme-surface-muted {
+  background-color: var(--app-surface-muted);
+}
+
+.theme-border {
+  border-color: var(--app-border);
+}
+
+.theme-border-strong {
+  border-color: var(--app-border-strong);
+}
+
+.theme-dashed-border {
+  border-color: var(--app-dashed-border);
+}
+
+::selection {
+  background: var(--app-selection);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Mobile sidebar overlay */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+}
+
+/* Recharts tooltip fix for dark mode */
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+
+/* Select element dark mode fix */
+select option {
+  background-color: var(--app-surface-strong);
+  color: var(--app-text);
+}

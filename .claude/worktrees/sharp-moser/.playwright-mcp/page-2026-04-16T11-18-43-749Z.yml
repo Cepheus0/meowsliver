@@ -1,0 +1,178 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - button [ref=e5]:
+          - img [ref=e6]
+        - generic [ref=e7]:
+          - img [ref=e9]
+          - generic [ref=e12]: เหมียวเงิน
+      - navigation [ref=e13]:
+        - link "แดชบอร์ด" [ref=e14] [cursor=pointer]:
+          - /url: /
+          - img [ref=e15]
+          - generic [ref=e20]: แดชบอร์ด
+        - link "รายการ" [ref=e21] [cursor=pointer]:
+          - /url: /transactions
+          - img [ref=e22]
+          - generic [ref=e25]: รายการ
+        - link "นำเข้า" [ref=e26] [cursor=pointer]:
+          - /url: /import
+          - img [ref=e27]
+          - generic [ref=e30]: นำเข้า
+        - link "ออมเป้า" [ref=e31] [cursor=pointer]:
+          - /url: /buckets
+          - img [ref=e32]
+          - generic [ref=e35]: ออมเป้า
+        - link "การลงทุน" [ref=e36] [cursor=pointer]:
+          - /url: /investments
+          - img [ref=e37]
+          - generic [ref=e40]: การลงทุน
+        - link "รายงาน" [ref=e41] [cursor=pointer]:
+          - /url: /reports
+          - img [ref=e42]
+          - generic [ref=e44]: รายงาน
+      - generic [ref=e45]:
+        - paragraph [ref=e46]: MoneyCat Tracker v1.0
+        - paragraph [ref=e47]: 🐱 เหมียวจดให้เรียบร้อย
+    - main [ref=e48]:
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - button [ref=e51]:
+            - img [ref=e52]
+          - combobox [ref=e54]:
+            - option "ปี 2026 (2569)" [selected]
+            - option "ปี 2025 (2568)"
+            - option "ปี 2024 (2567)"
+            - option "ปี 2023 (2566)"
+            - option "ปี 2022 (2565)"
+            - option "ปี 2021 (2564)"
+            - option "ปี 2020 (2563)"
+            - option "ปี 2019 (2562)"
+            - option "ปี 2018 (2561)"
+            - option "ปี 2017 (2560)"
+            - option "ปี 2016 (2559)"
+            - option "ปี 2015 (2558)"
+          - button [disabled] [ref=e55]:
+            - img [ref=e56]
+        - button "สลับโหมดสว่าง/มืด" [ref=e59]:
+          - img [ref=e60]
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - heading "แดชบอร์ด" [level=1] [ref=e65]
+          - paragraph [ref=e66]: ภาพรวมการเงินทั้งหมดของคุณ
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - img [ref=e71]
+            - generic [ref=e74]:
+              - paragraph [ref=e75]: รายรับรวม
+              - paragraph [ref=e76]: ฿811,218
+              - paragraph [ref=e77]:
+                - img [ref=e78]
+                - generic [ref=e81]: สรุปจากรายการปี 2026
+          - generic [ref=e82]:
+            - img [ref=e85]
+            - generic [ref=e88]:
+              - paragraph [ref=e89]: รายจ่ายรวม
+              - paragraph [ref=e90]: ฿877,194
+              - paragraph [ref=e91]:
+                - img [ref=e92]
+                - generic [ref=e95]: สรุปจากรายการปี 2026
+          - generic [ref=e96]:
+            - img [ref=e99]
+            - generic [ref=e102]:
+              - paragraph [ref=e103]: เงินคงเหลือ
+              - paragraph [ref=e104]: "-฿65,976"
+              - paragraph [ref=e105]:
+                - img [ref=e106]
+                - generic [ref=e109]: ขาดดุล
+          - generic [ref=e110]:
+            - img [ref=e113]
+            - generic [ref=e117]:
+              - paragraph [ref=e118]: อัตราการออม
+              - paragraph [ref=e119]: "-8.1%"
+              - paragraph [ref=e120]:
+                - img [ref=e121]
+                - generic [ref=e124]: ต้องปรับปรุง
+        - generic [ref=e125]:
+          - generic [ref=e126]:
+            - heading "สินทรัพย์และหนี้สิน" [level=3] [ref=e128]
+            - generic [ref=e129]:
+              - img [ref=e131]
+              - heading "ยังไม่มีข้อมูลสินทรัพย์หรือหนี้สิน" [level=3] [ref=e133]
+              - paragraph [ref=e134]: ส่วนนี้จะแสดงเมื่อมีการเชื่อมข้อมูลสินทรัพย์และหนี้สินจริงในภายหลัง
+          - generic [ref=e136]:
+            - paragraph [ref=e137]: สถานะข้อมูล
+            - generic [ref=e138]:
+              - img [ref=e140]
+              - heading "ตอนนี้แอปใช้ข้อมูลธุรกรรมจริงแล้ว" [level=3] [ref=e145]
+              - paragraph [ref=e146]: มีข้อมูลที่นำเข้าแล้ว 771 รายการ และกำลังแสดงผลตามปี 2026 ส่วนข้อมูลสินทรัพย์ หนี้สิน และการลงทุน ยังไม่ได้เชื่อมในรอบนี้
+              - link "ดูรายการทั้งหมด" [ref=e147] [cursor=pointer]:
+                - /url: /transactions
+        - generic [ref=e148]:
+          - heading "กระแสเงินสด ปี 2026" [level=3] [ref=e150]
+          - generic [ref=e152]:
+            - list [ref=e154]:
+              - listitem [ref=e155]:
+                - img "รายจ่าย legend icon" [ref=e156]
+                - text: รายจ่าย
+              - listitem [ref=e158]:
+                - img "รายรับ legend icon" [ref=e159]
+                - text: รายรับ
+              - listitem [ref=e161]:
+                - img "สุทธิ legend icon" [ref=e162]
+                - text: สุทธิ
+            - application [ref=e164]:
+              - generic [ref=e187]:
+                - generic [ref=e188]:
+                  - generic [ref=e190]: ม.ค.
+                  - generic [ref=e192]: ก.พ.
+                  - generic [ref=e194]: มี.ค.
+                  - generic [ref=e196]: เม.ย.
+                  - generic [ref=e198]: พ.ค.
+                  - generic [ref=e200]: มิ.ย.
+                  - generic [ref=e202]: ก.ค.
+                  - generic [ref=e204]: ส.ค.
+                  - generic [ref=e206]: ก.ย.
+                  - generic [ref=e208]: ต.ค.
+                  - generic [ref=e210]: พ.ย.
+                  - generic [ref=e212]: ธ.ค.
+                - generic [ref=e213]:
+                  - generic [ref=e215]: "-150k"
+                  - generic [ref=e217]: 0k
+                  - generic [ref=e219]: 150k
+                  - generic [ref=e221]: 300k
+                  - generic [ref=e223]: 450k
+        - generic [ref=e224]:
+          - heading "เปรียบเทียบรายปีจากธุรกรรม" [level=3] [ref=e226]
+          - table [ref=e228]:
+            - rowgroup [ref=e229]:
+              - row "รายการ 2026" [ref=e230]:
+                - columnheader "รายการ" [ref=e231]
+                - columnheader "2026" [ref=e232]
+            - rowgroup [ref=e233]:
+              - row "รายรับรวม ฿811,218" [ref=e234]:
+                - cell "รายรับรวม" [ref=e235]
+                - cell "฿811,218" [ref=e236]
+              - row "รายจ่ายรวม ฿877,194" [ref=e237]:
+                - cell "รายจ่ายรวม" [ref=e238]
+                - cell "฿877,194" [ref=e239]
+              - row "เงินคงเหลือ -฿65,976" [ref=e240]:
+                - cell "เงินคงเหลือ" [ref=e241]
+                - cell "-฿65,976" [ref=e242]
+              - row "Savings Rate -8.1%" [ref=e243]:
+                - cell "Savings Rate" [ref=e244]
+                - cell "-8.1%" [ref=e245]
+              - row "ยอดสุทธิสะสม -฿65,976" [ref=e246]:
+                - cell "ยอดสุทธิสะสม" [ref=e247]
+                - cell "-฿65,976" [ref=e248]
+              - row "การเปลี่ยนแปลงสะสม +0%" [ref=e249]:
+                - cell "การเปลี่ยนแปลงสะสม" [ref=e250]
+                - cell "+0%" [ref=e251]
+        - heading "Savings Goals Portfolio" [level=3] [ref=e254]
+    - button [ref=e260]:
+      - img [ref=e261]
+  - button "Open Next.js Dev Tools" [ref=e267] [cursor=pointer]:
+    - img [ref=e268]
+  - alert [ref=e271]
+  - generic [ref=e272]: "-150k"

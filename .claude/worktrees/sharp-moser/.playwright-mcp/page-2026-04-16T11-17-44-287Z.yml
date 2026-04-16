@@ -1,0 +1,75 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - button [ref=e5]:
+          - img [ref=e6]
+        - generic [ref=e7]:
+          - img [ref=e9]
+          - generic [ref=e12]: เหมียวเงิน
+      - navigation [ref=e13]:
+        - link "แดชบอร์ด" [ref=e14] [cursor=pointer]:
+          - /url: /
+          - img [ref=e15]
+          - generic [ref=e20]: แดชบอร์ด
+        - link "รายการ" [ref=e21] [cursor=pointer]:
+          - /url: /transactions
+          - img [ref=e22]
+          - generic [ref=e25]: รายการ
+        - link "นำเข้า" [ref=e26] [cursor=pointer]:
+          - /url: /import
+          - img [ref=e27]
+          - generic [ref=e30]: นำเข้า
+        - link "ออมเป้า" [ref=e31] [cursor=pointer]:
+          - /url: /buckets
+          - img [ref=e32]
+          - generic [ref=e35]: ออมเป้า
+        - link "การลงทุน" [ref=e36] [cursor=pointer]:
+          - /url: /investments
+          - img [ref=e37]
+          - generic [ref=e40]: การลงทุน
+        - link "รายงาน" [ref=e41] [cursor=pointer]:
+          - /url: /reports
+          - img [ref=e42]
+          - generic [ref=e44]: รายงาน
+      - generic [ref=e45]:
+        - paragraph [ref=e46]: MoneyCat Tracker v1.0
+        - paragraph [ref=e47]: 🐱 เหมียวจดให้เรียบร้อย
+    - main [ref=e48]:
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - button [ref=e51]:
+            - img [ref=e52]
+          - combobox [ref=e54]:
+            - option "ปี 2026 (2569)" [selected]
+            - option "ปี 2025 (2568)"
+            - option "ปี 2024 (2567)"
+            - option "ปี 2023 (2566)"
+            - option "ปี 2022 (2565)"
+            - option "ปี 2021 (2564)"
+            - option "ปี 2020 (2563)"
+            - option "ปี 2019 (2562)"
+            - option "ปี 2018 (2561)"
+            - option "ปี 2017 (2560)"
+            - option "ปี 2016 (2559)"
+            - option "ปี 2015 (2558)"
+          - button [disabled] [ref=e55]:
+            - img [ref=e56]
+        - button "สลับโหมดสว่าง/มืด" [ref=e59]:
+          - img [ref=e60]
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - heading "แดชบอร์ด" [level=1] [ref=e65]
+          - paragraph [ref=e66]: ภาพรวมการเงินทั้งหมดของคุณ
+        - generic [ref=e68]:
+          - img [ref=e70]
+          - heading "ยังไม่มีข้อมูลธุรกรรมจริง" [level=3] [ref=e73]
+          - paragraph [ref=e74]: แดชบอร์ดฝั่ง cashflow จะเริ่มแสดงผลทันทีเมื่อมีการนำเข้าธุรกรรมจริง แต่คุณยังสามารถสร้าง Savings Goals และติดตาม progress ได้เลย
+          - link "เริ่มนำเข้าไฟล์" [ref=e75] [cursor=pointer]:
+            - /url: /import
+        - heading "Savings Goals Portfolio" [level=3] [ref=e78]
+    - button [ref=e84]:
+      - img [ref=e85]
+  - button "Open Next.js Dev Tools" [ref=e91] [cursor=pointer]:
+    - img [ref=e92]
+  - alert [ref=e95]

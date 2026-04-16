@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Q4 – Navigation Placement</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    background: #0d1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+  .container { max-width: 820px; width: 100%; }
+
+  .badge {
+    display: inline-block;
+    background: rgba(16,185,129,0.15);
+    color: #6ee7b7;
+    border: 1px solid rgba(110,231,183,0.25);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 4px 12px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  h1 { font-size: 22px; font-weight: 700; color: #f7fbff; margin-bottom: 8px; }
+  .subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 32px; line-height: 1.6; }
+
+  .progress { display: flex; gap: 8px; margin-bottom: 36px; }
+  .step { flex: 1; height: 4px; border-radius: 2px; background: rgba(148,163,184,0.15); }
+  .step.done { background: #10b981; }
+  .step.current { background: linear-gradient(90deg, #10b981, #3b82f6); }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: rgba(15,23,42,0.8);
+    border: 1.5px solid rgba(148,163,184,0.12);
+    border-radius: 14px;
+    padding: 20px;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .card:hover { border-color: rgba(99,102,241,0.45); transform: translateY(-2px); }
+  .card.recommended { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.05); }
+
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .option-label { font-size: 13px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; }
+  .rec-badge { font-size: 11px; background: rgba(16,185,129,0.2); color: #6ee7b7; border-radius: 6px; padding: 2px 8px; font-weight: 600; }
+
+  .card h3 { font-size: 14px; font-weight: 700; color: #f1f5f9; margin-bottom: 10px; }
+
+  /* Sidebar mockup */
+  .sidebar-mock {
+    background: rgba(8,14,26,0.9);
+    border: 1px solid rgba(148,163,184,0.1);
+    border-radius: 10px;
+    padding: 10px 8px;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 7px;
+    color: #64748b;
+    font-size: 12px;
+  }
+  .nav-item.active {
+    background: rgba(16,185,129,0.12);
+    color: #6ee7b7;
+    font-weight: 600;
+    border: 1px solid rgba(110,231,183,0.2);
+  }
+  .nav-item.new {
+    background: rgba(59,130,246,0.1);
+    color: #93c5fd;
+    font-weight: 600;
+    border: 1px solid rgba(59,130,246,0.2);
+  }
+  .nav-item .icon { font-size: 14px; width: 16px; text-align: center; }
+
+  .pros-cons { font-size: 12px; color: #64748b; line-height: 1.7; }
+  .pros-cons .pro::before { content: "✓ "; color: #22c55e; }
+  .pros-cons .con::before { content: "✗ "; color: #ef4444; }
+
+  .hint { font-size: 13px; color: #475569; text-align: center; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="badge">Accounts Feature · Q4 of 5</div>
+  <h1>Accounts อยู่ที่ไหนใน Navigation?</h1>
+  <p class="subtitle">Sidebar ปัจจุบันมี 6 รายการ — เพิ่ม "บัญชี" ไว้ตำแหน่งไหนดี?</p>
+
+  <div class="progress">
+    <div class="step done"></div>
+    <div class="step done"></div>
+    <div class="step done"></div>
+    <div class="step current"></div>
+    <div class="step"></div>
+  </div>
+
+  <div class="grid">
+    <!-- Option A -->
+    <div class="card recommended">
+      <div class="card-header">
+        <span class="option-label">A)</span>
+        <span class="rec-badge">แนะนำ</span>
+      </div>
+      <h3>เพิ่มหลังแดชบอร์ด (position 2)</h3>
+      <div class="sidebar-mock">
+        <div class="nav-item active"><span class="icon">⬡</span> แดชบอร์ด</div>
+        <div class="nav-item new"><span class="icon">🏦</span> บัญชี ← NEW</div>
+        <div class="nav-item"><span class="icon">📋</span> รายการ</div>
+        <div class="nav-item"><span class="icon">⬆</span> นำเข้า</div>
+        <div class="nav-item"><span class="icon">💰</span> ออมเป้า</div>
+        <div class="nav-item"><span class="icon">📈</span> การลงทุน</div>
+        <div class="nav-item"><span class="icon">📊</span> รายงาน</div>
+      </div>
+      <div class="pros-cons">
+        <div class="pro">บัญชีเป็น core concept → ขึ้นสูงสุด</div>
+        <div class="pro">sidebar 7 รายการ ยังไม่แน่น</div>
+        <div class="con">อาจรู้สึก "สำคัญกว่ารายการ" เกินไป</div>
+      </div>
+    </div>
+
+    <!-- Option B -->
+    <div class="card">
+      <div class="card-header">
+        <span class="option-label">B)</span>
+      </div>
+      <h3>เพิ่มก่อนรายงาน (position 6)</h3>
+      <div class="sidebar-mock">
+        <div class="nav-item active"><span class="icon">⬡</span> แดชบอร์ด</div>
+        <div class="nav-item"><span class="icon">📋</span> รายการ</div>
+        <div class="nav-item"><span class="icon">⬆</span> นำเข้า</div>
+        <div class="nav-item"><span class="icon">💰</span> ออมเป้า</div>
+        <div class="nav-item"><span class="icon">📈</span> การลงทุน</div>
+        <div class="nav-item new"><span class="icon">🏦</span> บัญชี ← NEW</div>
+        <div class="nav-item"><span class="icon">📊</span> รายงาน</div>
+      </div>
+      <div class="pros-cons">
+        <div class="pro">ไม่ขยับ position เดิมของทุกหน้า</div>
+        <div class="pro">รู้สึกเป็น "summary layer" ก่อน reports</div>
+        <div class="con">หา Accounts ยากกว่า (อยู่ท้าย)</div>
+      </div>
+    </div>
+
+    <!-- Option C -->
+    <div class="card">
+      <div class="card-header">
+        <span class="option-label">C)</span>
+      </div>
+      <h3>แทนที่ออมเป้า → ย้ายไปเป็น sub-page</h3>
+      <div class="sidebar-mock">
+        <div class="nav-item active"><span class="icon">⬡</span> แดชบอร์ด</div>
+        <div class="nav-item"><span class="icon">📋</span> รายการ</div>
+        <div class="nav-item"><span class="icon">⬆</span> นำเข้า</div>
+        <div class="nav-item new"><span class="icon">🏦</span> บัญชี ← NEW</div>
+        <div class="nav-item" style="padding-left:24px; color:#475569; font-size:11px;">└ ออมเป้า (sub)</div>
+        <div class="nav-item"><span class="icon">📈</span> การลงทุน</div>
+        <div class="nav-item"><span class="icon">📊</span> รายงาน</div>
+      </div>
+      <div class="pros-cons">
+        <div class="pro">sidebar ไม่เกิน 6 items (สะอาดกว่า)</div>
+        <div class="pro">ออมเป้าสัมพันธ์กับบัญชีอยู่แล้ว</div>
+        <div class="con">เปลี่ยน URL ออมเป้า → breaking change</div>
+        <div class="con">ซับซ้อนกว่าสำหรับ v1</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint">พิมพ์ A / B / C ในแชท</p>
+</div>
+</body>
+</html>

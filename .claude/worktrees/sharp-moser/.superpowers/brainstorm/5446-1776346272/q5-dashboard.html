@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Q5 – Dashboard Changes</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    background: #0d1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+  .container { max-width: 860px; width: 100%; }
+
+  .badge {
+    display: inline-block;
+    background: rgba(16,185,129,0.15);
+    color: #6ee7b7;
+    border: 1px solid rgba(110,231,183,0.25);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 4px 12px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  h1 { font-size: 22px; font-weight: 700; color: #f7fbff; margin-bottom: 8px; }
+  .subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 32px; line-height: 1.6; }
+
+  .progress { display: flex; gap: 8px; margin-bottom: 36px; }
+  .step { flex: 1; height: 4px; border-radius: 2px; background: rgba(148,163,184,0.15); }
+  .step.done { background: #10b981; }
+  .step.current { background: linear-gradient(90deg, #10b981, #3b82f6); }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: rgba(15,23,42,0.8);
+    border: 1.5px solid rgba(148,163,184,0.12);
+    border-radius: 14px;
+    padding: 20px;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .card:hover { border-color: rgba(99,102,241,0.45); transform: translateY(-2px); }
+  .card.recommended { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.05); }
+
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .option-label { font-size: 13px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; }
+  .rec-badge { font-size: 11px; background: rgba(16,185,129,0.2); color: #6ee7b7; border-radius: 6px; padding: 2px 8px; font-weight: 600; }
+  .card h3 { font-size: 14px; font-weight: 700; color: #f1f5f9; margin-bottom: 10px; }
+  .card p { font-size: 13px; color: #94a3b8; line-height: 1.6; margin-bottom: 12px; }
+
+  /* Dashboard widget mockup */
+  .dash-mock {
+    background: rgba(8,14,26,0.9);
+    border: 1px solid rgba(148,163,184,0.1);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stat-card {
+    background: rgba(20,32,52,0.9);
+    border: 1px solid rgba(148,163,184,0.08);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .stat-label { font-size: 10px; color: #475569; margin-bottom: 2px; }
+  .stat-value { font-size: 15px; font-weight: 700; }
+  .stat-value.green { color: #22c55e; }
+  .stat-value.blue { color: #60a5fa; }
+  .stat-value.amber { color: #fbbf24; }
+  .stat-value.purple { color: #c4b5fd; }
+
+  .account-strip {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .account-chip {
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #93c5fd;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .account-chip .name { font-weight: 600; }
+  .account-chip .bal { color: #60a5fa; font-size: 12px; }
+  .account-chip.neg .bal { color: #f87171; }
+
+  .tag-new {
+    font-size: 10px;
+    background: rgba(16,185,129,0.2);
+    color: #6ee7b7;
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-weight: 700;
+    vertical-align: middle;
+  }
+
+  .section-label {
+    font-size: 10px;
+    color: #334155;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 0 4px;
+    border-bottom: 1px solid rgba(148,163,184,0.06);
+    margin-bottom: 4px;
+  }
+
+  .pros-cons { font-size: 12px; color: #64748b; line-height: 1.7; }
+  .pros-cons .pro::before { content: "✓ "; color: #22c55e; }
+  .pros-cons .con::before { content: "✗ "; color: #ef4444; }
+
+  .hint { font-size: 13px; color: #475569; text-align: center; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="badge">Accounts Feature · Q5 of 5</div>
+  <h1>Dashboard ควรแสดงอะไรเพิ่มขึ้น?</h1>
+  <p class="subtitle">เมื่อมีข้อมูล Account แล้ว — หน้าแดชบอร์ดควรอัปเดตแค่ไหน?</p>
+
+  <div class="progress">
+    <div class="step done"></div>
+    <div class="step done"></div>
+    <div class="step done"></div>
+    <div class="step done"></div>
+    <div class="step current"></div>
+  </div>
+
+  <div class="grid">
+    <!-- Option A -->
+    <div class="card">
+      <div class="card-header">
+        <span class="option-label">A)</span>
+      </div>
+      <h3>ไม่เปลี่ยน Dashboard</h3>
+      <p>Dashboard คงเดิม — ดู net worth ได้จากหน้า Accounts โดยตรง</p>
+      <div class="dash-mock">
+        <div class="section-label">ของเดิมทั้งหมด</div>
+        <div class="stat-row">
+          <div class="stat-card"><div class="stat-label">รายรับปีนี้</div><div class="stat-value green">฿ 811k</div></div>
+          <div class="stat-card"><div class="stat-label">รายจ่ายปีนี้</div><div class="stat-value" style="color:#f87171">฿ 654k</div></div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pro">scope เล็กที่สุด</div>
+        <div class="pro">ไม่มี risk รบกวน dashboard เดิม</div>
+        <div class="con">ต้องกดไป Accounts เพื่อดู net worth</div>
+      </div>
+    </div>
+
+    <!-- Option B -->
+    <div class="card recommended">
+      <div class="card-header">
+        <span class="option-label">B)</span>
+        <span class="rec-badge">แนะนำ</span>
+      </div>
+      <h3>เพิ่ม Net Worth card + Account strip</h3>
+      <p>ด้านบน stats เดิม — แถว account chips แสดงยอดแต่ละบัญชี <span class="tag-new">NEW</span></p>
+      <div class="dash-mock">
+        <div class="section-label">เพิ่มใหม่</div>
+        <div class="stat-row">
+          <div class="stat-card"><div class="stat-label">Net Worth รวม</div><div class="stat-value blue">฿ 1.23M</div></div>
+          <div class="stat-card"><div class="stat-label">เดือนนี้สุทธิ</div><div class="stat-value green">+฿ 12k</div></div>
+        </div>
+        <div class="account-strip">
+          <div class="account-chip"><span class="name">SCB</span><span class="bal">฿ 320k</span></div>
+          <div class="account-chip"><span class="name">K-Bank</span><span class="bal">฿ 88k</span></div>
+          <div class="account-chip"><span class="name">เงินสด</span><span class="bal">฿ 4k</span></div>
+          <div class="account-chip neg"><span class="name">SCB Credit</span><span class="bal">-฿ 22k</span></div>
+        </div>
+        <div class="section-label" style="margin-top:4px">ของเดิม (คงไว้)</div>
+        <div class="stat-row">
+          <div class="stat-card"><div class="stat-label">รายรับปีนี้</div><div class="stat-value green">฿ 811k</div></div>
+          <div class="stat-card"><div class="stat-label">รายจ่ายปีนี้</div><div class="stat-value" style="color:#f87171">฿ 654k</div></div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pro">เห็น net worth ทันทีที่เปิดแอป</div>
+        <div class="pro">คลิก chip → ไปหน้า account detail</div>
+        <div class="con">Dashboard ยาวขึ้นเล็กน้อย</div>
+      </div>
+    </div>
+
+    <!-- Option C -->
+    <div class="card" style="grid-column: 1 / -1;">
+      <div class="card-header">
+        <span class="option-label">C)</span>
+      </div>
+      <h3>B + เพิ่ม Net Worth trend chart (เส้นกราฟยอดรวมรายเดือน)</h3>
+      <p>เพิ่มกราฟเส้น Net Worth ย้อนหลัง 12 เดือน ใต้ account strip</p>
+      <div class="pros-cons">
+        <div class="pro">เห็น growth pattern ชัดเจน</div>
+        <div class="pro">ข้อมูลสมบูรณ์มากขึ้น</div>
+        <div class="con">ต้อง compute net worth snapshot รายเดือน (ซับซ้อนกว่า)</div>
+        <div class="con">dashboard หนักขึ้น — เหมาะกว่าสำหรับ v2</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint">พิมพ์ A / B / C ในแชท — นี่คือคำถามสุดท้ายก่อนเริ่มออกแบบ</p>
+</div>
+</body>
+</html>
