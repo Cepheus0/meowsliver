@@ -10,6 +10,7 @@ import {
   buildSkippedFingerprint,
   buildTransactionConflictKey,
   buildTransactionFingerprint,
+  dbTransactionToUiTransaction,
   dbTransactionToNormalized,
 } from "@/lib/server/import-db";
 
@@ -167,6 +168,10 @@ export function buildImportPreviewResult(
         row.normalized,
         toPreviewTransactionId(row.rowNumber)
       ),
+      existingTransaction:
+        exactMatch || conflictMatch
+          ? dbTransactionToUiTransaction((exactMatch ?? conflictMatch)!)
+          : undefined,
     });
 
     stagedRows.push({

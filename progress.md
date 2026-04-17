@@ -108,6 +108,17 @@
 - Added helper unit tests plus API/browser smoke coverage for manual transaction persistence and transaction-page CRUD behavior
 - Generated a passing test report at `reports/test-report.md`
 
+### Sprint 2: Import Conflict Review Workflow
+- Added DB-backed conflict review state on `import_run_rows` through the new `review_action` field
+- Added `PATCH /api/import/review` so preview rows can move from `conflict` into `new`, `duplicate`, or `skipped` explicitly
+- Extended import preview payloads to include the matched existing transaction for review context
+- Redesigned the preview step to show a dedicated conflict review queue and block commit until unresolved conflicts are cleared
+- Added helper unit coverage for import-review state mapping
+- Extended API smoke coverage to verify:
+  1. conflict -> import as new -> commit inserts
+  2. conflict -> keep existing -> commit skips cleanly
+- Regenerated a passing `reports/test-report.md` after the sprint 2 flow landed
+
 ## Current Status
 
 | Area | Status |

@@ -612,6 +612,150 @@ async function main() {
     );
     console.log("PASS import conflict detection");
 
+    const reviewImportAsNewResponse = await request("/api/import/review", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        importRunId: conflictJson.importRunId,
+        rowNumber: 1,
+        action: "import_as_new",
+      }),
+    });
+    assert(
+      reviewImportAsNewResponse.ok,
+      `Expected import conflict review (import_as_new) to pass, received ${reviewImportAsNewResponse.status}`
+    );
+    const reviewImportAsNewJson = (await reviewImportAsNewResponse.json()) as {
+      previewStatus: string;
+      reviewAction: string;
+      summary: { newRows: number; conflictRows: number };
+    };
+    assert(
+      reviewImportAsNewJson.previewStatus === "new" &&
+        reviewImportAsNewJson.reviewAction === "import_as_new" &&
+        reviewImportAsNewJson.summary.newRows === 1 &&
+        reviewImportAsNewJson.summary.conflictRows === 0,
+      "Expected reviewed conflict row to become a new row before commit"
+    );
+    console.log("PASS import conflict review import_as_new");
+
+    const reviewedConflictCommitResponse = await request("/api/import/commit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        importRunId: conflictJson.importRunId,
+      }),
+    });
+    assert(
+      reviewedConflictCommitResponse.ok,
+      `Expected reviewed conflict commit to pass, received ${reviewedConflictCommitResponse.status}`
+    );
+    const reviewedConflictCommitJson = (await reviewedConflictCommitResponse.json()) as {
+      committedRows: number;
+      summary: { conflictRows: number };
+      transactions: Array<{ note?: string }>;
+    };
+    assert(
+      reviewedConflictCommitJson.committedRows === 1 &&
+        reviewedConflictCommitJson.summary.conflictRows === 0,
+      "Expected reviewed conflict import_as_new to commit one row without pending conflicts"
+    );
+    assert(
+      reviewedConflictCommitJson.transactions.some((transaction) =>
+        transaction.note?.includes(`${smokeTag} variant`)
+      ),
+      "Expected reviewed conflict import_as_new to appear in the transaction feed"
+    );
+    console.log("PASS import conflict review commit import_as_new");
+
+    const keepExistingPreviewResponse = await request("/api/import/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: `${smokeTag}-keep-existing.csv`,
+        mode: "append",
+        rows: [
+          {
+            rowNumber: 1,
+            rawRow: {
+              วันที่: "2030-01-15",
+              ประเภท: "รายจ่าย",
+              จำนวน: "-1234",
+              โน้ต: `${smokeTag} variant keep`,
+            },
+            normalized: {
+              date: "2030-01-15",
+              amount: 1234,
+              type: "expense",
+              category: "อาหาร",
+              note: `${smokeTag} variant keep`,
+              recipient: smokeTag,
+              paymentChannel: "Debit Card",
+            },
+          },
+        ],
+      }),
+    });
+    const keepExistingPreviewJson = (await keepExistingPreviewResponse.json()) as {
+      importRunId: number;
+      summary: { conflictRows: number };
+    };
+    createdImportRunIds.push(keepExistingPreviewJson.importRunId);
+    assert(
+      keepExistingPreviewJson.summary.conflictRows === 1,
+      "Expected second conflict preview to flag a near-duplicate transaction"
+    );
+
+    const reviewKeepExistingResponse = await request("/api/import/review", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        importRunId: keepExistingPreviewJson.importRunId,
+        rowNumber: 1,
+        action: "keep_existing",
+      }),
+    });
+    assert(
+      reviewKeepExistingResponse.ok,
+      `Expected import conflict review (keep_existing) to pass, received ${reviewKeepExistingResponse.status}`
+    );
+    const reviewKeepExistingJson = (await reviewKeepExistingResponse.json()) as {
+      previewStatus: string;
+      reviewAction: string;
+      summary: { duplicateRows: number; conflictRows: number };
+    };
+    assert(
+      reviewKeepExistingJson.previewStatus === "duplicate" &&
+        reviewKeepExistingJson.reviewAction === "keep_existing" &&
+        reviewKeepExistingJson.summary.duplicateRows === 1 &&
+        reviewKeepExistingJson.summary.conflictRows === 0,
+      "Expected keep_existing review action to convert the conflict into a duplicate"
+    );
+    console.log("PASS import conflict review keep_existing");
+
+    const keepExistingCommitResponse = await request("/api/import/commit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        importRunId: keepExistingPreviewJson.importRunId,
+      }),
+    });
+    assert(
+      keepExistingCommitResponse.ok,
+      `Expected keep_existing conflict commit to pass, received ${keepExistingCommitResponse.status}`
+    );
+    const keepExistingCommitJson = (await keepExistingCommitResponse.json()) as {
+      committedRows: number;
+      summary: { duplicateRows: number; conflictRows: number };
+    };
+    assert(
+      keepExistingCommitJson.committedRows === 0 &&
+        keepExistingCommitJson.summary.duplicateRows === 1 &&
+        keepExistingCommitJson.summary.conflictRows === 0,
+      "Expected keep_existing review action to avoid inserting a new transaction"
+    );
+    console.log("PASS import conflict review commit keep_existing");
+
     console.log("Smoke tests completed successfully.");
   } finally {
     await cleanup();

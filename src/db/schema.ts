@@ -40,6 +40,12 @@ export const importPreviewStatusEnum = pgEnum("import_preview_status", [
   "skipped",
 ]);
 
+export const importReviewActionEnum = pgEnum("import_review_action", [
+  "import_as_new",
+  "keep_existing",
+  "skip",
+]);
+
 export const savingsGoalCategoryEnum = pgEnum("savings_goal_category", [
   "wedding",
   "retirement",
@@ -191,6 +197,7 @@ export const importRunRows = pgTable(
     previewStatus: importPreviewStatusEnum("preview_status")
       .notNull()
       .default("new"),
+    reviewAction: importReviewActionEnum("review_action"),
     fingerprint: text("fingerprint").notNull(),
     duplicateTransactionId: bigint("duplicate_transaction_id", {
       mode: "number",

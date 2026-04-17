@@ -1,6 +1,6 @@
 # Test Report
 
-- Generated at: 17 Apr 2026, 14:47:26
+- Generated at: 17 Apr 2026, 14:56:25
 - Target app URL: http://localhost:3000
 - Overall status: PASS
 
@@ -61,14 +61,14 @@ $ eslint
 ▲ Next.js 16.1.3 (Turbopack)
 
   Creating an optimized production build ...
-✓ Compiled successfully in 4.4s
+✓ Compiled successfully in 5.4s
   Running TypeScript ...
   Collecting page data using 7 workers ...
   Generating static pages using 7 workers (0/11) ...
   Generating static pages using 7 workers (2/11) 
   Generating static pages using 7 workers (5/11) 
   Generating static pages using 7 workers (8/11) 
-✓ Generating static pages using 7 workers (11/11) in 262.0ms
+✓ Generating static pages using 7 workers (11/11) in 316.5ms
   Finalizing page optimization ...
 
 Route (app)
@@ -80,6 +80,7 @@ Route (app)
 ├ ƒ /api/accounts/[accountId]
 ├ ƒ /api/import/commit
 ├ ƒ /api/import/preview
+├ ƒ /api/import/review
 ├ ƒ /api/savings-goals
 ├ ƒ /api/savings-goals/[goalId]
 ├ ƒ /api/savings-goals/[goalId]/entries
@@ -115,20 +116,21 @@ RUN  v4.1.3 /Users/woraweechanlongrat/Documents/projects/meowsliver
       Coverage enabled with v8
 
 
- Test Files  10 passed (10)
-      Tests  53 passed (53)
-   Start at  14:47:49
-   Duration  2.16s (transform 378ms, setup 0ms, import 1.85s, tests 129ms, environment 1ms)
+ Test Files  11 passed (11)
+      Tests  55 passed (55)
+   Start at  14:56:54
+   Duration  2.34s (transform 534ms, setup 0ms, import 2.35s, tests 137ms, environment 1ms)
 
  % Coverage report from v8
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |   77.73 |    67.45 |   77.14 |   78.35 |                   
- lib               |   80.08 |    68.26 |   79.41 |   80.98 |                   
+All files          |   78.11 |    68.02 |   77.98 |   78.63 |                   
+ lib               |   80.43 |    68.82 |   80.18 |   81.23 |                   
   excel-parser.ts  |      80 |       80 |   83.33 |   79.56 | ...96,227,239,253 
   ...-analytics.ts |   52.41 |    37.64 |   63.63 |   52.25 | 115,189,208-347   
-  ...t-pipeline.ts |   91.66 |    63.04 |     100 |   91.66 | 87,92,153         
+  ...t-pipeline.ts |   91.66 |    63.04 |     100 |   91.66 | 90,95,156         
+  import-review.ts |     100 |      100 |     100 |     100 |                   
   ...-analytics.ts |   94.65 |    84.04 |     100 |     100 | ...99,401,403-405 
   ...-analytics.ts |   96.55 |    74.07 |     100 |   96.29 | 26,65             
   savings-goals.ts |     100 |      100 |     100 |     100 |                   
@@ -170,7 +172,7 @@ PASS manual transaction account balance update
 PASS manual transaction list hydration
 PASS manual transaction delete
 PASS manual transaction account balance delete
-PASS savings goal create (7)
+PASS savings goal create (9)
 PASS savings goal update
 PASS savings goal entry
 PASS import preview new
@@ -181,6 +183,10 @@ PASS import transfer commit
 PASS import intra-file duplicate preview
 PASS import intra-file duplicate commit alignment
 PASS import conflict detection
+PASS import conflict review import_as_new
+PASS import conflict review commit import_as_new
+PASS import conflict review keep_existing
+PASS import conflict review commit keep_existing
 Smoke tests completed successfully.
 PASS browser smoke /transactions (/Users/woraweechanlongrat/Documents/projects/meowsliver/output/playwright/transactions-browser-smoke.png)
 ```

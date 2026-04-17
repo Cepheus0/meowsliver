@@ -33,8 +33,14 @@ import {
   type ImportCommitResponse,
   type ImportPreviewResponse,
   type ImportPreviewRow,
+  type ImportReviewAction,
   type ImportPreviewSummary,
 } from "@/lib/import-pipeline";
+import {
+  canReviewPreviewRow,
+  countPendingConflictRows,
+  IMPORT_REVIEW_ACTION_LABELS,
+} from "@/lib/import-review";
 import {
   getTransactionAmountPrefix,
   getTransactionTypeLabel,
@@ -109,6 +115,40 @@ const PREVIEW_STATUS_META: Record<
   },
 };
 
+const REVIEW_ACTION_META: Record<
+  ImportReviewAction,
+  { label: string; className: string }
+> = {
+  import_as_new: {
+    label: "นำเข้าเป็นรายการใหม่",
+    className:
+      "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+  },
+  keep_existing: {
+    label: "ใช้รายการเดิม",
+    className:
+      "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300",
+  },
+  skip: {
+    label: "ข้ามรายการนี้",
+    className:
+      "border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+  },
+};
+
+function recalculateImportStatsFromRows(
+  rows: ImportPreviewRow[],
+  previousStats: ImportStats
+): ImportStats {
+  return {
+    ...previousStats,
+    newRows: rows.filter((row) => row.previewStatus === "new").length,
+    duplicateRows: rows.filter((row) => row.previewStatus === "duplicate").length,
+    conflictRows: rows.filter((row) => row.previewStatus === "conflict").length,
+    skippedRows: rows.filter((row) => row.previewStatus === "skipped").length,
+  };
+}
+
 /** The mapping fields we need users to confirm */
 const MAPPING_FIELDS: {
   key: keyof ColumnMapping;
@@ -161,6 +201,7 @@ export default function ImportPage() {
   const [importStats, setImportStats] = useState<ImportStats>(EMPTY_IMPORT_STATS);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [isCommitting, setIsCommitting] = useState(false);
+  const [reviewingRowNumber, setReviewingRowNumber] = useState<number | null>(null);
 
   // === Step 1: File upload handlers ===
 
@@ -335,6 +376,78 @@ export default function ImportPage() {
     }
   }, [previewRunId, replaceImportedTransactions, setAccounts]);
 
+  const reviewConflictRow = useCallback(
+    async (rowNumber: number, action: ImportReviewAction) => {
+      if (!previewRunId) return;
+
+      setError(null);
+      setReviewingRowNumber(rowNumber);
+
+      try {
+        const response = await fetch("/api/import/review", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            importRunId: previewRunId,
+            rowNumber,
+            action,
+          }),
+        });
+
+        const payload = (await response.json()) as {
+          error?: string;
+          rowNumber?: number;
+          previewStatus?: ImportPreviewRow["previewStatus"];
+          reviewAction?: ImportReviewAction;
+          summary?: ImportPreviewSummary;
+        };
+
+        if (!response.ok || !payload.rowNumber || !payload.previewStatus) {
+          throw new Error(
+            payload.error ?? "ไม่สามารถบันทึกการตัดสินใจสำหรับรายการนี้ได้"
+          );
+        }
+
+        setPreviewRows((currentRows) => {
+          const nextRows = currentRows.map((row) =>
+            row.rowNumber === rowNumber
+              ? {
+                  ...row,
+                  previewStatus: payload.previewStatus!,
+                  reviewAction: payload.reviewAction,
+                }
+              : row
+          );
+
+          setImportStats((currentStats) =>
+            recalculateImportStatsFromRows(nextRows, {
+              ...currentStats,
+              ...(payload.summary
+                ? {
+                    ...payload.summary,
+                    committedRows: currentStats.committedRows,
+                  }
+                : {}),
+            })
+          );
+
+          return nextRows;
+        });
+      } catch (reviewError) {
+        setError(
+          reviewError instanceof Error
+            ? reviewError.message
+            : "ไม่สามารถบันทึกการตัดสินใจสำหรับรายการนี้ได้"
+        );
+      } finally {
+        setReviewingRowNumber(null);
+      }
+    },
+    [previewRunId]
+  );
+
   // === Reset ===
 
   const resetWizard = useCallback(() => {
@@ -348,14 +461,19 @@ export default function ImportPage() {
     setPreviewRows([]);
     setError(null);
     setImportStats(EMPTY_IMPORT_STATS);
+    setReviewingRowNumber(null);
   }, []);
 
   // === Validation: can we proceed from mapping? ===
   const canProceedFromMapping = mapping.date !== "" && mapping.amount !== "";
   const hasReviewExceptions =
     importStats.duplicateRows > 0 || importStats.conflictRows > 0;
+  const pendingConflictRows = countPendingConflictRows(previewRows);
+  const reviewableRows = previewRows.filter(canReviewPreviewRow);
   const confirmActionLabel =
-    importStats.newRows > 0
+    pendingConflictRows > 0
+      ? `เคลียร์ ${pendingConflictRows} conflict ก่อน`
+      : importStats.newRows > 0
       ? `ยืนยันเพิ่ม ${importStats.newRows.toLocaleString()} รายการใหม่`
       : "บันทึกผลตรวจสอบ";
 
@@ -731,6 +849,139 @@ export default function ImportPage() {
             </p>
           )}
 
+          {reviewableRows.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="space-y-2">
+                  <CardTitle>Conflict Review Queue</CardTitle>
+                  <p className="text-sm text-[color:var(--app-text-muted)]">
+                    เลือกว่าจะนำเข้าแถวที่ใกล้เคียงเป็นรายการใหม่ ใช้รายการเดิม หรือข้ามรายการนี้
+                    ระบบจะยังไม่อนุญาตให้ commit จนกว่ารายการสถานะ{" "}
+                    <span className="font-medium text-amber-600 dark:text-amber-400">
+                      ต้องตรวจสอบ
+                    </span>{" "}
+                    จะถูกตัดสินใจครบทุกแถว
+                  </p>
+                </div>
+              </CardHeader>
+
+              <div className="space-y-4">
+                {reviewableRows.map((row) => {
+                  const tx = row.transaction;
+                  const existingTx = row.existingTransaction;
+                  const isReviewing = reviewingRowNumber === row.rowNumber;
+
+                  return (
+                    <div
+                      key={`review-${row.rowNumber}`}
+                      className="rounded-2xl border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)]/60 p-4"
+                    >
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="text-sm font-semibold text-[color:var(--app-text)]">
+                          แถว {row.rowNumber}
+                        </span>
+                        <span
+                          className={cn(
+                            "inline-flex rounded-md px-2 py-0.5 text-xs font-medium",
+                            PREVIEW_STATUS_META[row.previewStatus].className
+                          )}
+                        >
+                          {PREVIEW_STATUS_META[row.previewStatus].label}
+                        </span>
+                        {row.reviewAction ? (
+                          <span
+                            className={cn(
+                              "inline-flex rounded-md border px-2 py-0.5 text-xs font-medium",
+                              REVIEW_ACTION_META[row.reviewAction].className
+                            )}
+                          >
+                            {IMPORT_REVIEW_ACTION_LABELS[row.reviewAction]}
+                          </span>
+                        ) : null}
+                        {row.reason ? (
+                          <span className="text-xs text-[color:var(--app-text-muted)]">
+                            {row.reason}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                        <div className="rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-4">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                            รายการจากไฟล์
+                          </p>
+                          <div className="mt-3 space-y-1.5 text-sm text-[color:var(--app-text)]">
+                            <p>{tx?.date ?? "-"} {tx?.time ? `· ${tx.time}` : ""}</p>
+                            <p>{tx?.category ?? "-"}</p>
+                            <p className="font-semibold">
+                              {tx
+                                ? `${getTransactionAmountPrefix(tx.type)}${formatBaht(tx.amount)}`
+                                : "-"}
+                            </p>
+                            <p className="text-[color:var(--app-text-muted)]">
+                              {tx?.note || tx?.subcategory || "-"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-4">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-sky-600 dark:text-sky-400">
+                            รายการเดิมที่ใกล้เคียง
+                          </p>
+                          <div className="mt-3 space-y-1.5 text-sm text-[color:var(--app-text)]">
+                            <p>
+                              {existingTx?.date ?? "-"}{" "}
+                              {existingTx?.time ? `· ${existingTx.time}` : ""}
+                            </p>
+                            <p>{existingTx?.category ?? "-"}</p>
+                            <p className="font-semibold">
+                              {existingTx
+                                ? `${getTransactionAmountPrefix(existingTx.type)}${formatBaht(
+                                    existingTx.amount
+                                  )}`
+                                : "-"}
+                            </p>
+                            <p className="text-[color:var(--app-text-muted)]">
+                              {existingTx?.note || existingTx?.subcategory || "-"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {(Object.keys(REVIEW_ACTION_META) as ImportReviewAction[]).map(
+                          (action) => (
+                            <button
+                              key={action}
+                              type="button"
+                              disabled={isReviewing || isCommitting}
+                              onClick={() => void reviewConflictRow(row.rowNumber, action)}
+                              className={cn(
+                                "rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+                                REVIEW_ACTION_META[action].className,
+                                row.reviewAction === action &&
+                                  "ring-2 ring-offset-2 ring-offset-[color:var(--app-surface)] ring-[color:var(--app-brand)]"
+                              )}
+                            >
+                              {isReviewing && row.reviewAction !== action ? (
+                                <span className="inline-flex items-center gap-2">
+                                  <Loader2 size={14} className="animate-spin" />
+                                  กำลังบันทึก...
+                                </span>
+                              ) : (
+                                IMPORT_REVIEW_ACTION_LABELS[action]
+                              )}
+                            </button>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+
           {/* Preview table */}
           <Card>
             <CardHeader>
@@ -738,11 +989,16 @@ export default function ImportPage() {
                 <CardTitle>ตัวอย่างข้อมูลหลังตรวจซ้ำกับฐานข้อมูล (20 แถวแรก)</CardTitle>
                 <p className="text-sm text-[color:var(--app-text-muted)]">
                   ระบบจะเพิ่มเฉพาะรายการสถานะ <span className="font-medium text-emerald-600 dark:text-emerald-400">ใหม่</span>{" "}
-                  เท่านั้น ส่วนรายการซ้ำหรือรายการที่ใกล้เคียงจะถูกกันออกไว้ก่อน
+                  เท่านั้น ส่วนรายการซ้ำจะกันออกไว้ และรายการ conflict ต้องผ่านการตัดสินใจก่อน
                 </p>
                 {hasReviewExceptions && (
                   <p className="text-sm text-amber-600 dark:text-amber-400">
                     พบรายการซ้ำหรือรายการที่ควรตรวจสอบก่อนนำเข้า กรุณาเช็กแถวที่มีสถานะไม่ใช่ “ใหม่”
+                  </p>
+                )}
+                {pendingConflictRows > 0 && (
+                  <p className="text-sm text-amber-600 dark:text-amber-400">
+                    ยังมี {pendingConflictRows} รายการ conflict ที่รอการตัดสินใจ
                   </p>
                 )}
               </div>
@@ -761,6 +1017,7 @@ export default function ImportPage() {
                     <th className="py-2.5 pr-3 text-right text-xs font-medium text-zinc-500">จำนวน</th>
                     <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">โน้ต</th>
                     <th className="py-2.5 text-xs font-medium text-zinc-500">ช่องทาง</th>
+                    <th className="py-2.5 pl-3 text-xs font-medium text-zinc-500">การตัดสินใจ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -828,6 +1085,13 @@ export default function ImportPage() {
                         <td className="max-w-[150px] truncate py-2 text-xs text-[color:var(--app-text-muted)]">
                           {tx?.subcategory || "-"}
                         </td>
+                        <td className="py-2 pl-3 text-xs text-[color:var(--app-text-muted)]">
+                          {row.reviewAction
+                            ? IMPORT_REVIEW_ACTION_LABELS[row.reviewAction]
+                            : row.previewStatus === "conflict"
+                              ? "รอการตัดสินใจ"
+                              : "-"}
+                        </td>
                       </tr>
                     );
                   })}
@@ -848,7 +1112,7 @@ export default function ImportPage() {
               </Button>
               <Button
                 onClick={() => void confirmImport()}
-                disabled={!previewRunId || isCommitting}
+                disabled={!previewRunId || isCommitting || pendingConflictRows > 0}
               >
                 {isCommitting ? (
                   <>

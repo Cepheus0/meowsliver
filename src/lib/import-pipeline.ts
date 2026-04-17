@@ -4,6 +4,7 @@ import { getTransactionDefaultCategory } from "@/lib/transaction-presentation";
 import type { Transaction, TransactionType } from "@/lib/types";
 
 export type ImportPreviewStatus = "new" | "duplicate" | "conflict" | "skipped";
+export type ImportReviewAction = "import_as_new" | "keep_existing" | "skip";
 
 export interface NormalizedImportRow {
   date: string;
@@ -29,9 +30,11 @@ export interface PreparedImportRow {
 export interface ImportPreviewRow {
   rowNumber: number;
   previewStatus: ImportPreviewStatus;
+  reviewAction?: ImportReviewAction;
   duplicateTransactionId?: number;
   reason?: string;
   transaction?: Transaction;
+  existingTransaction?: Transaction;
 }
 
 export interface ImportPreviewSummary {

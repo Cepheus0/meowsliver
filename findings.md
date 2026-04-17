@@ -153,6 +153,16 @@ The most reliable working flow today is:
 - Dependencies: preview-row detail UI, resolution actions, import-run persistence refinements, regression tests around duplicate semantics
 - Trade-off: more workflow complexity in exchange for much better import trust and lower data-cleanup cost later
 
+### Sprint 2 Outcome
+
+- Conflict rows now have a DB-backed review state before commit instead of being passive warnings only
+- The import preview UI now shows a dedicated review queue with side-by-side context for the incoming row and the matched existing row
+- Users can now choose `import_as_new`, `keep_existing`, or `skip` on each conflict row
+- Import commit is now blocked while unresolved conflict rows remain, which reduces accidental dirty imports
+- Smoke coverage now validates both high-value resolution paths:
+  - review conflict -> import as new -> commit inserts the row
+  - review conflict -> keep existing -> commit skips insertion cleanly
+
 ### 3. Account Reconciliation and Explainability
 
 - Why it matters: homepage balances are correct relative to the `accounts` table, but users cannot yet see whether each balance comes from manual adjustments, imported transactions, or drift
