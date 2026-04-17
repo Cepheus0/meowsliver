@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -10,7 +11,6 @@ import {
   TrendingUp,
   BarChart3,
   Menu,
-  Cat,
   Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,8 +48,15 @@ export function Sidebar() {
         </button>
         {!sidebarCollapsed && (
           <div className="flex items-center gap-2 overflow-hidden">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[color:var(--app-brand-soft-strong)] text-[color:var(--app-brand-text)]">
-              <Cat size={14} />
+            <div className="flex shrink-0 items-center justify-center overflow-hidden rounded-md">
+              <Image 
+                src="/logo.png" 
+                alt="Meowsliver Logo" 
+                width={34} 
+                height={34}
+                className="rounded-md object-cover animate-logo-reveal"
+                unoptimized
+              />
             </div>
             <span className="truncate text-sm font-semibold text-[color:var(--app-text)]">
               เหมียวเงิน
