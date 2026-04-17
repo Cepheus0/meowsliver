@@ -34,7 +34,7 @@ function PortfolioStatCard({
       <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+      <p className="mt-2 text-2xl font-bold text-[color:var(--app-text)]">
         {value}
       </p>
       <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">{helper}</p>
@@ -153,7 +153,7 @@ export default function BucketsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+          <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
             Savings Goals Portfolio
           </h1>
           <p className="mt-1 max-w-3xl text-sm text-[color:var(--app-text-muted)]">
@@ -189,19 +189,19 @@ export default function BucketsPage() {
                 >
                   {preset.icon}
                 </div>
-                <p className="mt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                <p className="mt-4 text-base font-semibold text-[color:var(--app-text)]">
                   {preset.name}
                 </p>
                 <p className="mt-1 text-sm leading-relaxed text-[color:var(--app-text-muted)]">
                   {preset.description}
                 </p>
               </div>
-              <Sparkles size={18} className="shrink-0 text-zinc-400" />
+              <Sparkles size={18} className="shrink-0 text-[color:var(--app-text-subtle)]" />
             </div>
             <p className="mt-4 text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-subtle)]">
               Suggested vehicle
             </p>
-            <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
+            <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
               {preset.strategyLabel}
             </p>
           </button>
@@ -216,7 +216,7 @@ export default function BucketsPage() {
           <form className="space-y-4" onSubmit={handleCreateGoal}>
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text)]">
                   ชื่อเป้าหมาย
                 </span>
                 <input
@@ -228,7 +228,7 @@ export default function BucketsPage() {
                       name: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none ring-0 transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="theme-border theme-surface w-full rounded-xl border px-4 py-2.5 text-[color:var(--app-text)] outline-none ring-0 transition-colors focus:border-[#f54e00]"
                   placeholder="เช่น เงินแต่งงาน, เงินเกษียณ"
                 />
               </label>
@@ -276,13 +276,13 @@ export default function BucketsPage() {
                       targetAmount: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="theme-border theme-surface w-full rounded-xl border px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[#f54e00]"
                   placeholder="เช่น 300000"
                 />
               </label>
 
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text)]">
                   วันเป้าหมาย
                 </span>
                 <input
@@ -294,12 +294,12 @@ export default function BucketsPage() {
                       targetDate: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="theme-border theme-surface w-full rounded-xl border px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[#f54e00]"
                 />
               </label>
 
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text)]">
                   ช่องทางออม / กลยุทธ์
                 </span>
                 <input
@@ -310,13 +310,13 @@ export default function BucketsPage() {
                       strategyLabel: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="theme-border theme-surface w-full rounded-xl border px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[#f54e00]"
                   placeholder="เช่น RMF, Money Market Fund, บัญชีฝากประจำ"
                 />
               </label>
 
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text)]">
                   ยอดตั้งต้น (ถ้ามี)
                 </span>
                 <input
@@ -330,13 +330,13 @@ export default function BucketsPage() {
                       initialAmount: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="theme-border theme-surface w-full rounded-xl border px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[#f54e00]"
                   placeholder="เช่น 50000"
                 />
               </label>
 
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text)]">
                   วันที่ยอดตั้งต้น
                 </span>
                 <input
@@ -348,12 +348,12 @@ export default function BucketsPage() {
                       initialDate: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="theme-border theme-surface w-full rounded-xl border px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[#f54e00]"
                 />
               </label>
 
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text)]">
                   ไอคอน
                 </span>
                 <input
@@ -364,14 +364,14 @@ export default function BucketsPage() {
                       icon: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="theme-border theme-surface w-full rounded-xl border px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[#f54e00]"
                   placeholder="เช่น 💍"
                 />
               </label>
             </div>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-zinc-700 dark:text-zinc-200">
+              <span className="font-medium text-[color:var(--app-text)]">
                 บันทึกเพิ่มเติม
               </span>
               <textarea
@@ -383,7 +383,7 @@ export default function BucketsPage() {
                   }))
                 }
                 rows={4}
-                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                className="theme-border theme-surface w-full rounded-xl border px-4 py-3 text-[color:var(--app-text)] outline-none transition-colors focus:border-[#f54e00]"
                 placeholder="เช่น เป้าหมายนี้อยากเก็บให้ครบก่อน Q4 ปีหน้า และคุม volatility ต่ำ"
               />
             </label>
@@ -409,7 +409,7 @@ export default function BucketsPage() {
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="h-32 animate-pulse rounded-2xl bg-zinc-100 dark:bg-zinc-800"
+              className="h-32 animate-pulse rounded-2xl bg-[color:var(--app-surface-soft)]"
             />
           ))}
         </div>
@@ -453,7 +453,7 @@ export default function BucketsPage() {
 
                 return (
                   <Link key={goal.id} href={`/buckets/${goal.id}`} className="block">
-                    <Card className="overflow-hidden transition-all hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md dark:hover:border-zinc-600">
+                    <Card className="overflow-hidden transition-all hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)] hover:shadow-md">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-4">
                           <div
@@ -464,7 +464,7 @@ export default function BucketsPage() {
                           </div>
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
-                              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                              <h2 className="text-lg font-semibold text-[color:var(--app-text)]">
                                 {goal.name}
                               </h2>
                               <span
@@ -487,7 +487,7 @@ export default function BucketsPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                          <p className="text-2xl font-bold text-[color:var(--app-text)]">
                             {Math.round(goal.progressPercent)}%
                           </p>
                           <p className="text-xs text-[color:var(--app-text-muted)]">
@@ -496,7 +496,7 @@ export default function BucketsPage() {
                         </div>
                       </div>
 
-                      <div className="mt-5 h-3 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                      <div className="mt-5 h-3 overflow-hidden rounded-full bg-[color:var(--app-surface-soft)]">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
@@ -509,7 +509,7 @@ export default function BucketsPage() {
                       <div className="mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
                         <div>
                           <p className="text-xs text-[color:var(--app-text-muted)]">ยอดปัจจุบัน</p>
-                          <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                          <p className="mt-1 text-sm font-semibold text-[color:var(--app-text)]">
                             {formatBaht(goal.currentAmount)}
                           </p>
                         </div>
@@ -521,19 +521,19 @@ export default function BucketsPage() {
                         </div>
                         <div>
                           <p className="text-xs text-[color:var(--app-text-muted)]">กำไรสะสม</p>
-                          <p className="mt-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                          <p className="mt-1 text-sm font-semibold text-[color:var(--income-text)]">
                             {formatBaht(goal.totalGrowth)}
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-[color:var(--app-text-muted)]">% กำไร</p>
-                          <p className="mt-1 text-sm font-semibold text-blue-600 dark:text-blue-400">
+                          <p className="mt-1 text-sm font-semibold text-[color:var(--app-brand-text)]">
                             {formatPercent(goal.growthPercent)}
                           </p>
                         </div>
                       </div>
 
-                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--app-divider-soft)] pt-4">
                         <div className="flex flex-wrap gap-4 text-sm text-[color:var(--app-text-muted)]">
                           <span className="inline-flex items-center gap-2">
                             <Target size={16} />
@@ -544,7 +544,7 @@ export default function BucketsPage() {
                             พอร์ตเติบโต {formatPercent(goal.growthPercent)}
                           </span>
                         </div>
-                        <span className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors dark:bg-zinc-100 dark:text-zinc-900">
+                        <span className="inline-flex items-center gap-2 rounded-xl bg-[#f54e00] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#d44400]">
                           เปิดเป้านี้
                           <ArrowRight size={16} />
                         </span>

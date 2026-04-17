@@ -57,7 +57,7 @@ export function BucketsOverview() {
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="h-28 animate-pulse rounded-2xl bg-[color:var(--app-surface-soft)]"
+              className="h-28 animate-pulse rounded-lg bg-[color:var(--app-surface-soft)]"
             />
           ))}
         </div>
@@ -113,7 +113,7 @@ export function BucketsOverview() {
           </p>
         </div>
         <div className="ml-auto flex items-center gap-3">
-          <div className="rounded-2xl bg-emerald-50 px-3 py-2 text-right dark:bg-emerald-500/10">
+          <div className="rounded-md border border-[color:var(--app-border)] px-3 py-2 text-right">
             <p className="text-xs font-medium text-[color:var(--app-text-muted)]">
               ความคืบหน้ารวม
             </p>
@@ -123,7 +123,7 @@ export function BucketsOverview() {
           </div>
           <Link
             href="/buckets"
-            className="theme-border rounded-xl border px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
+            className="theme-border rounded-md border px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
           >
             ดูทั้งหมด
           </Link>
@@ -138,11 +138,11 @@ export function BucketsOverview() {
             <Link
               key={goal.id}
               href={`/buckets/${goal.id}`}
-              className="theme-border rounded-2xl border bg-[color:var(--app-surface-soft)]/70 p-4 transition-colors hover:bg-[color:var(--app-surface)]"
+              className="theme-border rounded-lg border bg-[color:var(--app-surface-soft)]/70 p-4 transition-colors hover:bg-[color:var(--app-surface)]"
             >
               <div className="flex items-start gap-3">
                 <div
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl text-2xl"
+                  className="flex h-11 w-11 items-center justify-center rounded-lg text-2xl"
                   style={{ backgroundColor: `${goal.color}18` }}
                 >
                   {goal.icon}
@@ -158,7 +158,7 @@ export function BucketsOverview() {
                       </p>
                     </div>
                     <span
-                      className="rounded-xl px-2.5 py-1 text-xs font-semibold"
+                      className="rounded-md px-2.5 py-1 text-xs font-semibold"
                       style={{
                         color: goal.color,
                         backgroundColor: `${goal.color}15`,

@@ -25,32 +25,32 @@ function StatCard({ label, value, subtext, icon, trend, color }: StatCardProps) 
   return (
     <Card className="flex items-start gap-4">
       <div
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-        style={{ backgroundColor: `${color}20` }}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md"
+        style={{ backgroundColor: `${color}15` }}
       >
         <span style={{ color }}>{icon}</span>
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-medium text-[color:var(--app-text-muted)]">
+        <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
           {label}
         </p>
-        <p className="mt-0.5 text-xl font-bold text-[color:var(--app-text)]">
+        <p className="mt-0.5 font-[family-name:var(--font-geist-mono)] text-xl font-semibold text-[color:var(--app-text)]">
           {value}
         </p>
         {subtext && (
           <p className="mt-0.5 flex items-center gap-1 text-xs">
             {trend === "up" && (
-              <ArrowUpRight size={12} className="text-emerald-500" />
+              <ArrowUpRight size={12} className="text-[color:var(--income-text)]" />
             )}
             {trend === "down" && (
-              <ArrowDownRight size={12} className="text-red-500" />
+              <ArrowDownRight size={12} className="text-[color:var(--expense-text)]" />
             )}
             <span
               className={
                 trend === "up"
-                  ? "text-emerald-500"
+                  ? "text-[color:var(--income-text)]"
                   : trend === "down"
-                    ? "text-red-500"
+                    ? "text-[color:var(--expense-text)]"
                     : "text-[color:var(--app-text-subtle)]"
               }
             >
@@ -90,7 +90,7 @@ export function SummaryCards() {
         subtext={subtext}
         icon={<TrendingUp size={20} />}
         trend={hasYearData ? "up" : "neutral"}
-        color="#22c55e"
+        color="#1f8a65"
       />
       <StatCard
         label="รายจ่ายรวม"
@@ -98,7 +98,7 @@ export function SummaryCards() {
         subtext={subtext}
         icon={<Wallet size={20} />}
         trend={hasYearData ? "down" : "neutral"}
-        color="#ef4444"
+        color="#cf2d56"
       />
       <StatCard
         label="เงินคงเหลือ"
@@ -106,7 +106,7 @@ export function SummaryCards() {
         subtext={hasYearData ? (netCashflow >= 0 ? "เหลือเก็บ" : "ขาดดุล") : subtext}
         icon={<PiggyBank size={20} />}
         trend={hasYearData ? (netCashflow >= 0 ? "up" : "down") : "neutral"}
-        color="#3b82f6"
+        color={netCashflow >= 0 ? "#1f8a65" : "#cf2d56"}
       />
       <StatCard
         label="อัตราการออม"
@@ -114,7 +114,7 @@ export function SummaryCards() {
         subtext={hasYearData ? (savingsRate >= 20 ? "ดีมาก!" : "ต้องปรับปรุง") : subtext}
         icon={<Percent size={20} />}
         trend={hasYearData ? (savingsRate >= 20 ? "up" : "down") : "neutral"}
-        color="#8b5cf6"
+        color="#f54e00"
       />
     </div>
   );

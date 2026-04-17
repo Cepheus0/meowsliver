@@ -13,7 +13,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Landmark } from "lucide-react";
 import { ChartViewport } from "@/components/charts/ChartViewport";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { chartTheme } from "@/lib/chart-theme";
+import { chartTheme, chartColors } from "@/lib/chart-theme";
 
 export function AssetPieChart() {
   const { getAssets, getLiabilities, getNetWorth, getTotalAssets, getTotalLiabilities } = useFinanceStore();
@@ -92,21 +92,22 @@ export function AssetPieChart() {
               }
               onMouseLeave={() => setHoveredItem(null)}
             >
-              {pieData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.color}
-                  opacity={
-                    hoveredItem === null || hoveredItem === entry.label
-                      ? 1
-                      : 0.4
-                  }
-                  stroke={
-                    hoveredItem === entry.label ? entry.color : "transparent"
-                  }
-                  strokeWidth={hoveredItem === entry.label ? 3 : 0}
-                />
-              ))}
+              {pieData.map((entry, index) => {
+                const fill = chartColors.categories[index % chartColors.categories.length];
+                return (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={fill}
+                    opacity={
+                      hoveredItem === null || hoveredItem === entry.label
+                        ? 1
+                        : 0.35
+                    }
+                    stroke="transparent"
+                    strokeWidth={0}
+                  />
+                );
+              })}
             </Pie>
             <Tooltip
               formatter={(value) => formatBaht(Number(value))}
@@ -117,26 +118,29 @@ export function AssetPieChart() {
       </ChartViewport>
 
       {/* Legend */}
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-        {pieData.map((item) => (
-          <div
-            key={item.label}
-            className="flex items-center gap-2 text-xs"
-            onMouseEnter={() => setHoveredItem(item.label)}
-            onMouseLeave={() => setHoveredItem(null)}
-          >
-            <span
-              className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
-              style={{ backgroundColor: item.color }}
-            />
-            <span className="truncate text-zinc-600 dark:text-zinc-400">
-              {item.label}
-            </span>
-            <span className="ml-auto whitespace-nowrap font-medium text-zinc-800 dark:text-zinc-200">
-              {formatBaht(item.value)}
-            </span>
-          </div>
-        ))}
+      <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+        {pieData.map((item, index) => {
+          const dotColor = chartColors.categories[index % chartColors.categories.length];
+          return (
+            <div
+              key={item.label}
+              className="flex items-center gap-2 text-xs"
+              onMouseEnter={() => setHoveredItem(item.label)}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
+              <span
+                className="inline-block h-2 w-2 shrink-0 rounded-sm"
+                style={{ backgroundColor: dotColor }}
+              />
+              <span className="truncate text-[color:var(--app-text-muted)]">
+                {item.label}
+              </span>
+              <span className="ml-auto whitespace-nowrap font-[family-name:var(--font-geist-mono)] font-medium text-[color:var(--app-text)]">
+                {formatBaht(item.value)}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </Card>
   );

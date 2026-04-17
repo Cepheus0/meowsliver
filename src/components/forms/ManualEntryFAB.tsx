@@ -55,7 +55,7 @@ export function ManualEntryFAB() {
       {/* FAB Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 transition-transform hover:scale-110 hover:bg-emerald-700 active:scale-95"
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#f54e00] text-white shadow-lg shadow-[#f54e00]/25 transition-transform hover:scale-110 hover:bg-[#d44400] active:scale-95"
       >
         <Plus size={28} />
       </button>
@@ -63,7 +63,7 @@ export function ManualEntryFAB() {
       {/* Modal overlay */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-[color:var(--app-overlay)] sm:items-center">
-          <div className="theme-border theme-surface-strong w-full max-w-lg rounded-t-3xl border p-6 shadow-[var(--app-card-shadow)] sm:rounded-3xl">
+          <div className="theme-border theme-surface-strong w-full max-w-lg rounded-t-xl border p-6 shadow-[var(--app-card-shadow)] sm:rounded-md">
             {/* Header */}
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-bold text-[color:var(--app-text)]">
@@ -78,7 +78,7 @@ export function ManualEntryFAB() {
             </div>
 
             {/* Income / Expense Toggle */}
-            <div className="mb-4 flex rounded-xl bg-[color:var(--app-surface-soft)] p-1">
+            <div className="mb-4 flex rounded-md bg-[color:var(--app-surface-soft)] p-1">
               <button
                 onClick={() => setTxType("expense")}
                 className={cn(
@@ -95,7 +95,7 @@ export function ManualEntryFAB() {
                 className={cn(
                   "flex-1 rounded-lg py-2 text-sm font-medium transition-colors",
                   txType === "income"
-                    ? "bg-emerald-500 text-white shadow"
+                    ? "bg-[color:var(--income)] text-white shadow"
                     : "text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
                 )}
               >
@@ -132,7 +132,7 @@ export function ManualEntryFAB() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0"
-                  className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-lg font-bold text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+                  className="theme-border w-full rounded-md border bg-transparent px-4 py-2.5 text-lg font-bold text-[color:var(--app-text)] outline-none focus:border-[#f54e00]"
                 />
               </div>
 
@@ -159,7 +159,7 @@ export function ManualEntryFAB() {
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+                    className="theme-border w-full rounded-md border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-[#f54e00]"
                   />
                 </div>
                 <div>
@@ -171,7 +171,7 @@ export function ManualEntryFAB() {
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="รายละเอียด..."
-                    className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+                    className="theme-border w-full rounded-md border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-[#f54e00]"
                   />
                 </div>
               </div>

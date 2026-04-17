@@ -31,7 +31,6 @@ export function Select({
 
   const selectedLabel = options.find((o) => o.value === value)?.label ?? placeholder;
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
@@ -43,7 +42,6 @@ export function Select({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  // Close on Escape
   useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -61,9 +59,9 @@ export function Select({
         disabled={disabled}
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "theme-border theme-surface flex w-full items-center justify-between gap-2 rounded-xl border px-4 py-2 text-sm font-medium text-[color:var(--app-text)] shadow-[var(--app-card-shadow)] transition-all",
-          "hover:bg-[color:var(--app-surface-soft)] focus:outline-none focus:ring-2 focus:ring-emerald-500/40",
-          open && "ring-2 ring-emerald-500/40",
+          "flex w-full items-center justify-between gap-2 rounded-md border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors",
+          "hover:bg-[color:var(--app-surface-soft)] focus:outline-none focus:ring-2 focus:ring-orange-500/40",
+          open && "ring-2 ring-violet-500/40",
           disabled && "cursor-not-allowed opacity-40"
         )}
         aria-haspopup="listbox"
@@ -71,9 +69,9 @@ export function Select({
       >
         <span className="truncate">{selectedLabel}</span>
         <ChevronDown
-          size={15}
+          size={14}
           className={cn(
-            "shrink-0 text-[color:var(--app-text-muted)] transition-transform duration-200",
+            "shrink-0 text-[color:var(--app-text-muted)] transition-transform duration-150",
             open && "rotate-180"
           )}
         />
@@ -84,13 +82,12 @@ export function Select({
         <div
           role="listbox"
           className={cn(
-            "absolute left-0 top-full z-50 mt-1.5 min-w-full overflow-hidden rounded-2xl border border-[color:var(--app-border-strong)]",
-            "bg-[color:var(--app-surface-strong)] shadow-[0_20px_60px_-20px_rgba(15,23,42,0.28)] backdrop-blur-xl",
-            "dark:shadow-[0_20px_60px_-20px_rgba(2,6,23,0.7)]",
+            "absolute left-0 top-full z-50 mt-1 min-w-full overflow-hidden rounded-lg border border-[color:var(--app-border-strong)]",
+            "bg-[color:var(--app-surface-strong)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]",
             "animate-in fade-in-0 zoom-in-95 duration-100"
           )}
         >
-          <div className="max-h-60 overflow-y-auto p-1.5">
+          <div className="max-h-60 overflow-y-auto p-1">
             {options.map((option) => {
               const isSelected = option.value === value;
               return (
@@ -104,14 +101,14 @@ export function Select({
                     setOpen(false);
                   }}
                   className={cn(
-                    "flex w-full items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-sm transition-colors",
+                    "flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-sm transition-colors",
                     isSelected
                       ? "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)] font-medium"
                       : "text-[color:var(--app-text)] hover:bg-[color:var(--app-surface-soft)]"
                   )}
                 >
                   <span>{option.label}</span>
-                  {isSelected && <Check size={14} className="shrink-0" />}
+                  {isSelected && <Check size={13} className="shrink-0" />}
                 </button>
               );
             })}

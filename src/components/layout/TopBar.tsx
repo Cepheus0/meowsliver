@@ -10,17 +10,17 @@ export function TopBar() {
   const mounted = useMounted();
 
   return (
-    <header className="theme-surface-muted sticky top-0 z-30 flex h-16 items-center justify-between px-6 shadow-[inset_0_-1px_0_var(--app-shell-border)] backdrop-blur-xl">
+    <header className="sticky top-0 z-30 flex h-[52px] items-center justify-between border-b border-[color:var(--app-shell-border)] bg-[color:var(--app-bg-elevated)] px-6">
       <YearPicker />
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {mounted && (
           <button
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-2.5 text-[color:var(--app-text-muted)] shadow-[var(--app-card-shadow)] transition-colors hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-[color:var(--app-text-muted)] transition-colors hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
             title="สลับโหมดสว่าง/มืด"
           >
-            {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {resolvedTheme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </button>
         )}
       </div>

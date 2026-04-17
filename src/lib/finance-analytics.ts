@@ -19,13 +19,13 @@ export const EMPTY_INVESTMENTS: Record<string, InvestmentHolding[]> = {
 };
 
 const CATEGORY_COLORS = [
-  "#ef4444",
-  "#f59e0b",
-  "#8b5cf6",
-  "#ec4899",
-  "#3b82f6",
-  "#22c55e",
-  "#64748b",
+  "#7c2d12", // orange-950 (largest slice)
+  "#9a3a16", // deep copper
+  "#b84d22", // rust
+  "#d9622f", // warm orange
+  "#f07843", // medium orange
+  "#f5a070", // light salmon
+  "#f8c4a0", // pale peach
 ];
 
 const ASSET_TYPE_COLORS: Record<string, string> = {

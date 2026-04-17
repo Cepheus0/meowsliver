@@ -23,7 +23,7 @@ import {
   getExpenseBreakdownFromTransactions,
   getMonthlyNetWorthTrendFromTransactions,
 } from "@/lib/finance-analytics";
-import { chartTheme } from "@/lib/chart-theme";
+import { chartTheme, chartColors } from "@/lib/chart-theme";
 import { FileSpreadsheet } from "lucide-react";
 
 function formatCurrencyAxis(value: number) {
@@ -140,9 +140,9 @@ export default function ReportsPage() {
                   type="monotone"
                   dataKey="netWorth"
                   name="ยอดสุทธิสะสม"
-                  stroke="#22c55e"
+                  stroke={chartColors.net}
                   strokeWidth={3}
-                  dot={{ fill: "#22c55e", r: shouldUseMonthlyNetWorthView ? 2.5 : 4 }}
+                  dot={{ fill: chartColors.net, r: shouldUseMonthlyNetWorthView ? 2.5 : 4 }}
                 />
               </LineChart>
             )}
@@ -198,7 +198,7 @@ export default function ReportsPage() {
                     <span className="text-[color:var(--app-text-muted)]">
                       {item.name}
                     </span>
-                    <span className="ml-auto font-medium text-zinc-700 dark:text-zinc-200">
+                    <span className="ml-auto font-medium text-[color:var(--app-text)]">
                       {formatBaht(item.value)}
                     </span>
                   </div>
@@ -243,19 +243,19 @@ export default function ReportsPage() {
                     <Tooltip
                       formatter={(value) => formatBaht(Number(value))}
                       contentStyle={chartTheme.tooltipStyle}
-                      cursor={{ fill: "rgba(34,197,94,0.08)" }}
+                      cursor={{ fill: "var(--app-brand-soft)" }}
                     />
                     <Bar
                       dataKey="income"
                       name="รายรับ"
-                      fill="#22c55e"
+                      fill={chartColors.income}
                       radius={[4, 4, 0, 0]}
                       cursor="pointer"
                     />
                     <Bar
                       dataKey="expense"
                       name="รายจ่าย"
-                      fill="#ef4444"
+                      fill={chartColors.expense}
                       radius={[4, 4, 0, 0]}
                       cursor="pointer"
                     />
@@ -286,7 +286,7 @@ export default function ReportsPage() {
                   formatter={(value) => `${Number(value).toFixed(1)}%`}
                   contentStyle={chartTheme.tooltipStyle}
                 />
-                <Bar dataKey="rate" name="Savings Rate" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="rate" name="Savings Rate" fill={chartColors.metric} radius={[6, 6, 0, 0]} />
               </BarChart>
             )}
           </ChartViewport>

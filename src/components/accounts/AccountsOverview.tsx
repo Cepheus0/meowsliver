@@ -17,7 +17,7 @@ export function AccountsOverview() {
   if (!storeHydrated) {
     return (
       <Card>
-        <div className="h-32 animate-pulse rounded-xl bg-[color:var(--app-surface-soft)]" />
+        <div className="h-32 animate-pulse rounded-md bg-[color:var(--app-surface-soft)]" />
       </Card>
     );
   }
@@ -72,14 +72,14 @@ export function AccountsOverview() {
         <div className="flex items-center gap-2">
           <Link
             href="/accounts"
-            className="inline-flex items-center gap-1 rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-3 py-1.5 text-xs font-medium text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+            className="inline-flex items-center gap-1 rounded-md border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-3 py-1.5 text-xs font-medium text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
           >
             จัดการบัญชี
             <ArrowRight size={12} />
           </Link>
           <Link
             href="/accounts"
-            className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400"
+            className="inline-flex items-center gap-1 rounded-md bg-[#f54e00] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#d44400]"
           >
             <Plus size={12} />
             เพิ่มบัญชี
@@ -94,11 +94,11 @@ export function AccountsOverview() {
             <Link
               key={account.id}
               href={`/accounts/${account.id}`}
-              className="theme-border group flex min-w-[180px] flex-col gap-3 rounded-2xl border bg-[color:var(--app-surface-soft)] p-4 transition-all hover:-translate-y-0.5 hover:bg-[color:var(--app-surface-strong)] hover:shadow-[var(--app-card-shadow)]"
+              className="group flex min-w-[172px] flex-col gap-3 rounded-lg border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-4 transition-colors hover:bg-[color:var(--app-surface-soft)]"
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-xl"
+                  className="flex h-10 w-10 items-center justify-center rounded-md"
                   style={{ backgroundColor: `${account.color}22` }}
                 >
                   <AccountIcon

@@ -98,7 +98,7 @@ export default function TransactionsPage() {
             <div className="relative flex-1">
               <Search
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--app-text-subtle)]"
               />
               <input
                 type="text"
@@ -108,11 +108,11 @@ export default function TransactionsPage() {
                   setCurrentPage(1);
                 }}
                 placeholder="ค้นหาหมวดหมู่ หมายเหตุ..."
-                className="theme-border theme-surface w-full rounded-xl border py-2.5 pl-9 pr-4 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+                className="theme-border theme-surface w-full rounded-xl border py-2.5 pl-9 pr-4 text-sm text-[color:var(--app-text)] outline-none focus:border-[#f54e00]"
               />
             </div>
             <div className="flex items-center gap-1 rounded-xl bg-[color:var(--app-surface-soft)] p-1">
-              <Filter size={14} className="ml-2 text-zinc-400" />
+              <Filter size={14} className="ml-2 text-[color:var(--app-text-subtle)]" />
               {(["all", "income", "expense", "transfer"] as const).map((type) => (
                 <button
                   key={type}
@@ -142,7 +142,7 @@ export default function TransactionsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                  <tr className="border-b border-[color:var(--app-divider)]">
                     <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">
                       วันที่
                     </th>
@@ -160,27 +160,27 @@ export default function TransactionsPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <tbody className="divide-y divide-[color:var(--app-divider-soft)]">
                   {paginatedTransactions.map((tx) => (
                     <tr
                       key={tx.id}
                       onClick={() => setSelectedTx(tx)}
-                      className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                      className="cursor-pointer hover:bg-[color:var(--app-surface-soft)]"
                     >
-                      <td className="whitespace-nowrap py-2.5 pr-4 text-zinc-600 dark:text-zinc-300">
+                      <td className="whitespace-nowrap py-2.5 pr-4 text-[color:var(--app-text-muted)]">
                         {tx.date}
                       </td>
-                      <td className="whitespace-nowrap py-2.5 pr-4 text-zinc-500 dark:text-zinc-400">
+                      <td className="whitespace-nowrap py-2.5 pr-4 text-[color:var(--app-text-subtle)]">
                         {tx.time ?? "-"}
                       </td>
                       <td className="py-2.5 pr-4">
-                        <span className="inline-flex items-center gap-1.5 text-zinc-700 dark:text-zinc-200">
+                        <span className="inline-flex items-center gap-1.5 text-[color:var(--app-text)]">
                           {tx.type === "income" ? (
-                            <ArrowUpRight size={14} className="text-emerald-500" />
+                            <ArrowUpRight size={14} className="text-[color:var(--income-text)]" />
                           ) : tx.type === "transfer" ? (
-                            <ArrowRightLeft size={14} className="text-sky-500" />
+                            <ArrowRightLeft size={14} className="text-[color:var(--neutral)]" />
                           ) : (
-                            <ArrowDownRight size={14} className="text-red-500" />
+                            <ArrowDownRight size={14} className="text-[color:var(--expense-text)]" />
                           )}
                           {tx.category}
                         </span>
@@ -191,10 +191,10 @@ export default function TransactionsPage() {
                       <td
                         className={`whitespace-nowrap py-2.5 pr-4 text-right font-medium ${
                           tx.type === "income"
-                            ? "text-emerald-600 dark:text-emerald-400"
+                            ? "text-[color:var(--income-text)]"
                             : tx.type === "transfer"
-                              ? "text-sky-600 dark:text-sky-400"
-                            : "text-red-500"
+                              ? "text-[color:var(--neutral)]"
+                            : "text-[color:var(--expense-text)]"
                         }`}
                       >
                         {getTransactionAmountPrefix(tx.type)}

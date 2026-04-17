@@ -17,7 +17,7 @@ import { formatBaht } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { ChartViewport } from "@/components/charts/ChartViewport";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { chartTheme } from "@/lib/chart-theme";
+import { chartTheme, chartColors } from "@/lib/chart-theme";
 import { ChartColumnIncreasing, Table2 } from "lucide-react";
 
 export function CashflowChart() {
@@ -99,18 +99,18 @@ export function CashflowChart() {
             <Bar
               dataKey="income"
               name="รายรับ"
-              fill="#22c55e"
-              radius={[5, 5, 0, 0]}
-              maxBarSize={36}
+              fill={chartColors.income}
+              radius={[4, 4, 0, 0]}
+              maxBarSize={32}
               cursor="pointer"
               onClick={handleBarClick}
             />
             <Bar
               dataKey="expense"
               name="รายจ่าย"
-              fill="#ef4444"
-              radius={[5, 5, 0, 0]}
-              maxBarSize={36}
+              fill={chartColors.expense}
+              radius={[4, 4, 0, 0]}
+              maxBarSize={32}
               cursor="pointer"
               onClick={handleBarClick}
             />
@@ -118,10 +118,11 @@ export function CashflowChart() {
               type="monotone"
               dataKey="net"
               name="สุทธิ"
-              stroke="#3b82f6"
-              strokeWidth={2.5}
-              dot={{ fill: "#3b82f6", r: 3 }}
-              activeDot={{ r: 5 }}
+              stroke={chartColors.net}
+              strokeWidth={1.5}
+              strokeDasharray="4 3"
+              dot={false}
+              activeDot={{ r: 3, fill: chartColors.net }}
             />
           </ComposedChart>
         )}
@@ -183,7 +184,7 @@ export function YearlyComparisonTable() {
               {recent.map((s) => (
                 <td
                   key={s.year}
-                  className="py-2.5 pr-4 text-right font-medium text-emerald-600 dark:text-emerald-400"
+                  className="py-2.5 pr-4 font-[family-name:var(--font-geist-mono)] text-right font-medium text-[color:var(--income-text)]"
                 >
                   {formatBaht(s.totalIncome)}
                 </td>
@@ -196,7 +197,7 @@ export function YearlyComparisonTable() {
               {recent.map((s) => (
                 <td
                   key={s.year}
-                  className="py-2.5 pr-4 text-right font-medium text-red-500"
+                  className="py-2.5 pr-4 font-[family-name:var(--font-geist-mono)] text-right font-medium text-[color:var(--expense-text)]"
                 >
                   {formatBaht(s.totalExpense)}
                 </td>
@@ -209,10 +210,10 @@ export function YearlyComparisonTable() {
               {recent.map((s) => (
                 <td
                   key={s.year}
-                  className={`py-2.5 pr-4 text-right font-bold ${
+                  className={`py-2.5 pr-4 font-[family-name:var(--font-geist-mono)] text-right font-bold ${
                     s.netCashflow >= 0
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-red-500"
+                      ? "text-[color:var(--income-text)]"
+                      : "text-[color:var(--expense-text)]"
                   }`}
                 >
                   {formatBaht(s.netCashflow)}
@@ -226,7 +227,7 @@ export function YearlyComparisonTable() {
               {recent.map((s) => (
                 <td
                   key={s.year}
-                  className="py-2.5 pr-4 text-right font-medium text-blue-500"
+                  className="py-2.5 pr-4 font-[family-name:var(--font-geist-mono)] text-right font-medium text-[color:var(--app-brand-text)]"
                 >
                   {s.savingsRate}%
                 </td>
@@ -252,10 +253,10 @@ export function YearlyComparisonTable() {
               {recent.map((s) => (
                 <td
                   key={s.year}
-                  className={`py-2.5 pr-4 text-right font-medium ${
+                  className={`py-2.5 pr-4 font-[family-name:var(--font-geist-mono)] text-right font-medium ${
                     s.netWorthGrowth >= 0
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-red-500"
+                      ? "text-[color:var(--income-text)]"
+                      : "text-[color:var(--expense-text)]"
                   }`}
                 >
                   {s.netWorthGrowth >= 0 ? "+" : ""}

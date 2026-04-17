@@ -33,24 +33,25 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "theme-surface-muted fixed left-0 top-0 z-40 flex h-screen flex-col shadow-[inset_-1px_0_0_var(--app-shell-border)] backdrop-blur-xl transition-all duration-300",
-        sidebarCollapsed ? "w-16" : "w-60"
+        "fixed left-0 top-0 z-40 flex h-screen flex-col bg-[color:var(--app-bg-elevated)] shadow-[inset_-1px_0_0_var(--app-shell-border)] transition-all duration-200",
+        sidebarCollapsed ? "w-[52px]" : "w-[220px]"
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 px-4 shadow-[inset_0_-1px_0_var(--app-shell-border)]">
+      <div className="flex h-[52px] items-center gap-2.5 px-3 shadow-[inset_0_-1px_0_var(--app-shell-border)]">
         <button
           onClick={toggleSidebar}
-          className="rounded-lg p-1.5 text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)]"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[color:var(--app-text-subtle)] transition-colors hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text-muted)]"
+          aria-label="Toggle sidebar"
         >
-          <Menu size={20} />
+          <Menu size={16} />
         </button>
         {!sidebarCollapsed && (
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[color:var(--app-brand-border)] bg-[linear-gradient(135deg,var(--app-brand-soft-strong)_0%,var(--app-brand-soft)_100%)] text-[color:var(--app-brand-text)] shadow-[0_18px_36px_-26px_var(--app-brand-shadow)]">
-              <Cat size={20} />
+          <div className="flex items-center gap-2 overflow-hidden">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[color:var(--app-brand-soft-strong)] text-[color:var(--app-brand-text)]">
+              <Cat size={14} />
             </div>
-            <span className="text-lg font-bold text-[color:var(--app-text)]">
+            <span className="truncate text-sm font-semibold text-[color:var(--app-text)]">
               เหมียวเงิน
             </span>
           </div>
@@ -58,7 +59,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/"
@@ -69,14 +70,15 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex h-9 items-center gap-2.5 rounded-md px-3 text-[13px] font-medium transition-colors",
                 isActive
-                  ? "border border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)] shadow-[0_18px_32px_-28px_var(--app-brand-shadow)]"
+                  // Linear-style left inset shadow as the active indicator
+                  ? "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)] shadow-[inset_3px_0_0_var(--app-brand-text)]"
                   : "text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
               )}
             >
-              <item.icon size={20} />
-              {!sidebarCollapsed && <span>{item.label}</span>}
+              <item.icon size={16} className="shrink-0" />
+              {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
             </Link>
           );
         })}
@@ -84,11 +86,11 @@ export function Sidebar() {
 
       {/* Footer */}
       {!sidebarCollapsed && (
-        <div className="p-4 shadow-[inset_0_1px_0_var(--app-shell-border)]">
-          <p className="text-xs text-[color:var(--app-text-subtle)]">
+        <div className="p-3 shadow-[inset_0_1px_0_var(--app-shell-border)]">
+          <p className="text-[11px] text-[color:var(--app-text-subtle)]">
             MoneyCat Tracker v1.0
           </p>
-          <p className="text-xs text-[color:var(--app-text-subtle)]">
+          <p className="text-[11px] text-[color:var(--app-text-subtle)]">
             เหมียวจดให้เรียบร้อย
           </p>
         </div>

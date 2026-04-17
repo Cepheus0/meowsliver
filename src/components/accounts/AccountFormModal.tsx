@@ -98,7 +98,7 @@ export function AccountFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-[color:var(--app-overlay)] p-0 sm:items-center sm:p-4">
-      <div className="theme-border theme-surface-strong w-full max-w-xl rounded-t-3xl border p-6 shadow-[var(--app-card-shadow)] sm:rounded-3xl">
+      <div className="theme-border theme-surface-strong w-full max-w-xl rounded-t-xl border p-6 shadow-[var(--app-card-shadow)] sm:rounded-md">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-bold text-[color:var(--app-text)]">
             {initial ? "แก้ไขบัญชี" : "เพิ่มบัญชีใหม่"}
@@ -113,7 +113,7 @@ export function AccountFormModal({
         </div>
 
         {error && (
-          <div className="mb-3 rounded-xl border border-red-300/60 bg-red-50/60 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+          <div className="mb-3 rounded-md border border-red-300/60 bg-red-50/60 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
             {error}
           </div>
         )}
@@ -127,7 +127,7 @@ export function AccountFormModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="เช่น SCB, K-Bank, เงินสด"
-              className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+              className="theme-border w-full rounded-md border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-[#f54e00]"
             />
           </div>
 
@@ -156,7 +156,7 @@ export function AccountFormModal({
                 value={initialBalance}
                 onChange={(e) => setInitialBalance(e.target.value)}
                 placeholder="0"
-                className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+                className="theme-border w-full rounded-md border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-[#f54e00]"
               />
             </div>
 
@@ -170,7 +170,7 @@ export function AccountFormModal({
                   value={creditLimit}
                   onChange={(e) => setCreditLimit(e.target.value)}
                   placeholder="100000"
-                  className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+                  className="theme-border w-full rounded-md border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-[#f54e00]"
                 />
               </div>
             )}
@@ -184,7 +184,7 @@ export function AccountFormModal({
               value={aliasesText}
               onChange={(e) => setAliasesText(e.target.value)}
               placeholder="เช่น Kbank, ไทยพาณิชย์"
-              className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+              className="theme-border w-full rounded-md border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-[#f54e00]"
             />
             <p className="mt-1 text-xs text-[color:var(--app-text-subtle)]">
               ใช้จับคู่กับฟิลด์ payFrom ตอน import อัตโนมัติ
@@ -199,16 +199,16 @@ export function AccountFormModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="theme-border w-full rounded-xl border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-emerald-500"
+              className="theme-border w-full rounded-md border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-[#f54e00]"
             />
           </div>
 
-          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-4 py-3">
+          <label className="flex cursor-pointer items-center gap-3 rounded-md border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-4 py-3">
             <input
               type="checkbox"
               checked={isDefault}
               onChange={(e) => setIsDefault(e.target.checked)}
-              className="h-4 w-4 accent-emerald-500"
+              className="h-4 w-4 accent-orange-600"
             />
             <div>
               <p className="text-sm font-medium text-[color:var(--app-text)]">

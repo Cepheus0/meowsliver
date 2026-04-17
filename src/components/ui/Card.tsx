@@ -9,7 +9,7 @@ export function Card({ children, className }: CardProps) {
   return (
     <div
       className={cn(
-        "theme-border theme-surface rounded-[1.5rem] border p-5 shadow-[var(--app-card-shadow)] backdrop-blur-sm",
+        "rounded-lg border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-5 shadow-[var(--app-card-shadow)]",
         className
       )}
     >

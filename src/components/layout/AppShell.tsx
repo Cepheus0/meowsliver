@@ -18,8 +18,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <main
         className={cn(
-          "transition-all duration-300",
-          sidebarCollapsed ? "ml-16" : "ml-60"
+          "transition-all duration-200",
+          sidebarCollapsed ? "ml-[52px]" : "ml-[220px]"
         )}
       >
         <TopBar />

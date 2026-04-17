@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
 import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { chartTheme } from "@/lib/chart-theme";
+import { chartTheme, chartColors } from "@/lib/chart-theme";
 
 const TABS = [
   { key: "crypto", label: "Crypto", color: "#f59e0b" },
@@ -65,7 +65,7 @@ export default function InvestmentsPage() {
     value: h.totalValue,
   }));
 
-  const PIE_COLORS = ["#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
+  const PIE_COLORS = chartColors.categories;
 
   // Data for performance bar chart
   const barData = holdings.map((h) => ({
@@ -124,8 +124,8 @@ export default function InvestmentsPage() {
               className={cn(
                 "flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold",
                 totalGainLoss >= 0
-                  ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-                  : "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400"
+                  ? "bg-[color:var(--income-soft)] text-[color:var(--income-text)]"
+                  : "bg-[color:var(--expense-soft)] text-[color:var(--expense-text)]"
               )}
             >
               {totalGainLoss >= 0 ? (
@@ -146,8 +146,8 @@ export default function InvestmentsPage() {
               className={cn(
                 "text-sm font-medium",
                 totalGainLoss >= 0
-                  ? "text-emerald-500"
-                  : "text-red-500"
+                  ? "text-[color:var(--income-text)]"
+                  : "text-[color:var(--expense-text)]"
               )}
             >
               {totalGainLoss >= 0 ? "+" : ""}
@@ -158,14 +158,14 @@ export default function InvestmentsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                <tr className="border-b border-[color:var(--app-divider)]">
                   <th className="py-2.5 pr-3 font-medium text-[color:var(--app-text-muted)]">ชื่อ</th>
                   <th className="py-2.5 pr-3 text-right font-medium text-[color:var(--app-text-muted)]">มูลค่า</th>
                   <th className="py-2.5 pr-3 text-right font-medium text-[color:var(--app-text-muted)]">กำไร/ขาดทุน</th>
                   <th className="py-2.5 text-right font-medium text-[color:var(--app-text-muted)]">%</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              <tbody className="divide-y divide-[color:var(--app-divider-soft)]">
                 {holdings.map((h) => (
                   <tr key={h.id}>
                     <td className="py-2.5 pr-3">
@@ -173,7 +173,7 @@ export default function InvestmentsPage() {
                         {h.name}
                       </p>
                       {h.ticker && (
-                        <p className="text-xs text-zinc-400">{h.ticker}</p>
+                        <p className="text-xs text-[color:var(--app-text-subtle)]">{h.ticker}</p>
                       )}
                     </td>
                     <td className="py-2.5 pr-3 text-right font-medium text-[color:var(--app-text)]">
@@ -183,8 +183,8 @@ export default function InvestmentsPage() {
                       className={cn(
                         "py-2.5 pr-3 text-right font-medium",
                         h.gainLoss >= 0
-                          ? "text-emerald-500"
-                          : "text-red-500"
+                          ? "text-[color:var(--income-text)]"
+                          : "text-[color:var(--expense-text)]"
                       )}
                     >
                       {h.gainLoss >= 0 ? "+" : ""}
@@ -194,8 +194,8 @@ export default function InvestmentsPage() {
                       className={cn(
                         "py-2.5 text-right font-bold",
                         h.gainLossPercent >= 0
-                          ? "text-emerald-500"
-                          : "text-red-500"
+                          ? "text-[color:var(--income-text)]"
+                          : "text-[color:var(--expense-text)]"
                       )}
                     >
                       {h.gainLossPercent >= 0 ? "+" : ""}
@@ -260,7 +260,7 @@ export default function InvestmentsPage() {
                     {barData.map((entry, i) => (
                       <Cell
                         key={i}
-                        fill={entry.gainLoss >= 0 ? "#22c55e" : "#ef4444"}
+                        fill={entry.gainLoss >= 0 ? "var(--income)" : "var(--expense)"}
                       />
                     ))}
                   </Bar>
@@ -270,12 +270,12 @@ export default function InvestmentsPage() {
           </Card>
 
           {/* Tax Note */}
-          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800/40 dark:bg-blue-500/5">
-            <p className="flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-400">
+          <div className="rounded-2xl border border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold text-[color:var(--app-brand-text)]">
               <AlertCircle size={16} />
               ข้อมูลภาษี
             </p>
-            <p className="mt-1.5 text-xs leading-relaxed text-blue-600 dark:text-blue-400/80">
+            <p className="mt-1.5 text-xs leading-relaxed text-[color:var(--app-text-muted)]">
               {TAX_NOTES[activeTab]}
             </p>
           </div>
