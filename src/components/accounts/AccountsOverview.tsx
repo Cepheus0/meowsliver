@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Plus, Wallet } from "lucide-react";
+import { ArrowRight, Plus, Wallet, TrendingUp, TrendingDown } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AccountIcon } from "@/components/accounts/AccountIcon";
@@ -50,36 +50,48 @@ export function AccountsOverview() {
   }
 
   return (
-    <Card>
-      <div className="flex flex-col gap-4 border-b border-[color:var(--app-border)] pb-4 sm:flex-row sm:items-end sm:justify-between">
+    <Card className="animate-fade-slide-up anim-delay-0 overflow-hidden">
+      {/* ── Net Worth hero ──────────────────────────────── */}
+      <div className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
-            Net Worth
+          {/* label */}
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-[color:var(--app-text-subtle)]">
+            NET WORTH
           </p>
-          <p className="mt-1 text-3xl font-bold text-[color:var(--app-text)]">
+
+          {/* big number */}
+          <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-4xl font-bold tracking-tight text-[color:var(--app-text)]">
             {formatBaht(netWorth)}
           </p>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[color:var(--app-text-muted)]">
-            <span className="text-emerald-600 dark:text-emerald-400">
+
+          {/* assets / liabilities breakdown */}
+          <div className="mt-2.5 flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--income-soft)] px-2.5 py-1 text-xs font-semibold text-[color:var(--income-text)]">
+              <TrendingUp size={11} />
               สินทรัพย์ {formatBaht(totalAssets)}
             </span>
-            <span className="text-red-600 dark:text-red-400">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--expense-soft)] px-2.5 py-1 text-xs font-semibold text-[color:var(--expense-text)]">
+              <TrendingDown size={11} />
               หนี้สิน {formatBaht(totalLiabilities)}
             </span>
-            <span>{active.length} บัญชีที่ใช้งาน</span>
+            <span className="text-xs text-[color:var(--app-text-subtle)]">
+              {active.length} บัญชีที่ใช้งาน
+            </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* actions */}
+        <div className="flex shrink-0 items-center gap-2">
           <Link
             href="/accounts"
-            className="inline-flex items-center gap-1 rounded-md border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-3 py-1.5 text-xs font-medium text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-3 py-1.5 text-xs font-medium text-[color:var(--app-text-muted)] transition-colors hover:border-[color:var(--app-border-strong)] hover:text-[color:var(--app-text)]"
           >
             จัดการบัญชี
             <ArrowRight size={12} />
           </Link>
           <Link
             href="/accounts"
-            className="inline-flex items-center gap-1 rounded-md bg-[#f54e00] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#d44400]"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#f54e00] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#d44400]"
           >
             <Plus size={12} />
             เพิ่มบัญชี
@@ -87,44 +99,59 @@ export function AccountsOverview() {
         </div>
       </div>
 
-      <div className="mt-4 -mx-1 flex gap-3 overflow-x-auto pb-1 px-1">
-        {active.map((account) => {
+      {/* ── divider ─────────────────────────────────────── */}
+      <div className="border-t border-[color:var(--app-border)]" />
+
+      {/* ── Account cards row ───────────────────────────── */}
+      <div className="scroll-fade-right -mx-1 mt-4 flex gap-3 overflow-x-auto pb-2 px-1">
+        {active.map((account, idx) => {
           const isNegative = account.currentBalance < 0;
+          const accentColor = account.color ?? "#f54e00";
           return (
             <Link
               key={account.id}
               href={`/accounts/${account.id}`}
-              className="group flex min-w-[172px] flex-col gap-3 rounded-lg border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-4 transition-colors hover:bg-[color:var(--app-surface-soft)]"
+              style={{ "--card-accent": accentColor } as React.CSSProperties}
+              className={`card-hover group relative flex min-w-[176px] flex-col gap-3 rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-4 animate-fade-slide-up anim-delay-${Math.min(idx + 1, 5)} overflow-hidden`}
             >
-              <div className="flex items-center gap-3">
+              {/* colored top accent bar */}
+              <div
+                className="absolute inset-x-0 top-0 h-[3px] rounded-t-xl"
+                style={{ backgroundColor: accentColor }}
+              />
+
+              {/* icon + name */}
+              <div className="flex items-center gap-3 pt-0.5">
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-md"
-                  style={{ backgroundColor: `${account.color}22` }}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: `${accentColor}20` }}
                 >
                   <AccountIcon
                     icon={account.icon}
                     type={account.type}
-                    size={18}
-                    className="text-[color:var(--app-text)]"
+                    size={17}
+                    style={{ color: accentColor }}
                   />
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-[color:var(--app-text)]">
                     {account.name}
                   </p>
-                  <p className="text-[11px] text-[color:var(--app-text-muted)]">
+                  <p className="text-[11px] text-[color:var(--app-text-subtle)]">
                     {ACCOUNT_TYPE_LABELS[account.type]}
                   </p>
                 </div>
               </div>
+
+              {/* balance */}
               <div>
-                <p className="text-[11px] text-[color:var(--app-text-muted)]">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-[color:var(--app-text-subtle)]">
                   ยอดคงเหลือ
                 </p>
                 <p
-                  className={`mt-0.5 text-lg font-bold ${
+                  className={`mt-0.5 font-[family-name:var(--font-geist-mono)] text-lg font-bold ${
                     isNegative
-                      ? "text-red-600 dark:text-red-400"
+                      ? "text-[color:var(--expense-text)]"
                       : "text-[color:var(--app-text)]"
                   }`}
                 >

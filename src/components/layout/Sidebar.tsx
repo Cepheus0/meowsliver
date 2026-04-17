@@ -76,15 +76,21 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              title={sidebarCollapsed ? item.label : undefined}
               className={cn(
-                "flex h-9 items-center gap-2.5 rounded-md px-3 text-[13px] font-medium transition-colors",
+                "group flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] font-medium transition-all duration-150",
                 isActive
-                  // Linear-style left inset shadow as the active indicator
                   ? "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)] shadow-[inset_3px_0_0_var(--app-brand-text)]"
                   : "text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
               )}
             >
-              <item.icon size={16} className="shrink-0" />
+              <item.icon
+                size={16}
+                className={cn(
+                  "shrink-0 transition-transform duration-150",
+                  !isActive && "group-hover:scale-110"
+                )}
+              />
               {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
             </Link>
           );

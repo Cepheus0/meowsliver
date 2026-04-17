@@ -29,6 +29,18 @@ import type { Transaction } from "@/lib/types";
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
+/** Convert "2026-04-15" → "15 เม.ย." */
+const THAI_MONTHS = [
+  "", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+  "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
+];
+function formatShortDate(dateStr: string): string {
+  const parts = dateStr.split("-");
+  const month = parseInt(parts[1] ?? "0", 10);
+  const day   = parseInt(parts[2] ?? "0", 10);
+  return `${day} ${THAI_MONTHS[month] ?? ""}`;
+}
+
 export default function TransactionsPage() {
   const {
     getTransactions,
@@ -236,65 +248,91 @@ export default function TransactionsPage() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-[color:var(--app-divider)]">
-                    <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">
+                    <th className="py-3 pr-4 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
                       วันที่
                     </th>
-                    <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">
-                      เวลา
+                    <th className="py-3 pr-4 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
+                      ประเภท
                     </th>
-                    <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">
-                      หมวด
+                    <th className="py-3 pr-4 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
+                      หมวดหมู่
                     </th>
-                    <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">
+                    <th className="py-3 pr-4 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
                       หมายเหตุ
                     </th>
-                    <th className="py-3 pr-4 text-right font-medium text-[color:var(--app-text-muted)]">
+                    <th className="py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
                       จำนวน
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[color:var(--app-divider-soft)]">
-                  {paginatedTransactions.map((tx) => (
-                    <tr
-                      key={tx.id}
-                      onClick={() => setSelectedTx(tx)}
-                      className="cursor-pointer hover:bg-[color:var(--app-surface-soft)]"
-                    >
-                      <td className="whitespace-nowrap py-2.5 pr-4 text-[color:var(--app-text-muted)]">
-                        {tx.date}
-                      </td>
-                      <td className="whitespace-nowrap py-2.5 pr-4 text-[color:var(--app-text-subtle)]">
-                        {tx.time ?? "-"}
-                      </td>
-                      <td className="py-2.5 pr-4">
-                        <span className="inline-flex items-center gap-1.5 text-[color:var(--app-text)]">
-                          {tx.type === "income" ? (
-                            <ArrowUpRight size={14} className="text-[color:var(--income-text)]" />
-                          ) : tx.type === "transfer" ? (
-                            <ArrowRightLeft size={14} className="text-[color:var(--neutral)]" />
-                          ) : (
-                            <ArrowDownRight size={14} className="text-[color:var(--expense-text)]" />
-                          )}
-                          {tx.category}
-                        </span>
-                      </td>
-                      <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
-                        {tx.note || "-"}
-                      </td>
-                      <td
-                        className={`whitespace-nowrap py-2.5 pr-4 text-right font-medium ${
-                          tx.type === "income"
-                            ? "text-[color:var(--income-text)]"
-                            : tx.type === "transfer"
-                              ? "text-[color:var(--neutral)]"
-                            : "text-[color:var(--expense-text)]"
-                        }`}
+                  {paginatedTransactions.map((tx) => {
+                    const isIncome   = tx.type === "income";
+                    const isTransfer = tx.type === "transfer";
+
+                    const typePill = isIncome
+                      ? { label: "รายรับ",   bg: "var(--income-soft)",   text: "var(--income-text)",   icon: <ArrowUpRight size={11} /> }
+                      : isTransfer
+                      ? { label: "โอน",      bg: "var(--neutral-soft)",  text: "var(--neutral)",       icon: <ArrowRightLeft size={11} /> }
+                      : { label: "รายจ่าย",  bg: "var(--expense-soft)",  text: "var(--expense-text)",  icon: <ArrowDownRight size={11} /> };
+
+                    return (
+                      <tr
+                        key={tx.id}
+                        onClick={() => setSelectedTx(tx)}
+                        className="cursor-pointer transition-colors hover:bg-[color:var(--app-surface-soft)]"
                       >
-                        {getTransactionAmountPrefix(tx.type)}
-                        {formatBaht(tx.amount)}
-                      </td>
-                    </tr>
-                  ))}
+                        {/* date + time stacked */}
+                        <td className="whitespace-nowrap py-3 pr-4">
+                          <p className="text-sm font-medium text-[color:var(--app-text)]">
+                            {formatShortDate(tx.date)}
+                          </p>
+                          <p className="text-[11px] text-[color:var(--app-text-subtle)]">
+                            {tx.time ?? "—"}
+                          </p>
+                        </td>
+
+                        {/* type pill */}
+                        <td className="py-3 pr-4">
+                          <span
+                            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                            style={{
+                              backgroundColor: typePill.bg,
+                              color: typePill.text,
+                            }}
+                          >
+                            {typePill.icon}
+                            {typePill.label}
+                          </span>
+                        </td>
+
+                        {/* category */}
+                        <td className="py-3 pr-4">
+                          <span className="font-medium text-[color:var(--app-text)]">
+                            {tx.category}
+                          </span>
+                        </td>
+
+                        {/* note */}
+                        <td className="max-w-[220px] py-3 pr-4">
+                          <span className="block truncate text-[color:var(--app-text-muted)]">
+                            {tx.note || "—"}
+                          </span>
+                        </td>
+
+                        {/* amount */}
+                        <td className="whitespace-nowrap py-3 text-right">
+                          <span
+                            className="font-[family-name:var(--font-geist-mono)] text-sm font-semibold"
+                            style={{ color: typePill.text }}
+                          >
+                            {getTransactionAmountPrefix(tx.type)}
+                            {formatBaht(tx.amount)}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
 

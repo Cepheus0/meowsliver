@@ -196,6 +196,60 @@ select option {
   }
 }
 
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
 .animate-logo-reveal {
   animation: logoReveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-fade-slide-up {
+  opacity: 0;
+  animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* stagger helpers */
+.anim-delay-0  { animation-delay:  0ms; }
+.anim-delay-1  { animation-delay: 60ms; }
+.anim-delay-2  { animation-delay: 120ms; }
+.anim-delay-3  { animation-delay: 180ms; }
+.anim-delay-4  { animation-delay: 240ms; }
+.anim-delay-5  { animation-delay: 300ms; }
+
+/* ── Card hover lift ─────────────────────────────── */
+.card-hover {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(38, 37, 30, 0.10),
+              0 1px 3px  rgba(38, 37, 30, 0.06);
+}
+.dark .card-hover:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.40),
+              0 1px 3px  rgba(0, 0, 0, 0.20);
+}
+
+/* ── Scroll fade hint (right edge) ──────────────── */
+.scroll-fade-right {
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+          mask-image: linear-gradient(to right, black 85%, transparent 100%);
 }
