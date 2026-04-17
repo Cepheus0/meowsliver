@@ -19,7 +19,8 @@ The most reliable working flow today is:
 - The application now also has database-backed API routes for savings goals and per-goal savings entries
 - PostgreSQL + Drizzle now back the transaction import pipeline and import history
 - PostgreSQL + Drizzle now also back the savings-goal subsystem via `savings_goals` and `savings_goal_entries`
-- The runtime is now hybrid: database-backed for imported transactions and savings goals, browser-local for some UI and manual entry flows
+- The runtime is still hybrid: database-backed for financial writes and durable records, browser-local for some UI/runtime convenience state
+- The runtime is now much closer to DB-first for financial writes: imported transactions, manual transaction CRUD, savings goals, and conflict review decisions are all persisted in Postgres
 - There is still no auth stack or per-user isolation
 - Imported transaction data is still mirrored into Zustand middleware for a smoother client experience
 - Charts are client-rendered with a hydration-safe wrapper to avoid SSR sizing issues
@@ -58,13 +59,12 @@ The most reliable working flow today is:
 
 ## Known Gaps
 
-- Manual entry is still browser-local and not yet committed into Postgres
-- Savings goals still do not support archive, delete, or bulk import flows
-- Entry-level edit/delete for savings movements is not implemented yet
+- Savings goals still do not support archive/delete or entry-level edit/delete flows
 - No formal data model for assets, liabilities, or portfolio holdings beyond current scaffolding
 - No production deployment workflow captured in the repo yet
-- `conflict` rows are identified, but there is not yet a user review workflow to resolve them before import
 - There is still no visual regression layer for validating dark mode across main routes
+- Account reconciliation currently excludes `transfer` rows from the transaction-derived balance to avoid double counting across accounts
+- Opening balances are still implicit stored values rather than explicit ledger-opening transactions, so reconciliation is intentionally opt-in and explanatory rather than automatic
 
 ## Recommended Direction
 
@@ -72,7 +72,7 @@ The most reliable working flow today is:
 
 - Harden import reliability
 - Keep expanding fixture-backed tests for parsing, fingerprinting, and duplicate classification
-- Add a resolution workflow for `conflict` rows
+- Add savings-goal lifecycle operations
 - Add visual QA checkpoints for dark mode
 
 ### Medium Term
@@ -127,7 +127,7 @@ The most reliable working flow today is:
 
 - The dashboard data is currently correct for the live dataset, but trust still depends on hybrid runtime behavior and multiple sources of truth
 - The status copy on the homepage is directionally true for this dataset, but it still overstates backend completeness because account balances are not yet fully ledger-reconciled
-- There is still no user-facing workflow for reviewing `conflict` rows before import commit, which limits trust when spreadsheet quality is mixed
+- Account reconciliation now explains drift clearly on account detail pages, but transfer rows and opening balances still require explicit user judgment
 
 ### Sprint 1 Outcome
 
@@ -162,6 +162,14 @@ The most reliable working flow today is:
 - Smoke coverage now validates both high-value resolution paths:
   - review conflict -> import as new -> commit inserts the row
   - review conflict -> keep existing -> commit skips insertion cleanly
+
+### Sprint 3 Outcome
+
+- Account detail pages now expose a reconciliation summary that compares stored balance against the balance derived from linked transactions
+- Users can now see the linked income, linked expense, transfer-row count, and last linked transaction date before deciding whether to reconcile
+- Reconciliation is now an explicit API-backed action instead of an implicit overwrite, which is safer while opening balances are still modeled as stored values
+- The reconcile endpoint intentionally rejects accounts with no linked transactions so users do not accidentally zero out manual opening balances
+- Automated coverage now validates both the reconciliation helper logic and the end-to-end account reconcile API flow
 
 ### 3. Account Reconciliation and Explainability
 

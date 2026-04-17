@@ -52,6 +52,24 @@ export interface Account {
   updatedAt: string;
 }
 
+export type AccountReconciliationStatus =
+  | "aligned"
+  | "needs_attention"
+  | "no_linked_transactions";
+
+export interface AccountReconciliation {
+  status: AccountReconciliationStatus;
+  storedBalance: number;
+  transactionDerivedBalance: number;
+  balanceDifference: number;
+  linkedTransactionCount: number;
+  linkedIncome: number;
+  linkedExpense: number;
+  linkedTransferCount: number;
+  lastLinkedTransactionDate?: string;
+  canReconcile: boolean;
+}
+
 export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   cash: "เงินสด",
   bank_savings: "ออมทรัพย์",

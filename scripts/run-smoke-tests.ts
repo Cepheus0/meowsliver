@@ -1,10 +1,18 @@
 import { inArray, sql } from "drizzle-orm";
 import { db } from "../src/db";
-import { importRunRows, importRuns, savingsGoalEntries, savingsGoals, transactions } from "../src/db/schema";
+import {
+  accounts,
+  importRunRows,
+  importRuns,
+  savingsGoalEntries,
+  savingsGoals,
+  transactions,
+} from "../src/db/schema";
 
 const appUrl = process.env.APP_URL ?? "http://localhost:3000";
 const smokeTag = `SMOKE_${Date.now()}`;
 const createdImportRunIds: number[] = [];
+const createdAccountIds: number[] = [];
 let createdGoalId: number | null = null;
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -51,6 +59,13 @@ async function cleanup() {
   }
 
   await db.delete(transactions).where(sql`${transactions.note} like ${`${smokeTag}%`}`);
+
+  if (createdAccountIds.length > 0) {
+    await db
+      .delete(transactions)
+      .where(inArray(transactions.accountId, createdAccountIds));
+    await db.delete(accounts).where(inArray(accounts.id, createdAccountIds));
+  }
 }
 
 async function main() {
@@ -216,6 +231,123 @@ async function main() {
       );
       console.log("PASS manual transaction account balance delete");
     }
+
+    const reconcileAccountResponse = await request("/api/accounts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: `${smokeTag} reconcile account`,
+        type: "cash",
+        initialBalance: 1000,
+      }),
+    });
+    assert(
+      reconcileAccountResponse.status === 201,
+      `Expected reconcile test account create to return 201, received ${reconcileAccountResponse.status}`
+    );
+    const reconcileAccountJson = (await reconcileAccountResponse.json()) as {
+      account?: { id: number; currentBalance: number };
+    };
+    assert(
+      reconcileAccountJson.account,
+      "Expected reconcile test account create to return the new account"
+    );
+    createdAccountIds.push(reconcileAccountJson.account.id);
+    console.log("PASS account create for reconciliation");
+
+    const reconcileWithoutTransactionsResponse = await request(
+      `/api/accounts/${reconcileAccountJson.account.id}/reconcile`,
+      {
+        method: "POST",
+      }
+    );
+    assert(
+      reconcileWithoutTransactionsResponse.status === 400,
+      `Expected reconcile without linked transactions to return 400, received ${reconcileWithoutTransactionsResponse.status}`
+    );
+    console.log("PASS account reconcile guard without linked transactions");
+
+    const reconcileTransactionResponse = await request("/api/transactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        date: "2030-03-05",
+        amount: 200,
+        type: "expense",
+        category: "อาหาร/เครื่องดื่ม",
+        note: `${smokeTag} reconcile drift`,
+        accountId: reconcileAccountJson.account.id,
+      }),
+    });
+    assert(
+      reconcileTransactionResponse.status === 201,
+      `Expected reconcile drift transaction create to return 201, received ${reconcileTransactionResponse.status}`
+    );
+    console.log("PASS account reconcile drift seed transaction");
+
+    const reconcileDetailResponse = await request(
+      `/api/accounts/${reconcileAccountJson.account.id}`
+    );
+    assert(
+      reconcileDetailResponse.ok,
+      `Expected reconcile detail fetch to pass, received ${reconcileDetailResponse.status}`
+    );
+    const reconcileDetailJson = (await reconcileDetailResponse.json()) as {
+      account: { currentBalance: number };
+      reconciliation: {
+        status: string;
+        balanceDifference: number;
+        transactionDerivedBalance: number;
+        linkedExpense: number;
+        linkedTransactionCount: number;
+        canReconcile: boolean;
+      };
+    };
+    assert(
+      reconcileDetailJson.account.currentBalance === 800,
+      "Expected seeded reconcile account to reflect the original balance plus manual delta before reconciliation"
+    );
+    assert(
+      reconcileDetailJson.reconciliation.status === "needs_attention" &&
+        reconcileDetailJson.reconciliation.balanceDifference === 1000 &&
+        reconcileDetailJson.reconciliation.transactionDerivedBalance === -200 &&
+        reconcileDetailJson.reconciliation.linkedExpense === 200 &&
+        reconcileDetailJson.reconciliation.linkedTransactionCount === 1 &&
+        reconcileDetailJson.reconciliation.canReconcile,
+      "Expected account detail reconciliation summary to explain stored-vs-ledger drift"
+    );
+    console.log("PASS account reconciliation detail explainability");
+
+    const reconcileCommitResponse = await request(
+      `/api/accounts/${reconcileAccountJson.account.id}/reconcile`,
+      {
+        method: "POST",
+      }
+    );
+    assert(
+      reconcileCommitResponse.ok,
+      `Expected reconcile commit to pass, received ${reconcileCommitResponse.status}`
+    );
+    const reconcileCommitJson = (await reconcileCommitResponse.json()) as {
+      detail?: {
+        account: { currentBalance: number };
+        reconciliation: {
+          status: string;
+          balanceDifference: number;
+          storedBalance: number;
+          transactionDerivedBalance: number;
+        };
+      };
+    };
+    assert(
+      reconcileCommitJson.detail?.account.currentBalance === -200 &&
+        reconcileCommitJson.detail.reconciliation.status === "aligned" &&
+        reconcileCommitJson.detail.reconciliation.balanceDifference === 0 &&
+        reconcileCommitJson.detail.reconciliation.storedBalance === -200 &&
+        reconcileCommitJson.detail.reconciliation.transactionDerivedBalance === -200,
+      "Expected reconcile action to persist the transaction-derived balance and clear the drift"
+    );
+    console.log("PASS account reconciliation action");
 
     const createResponse = await request("/api/savings-goals", {
       method: "POST",

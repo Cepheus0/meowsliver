@@ -1,6 +1,6 @@
 # Test Report
 
-- Generated at: 17 Apr 2026, 14:56:25
+- Generated at: 17 Apr 2026, 20:08:40
 - Target app URL: http://localhost:3000
 - Overall status: PASS
 
@@ -61,14 +61,14 @@ $ eslint
 ▲ Next.js 16.1.3 (Turbopack)
 
   Creating an optimized production build ...
-✓ Compiled successfully in 5.4s
+✓ Compiled successfully in 4.4s
   Running TypeScript ...
   Collecting page data using 7 workers ...
   Generating static pages using 7 workers (0/11) ...
   Generating static pages using 7 workers (2/11) 
   Generating static pages using 7 workers (5/11) 
   Generating static pages using 7 workers (8/11) 
-✓ Generating static pages using 7 workers (11/11) in 316.5ms
+✓ Generating static pages using 7 workers (11/11) in 342.4ms
   Finalizing page optimization ...
 
 Route (app)
@@ -78,6 +78,7 @@ Route (app)
 ├ ƒ /accounts/[accountId]
 ├ ƒ /api/accounts
 ├ ƒ /api/accounts/[accountId]
+├ ƒ /api/accounts/[accountId]/reconcile
 ├ ƒ /api/import/commit
 ├ ƒ /api/import/preview
 ├ ƒ /api/import/review
@@ -116,17 +117,18 @@ RUN  v4.1.3 /Users/woraweechanlongrat/Documents/projects/meowsliver
       Coverage enabled with v8
 
 
- Test Files  11 passed (11)
-      Tests  55 passed (55)
-   Start at  14:56:54
-   Duration  2.34s (transform 534ms, setup 0ms, import 2.35s, tests 137ms, environment 1ms)
+ Test Files  12 passed (12)
+      Tests  58 passed (58)
+   Start at  20:09:00
+   Duration  5.64s (transform 977ms, setup 0ms, import 5.78s, tests 253ms, environment 1ms)
 
  % Coverage report from v8
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |   78.11 |    68.02 |   77.98 |   78.63 |                   
- lib               |   80.43 |    68.82 |   80.18 |   81.23 |                   
+All files          |   78.53 |    68.57 |   78.37 |   79.07 |                   
+ lib               |   80.81 |    69.36 |   80.55 |   81.64 |                   
+  ...nciliation.ts |     100 |      100 |     100 |     100 |                   
   excel-parser.ts  |      80 |       80 |   83.33 |   79.56 | ...96,227,239,253 
   ...-analytics.ts |   52.41 |    37.64 |   63.63 |   52.25 | 115,189,208-347   
   ...t-pipeline.ts |   91.66 |    63.04 |     100 |   91.66 | 90,95,156         
@@ -172,7 +174,12 @@ PASS manual transaction account balance update
 PASS manual transaction list hydration
 PASS manual transaction delete
 PASS manual transaction account balance delete
-PASS savings goal create (9)
+PASS account create for reconciliation
+PASS account reconcile guard without linked transactions
+PASS account reconcile drift seed transaction
+PASS account reconciliation detail explainability
+PASS account reconciliation action
+PASS savings goal create (11)
 PASS savings goal update
 PASS savings goal entry
 PASS import preview new

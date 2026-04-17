@@ -1,10 +1,12 @@
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { accounts, transactions } from "@/db/schema";
+import { buildAccountReconciliation } from "@/lib/account-reconciliation";
 import {
   ACCOUNT_TYPE_COLORS,
   ACCOUNT_TYPE_ICONS,
   type Account,
+  type AccountReconciliation,
   type AccountType,
 } from "@/lib/types";
 
@@ -44,6 +46,61 @@ function mapAccount(row: AccountRow): Account {
 
 function canonicalize(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+interface AccountTransactionSummary {
+  transactionCount: number;
+  incomeSatang: number;
+  expenseSatang: number;
+  transferCount: number;
+  lastTransactionDate: string | null;
+}
+
+function getTransactionDerivedBalanceSatang(summary: AccountTransactionSummary) {
+  return summary.incomeSatang - summary.expenseSatang;
+}
+
+function buildReconciliationFromSummary(
+  accountBalance: number,
+  summary: AccountTransactionSummary
+): AccountReconciliation {
+  return buildAccountReconciliation({
+    storedBalance: accountBalance,
+    transactionDerivedBalance: fromSatang(
+      getTransactionDerivedBalanceSatang(summary)
+    ),
+    linkedTransactionCount: summary.transactionCount,
+    linkedIncome: fromSatang(summary.incomeSatang),
+    linkedExpense: fromSatang(summary.expenseSatang),
+    linkedTransferCount: summary.transferCount,
+    lastLinkedTransactionDate: summary.lastTransactionDate,
+  });
+}
+
+async function getAccountTransactionSummary(
+  id: number
+): Promise<AccountTransactionSummary> {
+  const [row] = await db
+    .select({
+      transactionCount: sql<number>`count(*)::int`,
+      incomeSatang:
+        sql<number>`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.amountSatang} else 0 end), 0)::bigint`,
+      expenseSatang:
+        sql<number>`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.amountSatang} else 0 end), 0)::bigint`,
+      transferCount:
+        sql<number>`coalesce(sum(case when ${transactions.type} = 'transfer' then 1 else 0 end), 0)::int`,
+      lastTransactionDate: sql<string | null>`max(${transactions.transactionDate})`,
+    })
+    .from(transactions)
+    .where(eq(transactions.accountId, id));
+
+  return {
+    transactionCount: row?.transactionCount ?? 0,
+    incomeSatang: row?.incomeSatang ?? 0,
+    expenseSatang: row?.expenseSatang ?? 0,
+    transferCount: row?.transferCount ?? 0,
+    lastTransactionDate: row?.lastTransactionDate ?? null,
+  };
 }
 
 export async function listAccounts(): Promise<Account[]> {
@@ -243,19 +300,8 @@ export async function detectAccountForPayFrom(
  * Income adds, expense subtracts, transfer is ignored for simplicity.
  */
 export async function recalcAccountBalance(id: number): Promise<number> {
-  const rows = await db
-    .select({
-      type: transactions.type,
-      amountSatang: transactions.amountSatang,
-    })
-    .from(transactions)
-    .where(eq(transactions.accountId, id));
-
-  let total = 0;
-  for (const row of rows) {
-    if (row.type === "income") total += row.amountSatang;
-    else if (row.type === "expense") total -= row.amountSatang;
-  }
+  const summary = await getAccountTransactionSummary(id);
+  const total = getTransactionDerivedBalanceSatang(summary);
 
   await db
     .update(accounts)
@@ -282,6 +328,7 @@ export async function applyAccountBalanceDelta(
 
 export interface AccountDetail {
   account: Account;
+  reconciliation: AccountReconciliation;
   recentTransactions: Array<{
     id: number;
     date: string;
@@ -298,29 +345,31 @@ export async function getAccountDetail(id: number): Promise<AccountDetail | null
   const account = await getAccount(id);
   if (!account) return null;
 
-  const rows = await db
-    .select({
-      id: transactions.id,
-      date: transactions.transactionDate,
-      time: transactions.transactionTime,
-      amountSatang: transactions.amountSatang,
-      type: transactions.type,
-      category: transactions.category,
-      note: transactions.note,
-    })
-    .from(transactions)
-    .where(eq(transactions.accountId, id))
-    .orderBy(desc(transactions.transactionDate), desc(transactions.id))
-    .limit(50);
-
-  const [countRow] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(transactions)
-    .where(eq(transactions.accountId, id));
+  const [rows, summary] = await Promise.all([
+    db
+      .select({
+        id: transactions.id,
+        date: transactions.transactionDate,
+        time: transactions.transactionTime,
+        amountSatang: transactions.amountSatang,
+        type: transactions.type,
+        category: transactions.category,
+        note: transactions.note,
+      })
+      .from(transactions)
+      .where(eq(transactions.accountId, id))
+      .orderBy(desc(transactions.transactionDate), desc(transactions.id))
+      .limit(50),
+    getAccountTransactionSummary(id),
+  ]);
 
   return {
     account,
-    transactionCount: countRow?.count ?? 0,
+    reconciliation: buildReconciliationFromSummary(
+      account.currentBalance,
+      summary
+    ),
+    transactionCount: summary.transactionCount,
     recentTransactions: rows.map((r) => ({
       id: r.id,
       date: r.date,
@@ -331,4 +380,26 @@ export async function getAccountDetail(id: number): Promise<AccountDetail | null
       note: r.note,
     })),
   };
+}
+
+export async function reconcileAccountFromTransactions(
+  id: number
+): Promise<AccountDetail | null> {
+  const account = await getAccount(id);
+  if (!account) return null;
+
+  const summary = await getAccountTransactionSummary(id);
+  if (summary.transactionCount === 0) {
+    throw new Error("บัญชีนี้ยังไม่มีรายการที่เชื่อมไว้ให้ reconcile");
+  }
+
+  await db
+    .update(accounts)
+    .set({
+      currentBalanceSatang: getTransactionDerivedBalanceSatang(summary),
+      updatedAt: new Date(),
+    })
+    .where(eq(accounts.id, id));
+
+  return getAccountDetail(id);
 }

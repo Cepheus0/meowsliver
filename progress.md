@@ -119,6 +119,19 @@
   2. conflict -> keep existing -> commit skips cleanly
 - Regenerated a passing `reports/test-report.md` after the sprint 2 flow landed
 
+### Sprint 3: Account Reconciliation and Explainability
+- Added reusable reconciliation modeling in `src/lib/account-reconciliation.ts` plus unit coverage for aligned, drifted, and no-linked-transaction states
+- Extended account detail payloads so `/api/accounts/[accountId]` now includes a reconciliation summary alongside recent transactions
+- Added `POST /api/accounts/[accountId]/reconcile` so users can explicitly reset an account balance to the linked transaction-derived balance
+- Redesigned the account detail page to show stored balance, transaction-derived balance, balance difference, linked income/expense totals, transfer-row count, and last linked transaction date
+- Added API smoke coverage for the full reconcile lifecycle:
+  1. create temp account with opening balance
+  2. reject reconcile when no linked transactions exist
+  3. create linked manual transaction to produce drift
+  4. verify explainability payload shows the drift
+  5. reconcile and confirm the stored balance matches the ledger
+- Regenerated a passing `reports/test-report.md` after the sprint 3 flow landed
+
 ## Current Status
 
 | Area | Status |
@@ -142,8 +155,8 @@
 
 ## Next Likely Milestones
 
-1. Move manual entry into the Postgres-backed transaction model.
-2. Add a real review workflow for `conflict` rows.
-3. Add edit / archive flows for savings goals and savings movements.
-4. Improve category normalization and reporting accuracy.
-5. Add visual regression checks for the main routes and dark mode.
+1. Add edit / archive / delete flows for savings goals and savings movements.
+2. Add transaction-to-goal contribution shortcuts where they improve auditability.
+3. Improve category normalization and reporting accuracy.
+4. Add visual regression checks for the main routes and dark mode.
+5. Decide whether opening balances should stay as stored values or become explicit ledger transactions in a later migration.

@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
+  AlertTriangle,
   Archive,
   ArrowLeft,
   ArrowUpRight,
+  CheckCircle2,
   PencilLine,
   RotateCcw,
   Star,
@@ -22,11 +24,16 @@ import {
 } from "@/components/accounts/AccountFormModal";
 import { AccountIcon } from "@/components/accounts/AccountIcon";
 import { useFinanceStore } from "@/store/finance-store";
-import { ACCOUNT_TYPE_LABELS, type Account } from "@/lib/types";
+import {
+  ACCOUNT_TYPE_LABELS,
+  type Account,
+  type AccountReconciliation,
+} from "@/lib/types";
 import { formatBaht } from "@/lib/utils";
 
 interface AccountDetailResponse {
   account: Account;
+  reconciliation: AccountReconciliation;
   recentTransactions: Array<{
     id: number;
     date: string;
@@ -37,6 +44,53 @@ interface AccountDetailResponse {
     note: string | null;
   }>;
   transactionCount: number;
+}
+
+const reconciliationStatusMeta: Record<
+  AccountReconciliation["status"],
+  {
+    label: string;
+    className: string;
+    description: string;
+  }
+> = {
+  aligned: {
+    label: "ยอดตรงกับรายการที่เชื่อมแล้ว",
+    className:
+      "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+    description:
+      "ยอดคงเหลือที่บันทึกไว้ตรงกับยอดที่ derive จากธุรกรรมที่เชื่อมกับบัญชีนี้",
+  },
+  needs_attention: {
+    label: "ยอดต่างจากรายการที่เชื่อมแล้ว",
+    className:
+      "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+    description:
+      "ยอดคงเหลือในบัญชีนี้ยังไม่ตรงกับธุรกรรมที่เชื่อมอยู่ อาจเกิดจาก opening balance หรือการปรับยอดด้วยมือ",
+  },
+  no_linked_transactions: {
+    label: "ยังไม่มีรายการที่เชื่อมไว้",
+    className:
+      "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+    description:
+      "ตอนนี้ระบบยังอธิบายยอดด้วย transaction ledger ไม่ได้ เพราะยังไม่มีรายการที่ผูกกับบัญชีนี้",
+  },
+};
+
+function formatAccountDate(date?: string) {
+  if (!date) return "—";
+
+  return new Intl.DateTimeFormat("th-TH", {
+    dateStyle: "medium",
+  }).format(new Date(`${date}T00:00:00`));
+}
+
+function formatBalanceDifference(value: number) {
+  if (Math.abs(value) < 0.01) {
+    return "ไม่มีส่วนต่าง";
+  }
+
+  return `${value > 0 ? "+" : "-"}${formatBaht(Math.abs(value))}`;
 }
 
 export default function AccountDetailPage() {
@@ -119,8 +173,8 @@ export default function AccountDetailPage() {
           .forEach((a) => upsertAccount({ ...a, isDefault: false }));
       }
       upsertAccount(data.account);
-      setDetail({ ...detail, account: data.account });
       setEditing(false);
+      await loadDetail();
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -172,10 +226,58 @@ export default function AccountDetailPage() {
         throw new Error(data.error ?? "ไม่สามารถนำกลับมาใช้งานได้");
       }
       upsertAccount(data.account);
-      setDetail({ ...detail, account: data.account });
+      await loadDetail();
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "ไม่สามารถนำกลับมาใช้งานได้");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleReconcile = async () => {
+    if (!detail) return;
+    if (!detail.reconciliation.canReconcile) {
+      setError("บัญชีนี้ยังไม่มีรายการที่เชื่อมไว้ให้ reconcile");
+      return;
+    }
+
+    const shouldProceed =
+      detail.reconciliation.status === "aligned" ||
+      confirm(
+        `ระบบจะปรับยอดคงเหลือจาก ${formatBaht(
+          detail.reconciliation.storedBalance
+        )} เป็น ${formatBaht(
+          detail.reconciliation.transactionDerivedBalance
+        )} ตามรายการที่เชื่อมแล้ว ต้องการดำเนินการต่อหรือไม่?`
+      );
+
+    if (!shouldProceed) {
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/accounts/${detail.account.id}/reconcile`, {
+        method: "POST",
+      });
+      const data = (await response.json()) as {
+        detail?: AccountDetailResponse;
+        error?: string;
+      };
+      if (!response.ok || !data.detail) {
+        throw new Error(data.error ?? "ไม่สามารถ reconcile บัญชีได้");
+      }
+      setDetail(data.detail);
+      upsertAccount(data.detail.account);
+    } catch (reconcileError) {
+      console.error(reconcileError);
+      setError(
+        reconcileError instanceof Error
+          ? reconcileError.message
+          : "ไม่สามารถ reconcile บัญชีได้"
+      );
     } finally {
       setBusy(false);
     }
@@ -216,6 +318,121 @@ export default function AccountDetailPage() {
         </Card>
       ) : (
         <>
+          <Card>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-sm font-semibold text-[color:var(--app-text)]">
+                    Balance Explainability
+                  </h2>
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${reconciliationStatusMeta[detail.reconciliation.status].className}`}
+                  >
+                    {detail.reconciliation.status === "aligned" ? (
+                      <CheckCircle2 size={12} />
+                    ) : detail.reconciliation.status ===
+                      "needs_attention" ? (
+                      <AlertTriangle size={12} />
+                    ) : (
+                      <Wallet size={12} />
+                    )}
+                    {reconciliationStatusMeta[detail.reconciliation.status].label}
+                  </span>
+                </div>
+                <p className="mt-2 max-w-3xl text-sm text-[color:var(--app-text-muted)]">
+                  {reconciliationStatusMeta[detail.reconciliation.status].description}
+                </p>
+              </div>
+
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleReconcile}
+                disabled={busy || !detail.reconciliation.canReconcile}
+              >
+                <RotateCcw size={14} />
+                {detail.reconciliation.status === "aligned"
+                  ? "รีเช็กยอดจากรายการ"
+                  : "ปรับยอดตามรายการที่เชื่อมแล้ว"}
+              </Button>
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
+                  Stored balance
+                </p>
+                <p className="mt-1 text-xl font-semibold text-[color:var(--app-text)]">
+                  {formatBaht(detail.reconciliation.storedBalance)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
+                  Transaction-derived
+                </p>
+                <p className="mt-1 text-xl font-semibold text-[color:var(--app-text)]">
+                  {formatBaht(detail.reconciliation.transactionDerivedBalance)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
+                  Difference
+                </p>
+                <p
+                  className={`mt-1 text-xl font-semibold ${
+                    Math.abs(detail.reconciliation.balanceDifference) < 0.01
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-amber-600 dark:text-amber-400"
+                  }`}
+                >
+                  {formatBalanceDifference(detail.reconciliation.balanceDifference)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 gap-4 border-t border-[color:var(--app-border)] pt-4 md:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
+                  Linked income
+                </p>
+                <p className="mt-1 text-base font-semibold text-emerald-600 dark:text-emerald-400">
+                  {formatBaht(detail.reconciliation.linkedIncome)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
+                  Linked expense
+                </p>
+                <p className="mt-1 text-base font-semibold text-red-600 dark:text-red-400">
+                  {formatBaht(detail.reconciliation.linkedExpense)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
+                  Transfer rows
+                </p>
+                <p className="mt-1 text-base font-semibold text-[color:var(--app-text)]">
+                  {detail.reconciliation.linkedTransferCount.toLocaleString("th-TH")}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
+                  Last linked txn
+                </p>
+                <p className="mt-1 text-base font-semibold text-[color:var(--app-text)]">
+                  {formatAccountDate(detail.reconciliation.lastLinkedTransactionDate)}
+                </p>
+              </div>
+            </div>
+
+            {detail.reconciliation.linkedTransferCount > 0 && (
+              <p className="mt-4 text-sm text-[color:var(--app-text-muted)]">
+                หมายเหตุ: ตอนนี้ transfer rows ยังไม่นับรวมในยอด transaction-derived
+                เพื่อหลีกเลี่ยงการนับซ้ำข้ามบัญชี
+              </p>
+            )}
+          </Card>
+
           <Card className="overflow-hidden">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="flex items-start gap-4">

@@ -44,9 +44,10 @@ Phase 5
 - [x] Evaluate database direction and choose Postgres + Drizzle
 - [x] Add migration tooling and local Postgres bootstrap path
 - [x] Move import flow into database-backed append workflows with duplicate preview
+- [x] Move manual transaction CRUD into Postgres-backed API flows
 - [ ] Introduce authentication if needed
 - [ ] Design per-user storage model
-- [ ] Move manual entry and the rest of runtime persistence into Postgres
+- [ ] Move the remaining browser-local runtime persistence into Postgres
 - **Status:** in_progress
 
 ### Phase 5.5: Experience Quality
@@ -60,7 +61,7 @@ Phase 5
 ### Phase 5.6: Data Trust and Daily-Use UX
 - [x] Move manual transaction entry, edit, and delete into Postgres-backed CRUD
 - [x] Add a pre-commit review workflow for `conflict` rows with clear resolution choices
-- [ ] Add account reconciliation so account balances can be refreshed or explained from linked transactions
+- [x] Add account reconciliation so account balances can be refreshed or explained from linked transactions
 - [ ] Add lifecycle operations for savings goals and savings-goal entries (edit, archive, delete)
 - [ ] Add transaction-to-goal linking or contribution shortcuts where it improves auditability
 - **Status:** in_progress
@@ -84,8 +85,8 @@ Phase 5
 
 ## Near-Term Priorities
 
-1. Add account reconciliation so dashboard balances and transaction-ledger behavior stay explainable.
-2. Add edit / archive / delete flows for savings goals and savings-goal entries.
-3. Add visual regression coverage for light/dark mode on core pages.
-4. Add transaction-to-goal linking once CRUD and lifecycle foundations are stable.
-5. Review homepage copy so "ข้อมูลจริงทั้งหมด" matches the remaining hybrid/reconciliation state.
+1. Add edit / archive / delete flows for savings goals and savings-goal entries.
+2. Review homepage copy so "ข้อมูลจริงทั้งหมด" matches the remaining hybrid/reconciliation state.
+3. Add transaction-to-goal linking once CRUD and lifecycle foundations are stable.
+4. Add visual regression coverage for light/dark mode on core pages.
+5. Review whether opening balances should become explicit ledger-opening transactions in a later migration.
