@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { GOAL_CATEGORY_LABELS } from "@/lib/savings-goals";
-import { getSavingsGoalDetail, updateSavingsGoal } from "@/lib/server/savings-goals";
+import {
+  deleteSavingsGoal,
+  getSavingsGoalDetail,
+  setSavingsGoalArchived,
+  updateSavingsGoal,
+} from "@/lib/server/savings-goals";
 import type { SavingsGoalCategory } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -59,6 +64,25 @@ export async function PATCH(
 
   try {
     const body = (await request.json()) as Record<string, unknown>;
+    const lifecyclePatch =
+      typeof body.isArchived === "boolean" && Object.keys(body).length === 1;
+
+    if (lifecyclePatch) {
+      const detail = await setSavingsGoalArchived(
+        parsedGoalId,
+        body.isArchived === true
+      );
+
+      if (!detail) {
+        return NextResponse.json(
+          { error: "ไม่พบเป้าหมายการออมนี้" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ detail });
+    }
+
     const name = typeof body.name === "string" ? body.name.trim() : "";
     const targetAmount = Number(body.targetAmount);
 
@@ -104,6 +128,40 @@ export async function PATCH(
     console.error("Failed to update savings goal detail", error);
     return NextResponse.json(
       { error: "ไม่สามารถอัปเดตเป้าหมายการออมได้" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ goalId: string }> }
+) {
+  const { goalId } = await context.params;
+  const parsedGoalId = Number(goalId);
+
+  if (!Number.isInteger(parsedGoalId) || parsedGoalId <= 0) {
+    return NextResponse.json(
+      { error: "รหัสเป้าหมายไม่ถูกต้อง" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const deleted = await deleteSavingsGoal(parsedGoalId);
+
+    if (!deleted) {
+      return NextResponse.json(
+        { error: "ไม่พบเป้าหมายการออมนี้" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Failed to delete savings goal", error);
+    return NextResponse.json(
+      { error: "ไม่สามารถลบเป้าหมายการออมได้" },
       { status: 500 }
     );
   }

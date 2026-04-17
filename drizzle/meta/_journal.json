@@ -43,6 +43,13 @@
       "when": 1776412290179,
       "tag": "0005_mighty_goblin_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1776431851570,
+      "tag": "0006_skinny_white_queen",
+      "breakpoints": true
     }
   ]
 }

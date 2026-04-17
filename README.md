@@ -10,6 +10,7 @@ It is designed for users who already track their money in a ledger or banking ap
 - Excel / CSV import flow with column mapping and preview
 - Dashboard with yearly summaries, cashflow, and transaction-driven analytics
 - Transaction list with search and filters
+- DB-backed manual transaction CRUD and account reconciliation detail
 - DB-backed savings goals with per-goal progress, growth, and movement history
 - Token-based dark mode across shell, charts, forms, and analytics surfaces
 - PostgreSQL + Drizzle-backed import history, duplicate preview, and append-with-de-dup
@@ -38,7 +39,7 @@ This project currently focuses on transaction-driven analytics.
 - Import preview and commit now run through PostgreSQL + Drizzle using `import_runs`, `import_run_rows`, and `transactions`
 - Savings goals now run through PostgreSQL + Drizzle using `savings_goals` and `savings_goal_entries`
 - Dashboard and transaction pages can hydrate from the database on cold start when local state is empty
-- Local browser persistence is still retained for selected year, sidebar state, and manual-only entries
+- Local browser persistence is still retained for selected year, sidebar state, and other UX convenience state
 - Assets, liabilities, and investment holdings are still scaffolded as product surfaces and are not yet fully backed by real imported data models
 - Authentication and production API workflows are not wired yet
 
@@ -65,7 +66,8 @@ This project currently focuses on transaction-driven analytics.
 - Year-aware transaction view
 - Search by category or note
 - Filter by income / expense
-- Manual quick-add entry flow
+- DB-backed manual quick-add / edit / delete flow
+- Account detail pages with reconciliation context and explicit ledger-based refresh
 
 ### 4. Reports
 
@@ -79,6 +81,8 @@ This project currently focuses on transaction-driven analytics.
 - Track goal-specific balance, target progress, total growth, and return percentage
 - Record typed goal movements such as contributions, growth, withdrawals, and adjustments
 - Open each goal to inspect detailed progress, balance trajectory, and movement history
+- Archive, restore, and permanently delete goals
+- Edit and delete existing goal movements when correction is needed
 
 ## Getting Started
 
@@ -213,9 +217,10 @@ Detailed testing guidance is documented in [`TESTING.md`](/Users/woraweechanlong
 ## Limitations
 
 - No multi-user support yet
-- Runtime is currently hybrid: import persistence and savings goals are DB-backed, but manual entry still remains browser-local
+- Runtime is currently hybrid: durable financial records are DB-backed, but some UI/runtime convenience state still lives in the browser
 - Import pipeline currently emphasizes transaction rows rather than full portfolio reconciliation
-- Savings goals support editing, but do not yet support archive, delete, or entry-level editing flows
+- Opening balances are still stored values rather than explicit ledger-opening transactions
+- Savings goals are intentionally separate from transaction rows and do not yet support transaction-to-goal contribution shortcuts
 
 ## Roadmap Ideas
 

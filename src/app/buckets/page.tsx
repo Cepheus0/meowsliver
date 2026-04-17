@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, PiggyBank, Plus, Sparkles, Target, TrendingUp } from "lucide-react";
+import {
+  Archive,
+  ArrowRight,
+  PiggyBank,
+  Plus,
+  Sparkles,
+  Target,
+  TrendingUp,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -419,7 +427,11 @@ export default function BucketsPage() {
             <PortfolioStatCard
               label="จำนวนเป้าหมาย"
               value={`${portfolio.overview.goalCount}`}
-              helper={`${portfolio.overview.completedGoals} เป้าหมายถึงแล้ว`}
+              helper={
+                portfolio.overview.archivedGoalCount > 0
+                  ? `${portfolio.overview.completedGoals} เป้าหมายถึงแล้ว • archived ${portfolio.overview.archivedGoalCount}`
+                  : `${portfolio.overview.completedGoals} เป้าหมายถึงแล้ว`
+              }
             />
             <PortfolioStatCard
               label="สะสมแล้ว"
@@ -442,8 +454,16 @@ export default function BucketsPage() {
             <Card>
               <EmptyState
                 icon={<PiggyBank size={20} />}
-                title="ยังไม่มี Savings Goals"
-                description="กด preset ด้านบนหรือสร้างเป้าหมายแบบกำหนดเอง แล้วระบบจะเริ่มติดตาม progress และ growth ให้ทันที"
+                title={
+                  portfolio.archivedGoals.length > 0
+                    ? "ยังไม่มีเป้าหมายที่ active อยู่ตอนนี้"
+                    : "ยังไม่มี Savings Goals"
+                }
+                description={
+                  portfolio.archivedGoals.length > 0
+                    ? `ตอนนี้มี ${portfolio.archivedGoals.length} เป้าหมายที่เก็บขึ้นหิ้งอยู่ด้านล่าง คุณสามารถเปิดดูเพื่อตัดสินใจกู้คืนหรือลบถาวรได้`
+                    : "กด preset ด้านบนหรือสร้างเป้าหมายแบบกำหนดเอง แล้วระบบจะเริ่มติดตาม progress และ growth ให้ทันที"
+                }
               />
             </Card>
           ) : (
@@ -553,6 +573,52 @@ export default function BucketsPage() {
                   </Link>
                 );
               })}
+            </div>
+          )}
+
+          {portfolio.archivedGoals.length > 0 && (
+            <div>
+              <div className="mb-3 flex items-center gap-2 text-sm font-medium text-[color:var(--app-text-muted)]">
+                <Archive size={16} />
+                เป้าหมายที่เก็บขึ้นหิ้ง ({portfolio.archivedGoals.length})
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                {portfolio.archivedGoals.map((goal) => (
+                  <Link key={goal.id} href={`/buckets/${goal.id}`} className="block">
+                    <Card className="transition-all hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)] hover:shadow-md">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <div
+                            className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl"
+                            style={{ backgroundColor: `${goal.color}16` }}
+                          >
+                            {goal.icon}
+                          </div>
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h2 className="text-base font-semibold text-[color:var(--app-text)]">
+                                {goal.name}
+                              </h2>
+                              <span className="rounded-xl bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                                เก็บขึ้นหิ้ง
+                              </span>
+                            </div>
+                            <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
+                              {goal.strategyLabel || "ยังไม่ได้ระบุช่องทางออม"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <span className="inline-flex items-center gap-2 text-sm font-medium text-[color:var(--app-text-muted)]">
+                          เปิดดู
+                          <ArrowRight size={16} />
+                        </span>
+                      </div>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </>

@@ -71,7 +71,10 @@ export async function POST(
         ? error.message
         : "ไม่สามารถบันทึกรายการให้เป้าหมายนี้ได้";
     const status =
-      message === "รายการนี้จะทำให้ยอดสะสมติดลบ" ? 400 : 500;
+      message === "รายการนี้จะทำให้ยอดสะสมติดลบ" ||
+      message === "เป้าหมายนี้ถูก archive แล้ว แก้ไข movement เพิ่มไม่ได้"
+        ? 400
+        : 500;
 
     return NextResponse.json(
       { error: message },

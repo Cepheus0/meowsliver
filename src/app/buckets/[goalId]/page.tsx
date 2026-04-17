@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
+  Archive,
   ArrowLeft,
   ArrowUpRight,
   Landmark,
   PencilLine,
   PiggyBank,
   Plus,
+  RotateCcw,
   Save,
   TrendingUp,
+  Trash2,
   Wallet,
   X,
 } from "lucide-react";
@@ -103,21 +106,29 @@ function formatSignedAmount(type: SavingsGoalEntryType, amount: number) {
   return `+${formatBaht(Math.abs(amount))}`;
 }
 
+function createDefaultEntryForm() {
+  return {
+    date: new Date().toISOString().slice(0, 10),
+    type: "contribution" as SavingsGoalEntryType,
+    amount: "",
+    note: "",
+  };
+}
+
 export default function SavingsGoalDetailPage() {
   const params = useParams<{ goalId: string }>();
+  const router = useRouter();
   const goalId = Number(params.goalId);
   const [detail, setDetail] = useState<SavingsGoalDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingGoal, setIsSavingGoal] = useState(false);
+  const [isArchivingGoal, setIsArchivingGoal] = useState(false);
+  const [isDeletingGoal, setIsDeletingGoal] = useState(false);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [editingEntryId, setEditingEntryId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    date: new Date().toISOString().slice(0, 10),
-    type: "contribution" as SavingsGoalEntryType,
-    amount: "",
-    note: "",
-  });
+  const [form, setForm] = useState(createDefaultEntryForm);
   const [goalForm, setGoalForm] = useState({
     name: "",
     category: "custom" as SavingsGoalCategory,
@@ -128,6 +139,25 @@ export default function SavingsGoalDetailPage() {
     strategyLabel: "",
     notes: "",
   });
+
+  const applyDetail = (nextDetail: SavingsGoalDetail) => {
+    setDetail(nextDetail);
+    setGoalForm({
+      name: nextDetail.goal.name,
+      category: nextDetail.goal.category,
+      icon: nextDetail.goal.icon,
+      color: nextDetail.goal.color,
+      targetAmount: `${nextDetail.goal.targetAmount}`,
+      targetDate: nextDetail.goal.targetDate ?? "",
+      strategyLabel: nextDetail.goal.strategyLabel ?? "",
+      notes: nextDetail.goal.notes ?? "",
+    });
+  };
+
+  const resetEntryForm = () => {
+    setEditingEntryId(null);
+    setForm(createDefaultEntryForm());
+  };
 
   useEffect(() => {
     if (Number.isFinite(goalId) && goalId > 0) {
@@ -147,17 +177,7 @@ export default function SavingsGoalDetailPage() {
             throw new Error(data.error ?? "ไม่สามารถโหลดรายละเอียดเป้าหมายได้");
           }
 
-          setDetail(data.detail);
-          setGoalForm({
-            name: data.detail.goal.name,
-            category: data.detail.goal.category,
-            icon: data.detail.goal.icon,
-            color: data.detail.goal.color,
-            targetAmount: `${data.detail.goal.targetAmount}`,
-            targetDate: data.detail.goal.targetDate ?? "",
-            strategyLabel: data.detail.goal.strategyLabel ?? "",
-            notes: data.detail.goal.notes ?? "",
-          });
+          applyDetail(data.detail);
           setError(null);
         } catch (loadError) {
           console.error(loadError);
@@ -176,22 +196,27 @@ export default function SavingsGoalDetailPage() {
     }
   }, [goalId]);
 
-  const handleAddEntry = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveEntry = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/savings-goals/${goalId}/entries`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...form,
-          amount: Number(form.amount),
-        }),
-      });
+      const response = await fetch(
+        editingEntryId
+          ? `/api/savings-goals/${goalId}/entries/${editingEntryId}`
+          : `/api/savings-goals/${goalId}/entries`,
+        {
+          method: editingEntryId ? "PATCH" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...form,
+            amount: Number(form.amount),
+          }),
+        }
+      );
 
       const data = (await response.json()) as {
         detail?: SavingsGoalDetail;
@@ -199,32 +224,78 @@ export default function SavingsGoalDetailPage() {
       };
 
       if (!response.ok || !data.detail) {
-        throw new Error(data.error ?? "ไม่สามารถบันทึกรายการได้");
+        throw new Error(
+          data.error ??
+            (editingEntryId
+              ? "ไม่สามารถแก้ไขรายการได้"
+              : "ไม่สามารถบันทึกรายการได้")
+        );
       }
 
-      setDetail(data.detail);
-      setGoalForm({
-        name: data.detail.goal.name,
-        category: data.detail.goal.category,
-        icon: data.detail.goal.icon,
-        color: data.detail.goal.color,
-        targetAmount: `${data.detail.goal.targetAmount}`,
-        targetDate: data.detail.goal.targetDate ?? "",
-        strategyLabel: data.detail.goal.strategyLabel ?? "",
-        notes: data.detail.goal.notes ?? "",
-      });
-      setForm((currentForm) => ({
-        ...currentForm,
-        amount: "",
-        note: "",
-        type: "contribution",
-      }));
+      applyDetail(data.detail);
+      resetEntryForm();
     } catch (submitError) {
       console.error(submitError);
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "ไม่สามารถบันทึกรายการให้เป้าหมายนี้ได้"
+          : editingEntryId
+            ? "ไม่สามารถแก้ไขรายการให้เป้าหมายนี้ได้"
+            : "ไม่สามารถบันทึกรายการให้เป้าหมายนี้ได้"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleStartEditEntry = (entry: SavingsGoalDetail["entries"][number]) => {
+    setEditingEntryId(entry.id);
+    setForm({
+      date: entry.date,
+      type: entry.type,
+      amount: `${entry.amount}`,
+      note: entry.note ?? "",
+    });
+    setError(null);
+  };
+
+  const handleDeleteEntry = async (
+    entry: SavingsGoalDetail["entries"][number]
+  ) => {
+    if (!confirm(`ลบ movement วันที่ ${formatGoalDate(entry.date)} ใช่หรือไม่?`)) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `/api/savings-goals/${goalId}/entries/${entry.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = (await response.json()) as {
+        detail?: SavingsGoalDetail;
+        error?: string;
+      };
+
+      if (!response.ok || !data.detail) {
+        throw new Error(data.error ?? "ไม่สามารถลบรายการได้");
+      }
+
+      applyDetail(data.detail);
+      if (editingEntryId === entry.id) {
+        resetEntryForm();
+      }
+    } catch (deleteError) {
+      console.error(deleteError);
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "ไม่สามารถลบรายการของเป้าหมายนี้ได้"
       );
     } finally {
       setIsSubmitting(false);
@@ -257,17 +328,7 @@ export default function SavingsGoalDetailPage() {
         throw new Error(data.error ?? "ไม่สามารถอัปเดตเป้าหมายได้");
       }
 
-      setDetail(data.detail);
-      setGoalForm({
-        name: data.detail.goal.name,
-        category: data.detail.goal.category,
-        icon: data.detail.goal.icon,
-        color: data.detail.goal.color,
-        targetAmount: `${data.detail.goal.targetAmount}`,
-        targetDate: data.detail.goal.targetDate ?? "",
-        strategyLabel: data.detail.goal.strategyLabel ?? "",
-        notes: data.detail.goal.notes ?? "",
-      });
+      applyDetail(data.detail);
       setIsEditingGoal(false);
     } catch (saveError) {
       console.error(saveError);
@@ -278,6 +339,119 @@ export default function SavingsGoalDetailPage() {
       );
     } finally {
       setIsSavingGoal(false);
+    }
+  };
+
+  const handleArchiveGoal = async () => {
+    if (!detail) return;
+    if (!confirm(`เก็บเป้าหมาย "${detail.goal.name}" ขึ้นหิ้ง?`)) return;
+
+    setIsArchivingGoal(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/savings-goals/${goalId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isArchived: true }),
+      });
+
+      const data = (await response.json()) as {
+        detail?: SavingsGoalDetail;
+        error?: string;
+      };
+
+      if (!response.ok || !data.detail) {
+        throw new Error(data.error ?? "ไม่สามารถเก็บเป้าหมายขึ้นหิ้งได้");
+      }
+
+      applyDetail(data.detail);
+      setIsEditingGoal(false);
+      resetEntryForm();
+    } catch (archiveError) {
+      console.error(archiveError);
+      setError(
+        archiveError instanceof Error
+          ? archiveError.message
+          : "ไม่สามารถเก็บเป้าหมายขึ้นหิ้งได้"
+      );
+    } finally {
+      setIsArchivingGoal(false);
+    }
+  };
+
+  const handleRestoreGoal = async () => {
+    if (!detail) return;
+
+    setIsArchivingGoal(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/savings-goals/${goalId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isArchived: false }),
+      });
+
+      const data = (await response.json()) as {
+        detail?: SavingsGoalDetail;
+        error?: string;
+      };
+
+      if (!response.ok || !data.detail) {
+        throw new Error(data.error ?? "ไม่สามารถกู้คืนเป้าหมายได้");
+      }
+
+      applyDetail(data.detail);
+    } catch (restoreError) {
+      console.error(restoreError);
+      setError(
+        restoreError instanceof Error
+          ? restoreError.message
+          : "ไม่สามารถกู้คืนเป้าหมายได้"
+      );
+    } finally {
+      setIsArchivingGoal(false);
+    }
+  };
+
+  const handleDeleteGoal = async () => {
+    if (!detail) return;
+    if (
+      !confirm(
+        `ลบเป้าหมาย "${detail.goal.name}" ถาวร? ระบบจะลบ movement ทั้งหมดของเป้านี้ด้วย`
+      )
+    ) {
+      return;
+    }
+
+    setIsDeletingGoal(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/savings-goals/${goalId}`, {
+        method: "DELETE",
+      });
+      const data = (await response.json()) as {
+        success?: boolean;
+        error?: string;
+      };
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error ?? "ไม่สามารถลบเป้าหมายนี้ได้");
+      }
+
+      router.push("/buckets");
+    } catch (deleteError) {
+      console.error(deleteError);
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "ไม่สามารถลบเป้าหมายนี้ได้"
+      );
+    } finally {
+      setIsDeletingGoal(false);
     }
   };
 
@@ -315,25 +489,71 @@ export default function SavingsGoalDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <Link
-          href="/buckets"
-          className="theme-border inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
-        >
-          <ArrowLeft size={16} />
-          กลับไปหน้า Savings
-        </Link>
-        <span className="rounded-xl bg-zinc-100 px-3 py-2 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-          {GOAL_CATEGORY_LABELS[detail.goal.category]}
-        </span>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setIsEditingGoal((value) => !value)}
-        >
-          {isEditingGoal ? <X size={16} /> : <PencilLine size={16} />}
-          {isEditingGoal ? "ปิดโหมดแก้ไข" : "แก้ไขเป้าหมาย"}
-        </Button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/buckets"
+            className="theme-border inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
+          >
+            <ArrowLeft size={16} />
+            กลับไปหน้า Savings
+          </Link>
+          <span className="rounded-xl bg-zinc-100 px-3 py-2 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            {GOAL_CATEGORY_LABELS[detail.goal.category]}
+          </span>
+          {detail.goal.isArchived && (
+            <span className="inline-flex items-center gap-2 rounded-xl bg-zinc-100 px-3 py-2 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+              <Archive size={14} />
+              เก็บขึ้นหิ้ง
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {detail.goal.isArchived ? (
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleRestoreGoal}
+                disabled={isArchivingGoal || isDeletingGoal}
+              >
+                <RotateCcw size={16} />
+                กู้คืนเป้าหมาย
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={handleDeleteGoal}
+                disabled={isArchivingGoal || isDeletingGoal}
+              >
+                <Trash2 size={16} />
+                ลบถาวร
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsEditingGoal((value) => !value)}
+                disabled={isArchivingGoal || isDeletingGoal}
+              >
+                {isEditingGoal ? <X size={16} /> : <PencilLine size={16} />}
+                {isEditingGoal ? "ปิดโหมดแก้ไข" : "แก้ไขเป้าหมาย"}
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={handleArchiveGoal}
+                disabled={isArchivingGoal || isDeletingGoal}
+              >
+                <Archive size={16} />
+                เก็บขึ้นหิ้ง
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {error ? (
@@ -341,6 +561,15 @@ export default function SavingsGoalDetailPage() {
           <p className="text-sm font-medium">{error}</p>
         </Card>
       ) : null}
+
+      {detail.goal.isArchived && (
+        <Card className="border-amber-200 bg-amber-50/60 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-200">
+          <p className="text-sm font-medium">
+            เป้าหมายนี้ถูกเก็บขึ้นหิ้งแล้ว จึงหยุดรับ movement ใหม่และแก้ไขประวัติเดิมชั่วคราว
+            คุณสามารถกู้คืนเพื่อกลับมาใช้งานต่อ หรือเลือกลบถาวรได้
+          </p>
+        </Card>
+      )}
 
       <Card className="overflow-hidden">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -387,7 +616,7 @@ export default function SavingsGoalDetailPage() {
         </div>
       </Card>
 
-      {isEditingGoal ? (
+      {isEditingGoal && !detail.goal.isArchived ? (
         <Card>
           <CardHeader>
             <CardTitle>แก้ไขเป้าหมายนี้</CardTitle>
@@ -633,9 +862,22 @@ export default function SavingsGoalDetailPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>บันทึก movement ใหม่</CardTitle>
+            <CardTitle>
+              {detail.goal.isArchived
+                ? "เป้าหมายนี้อยู่ในสถานะ archived"
+                : editingEntryId
+                  ? "แก้ไข movement"
+                  : "บันทึก movement ใหม่"}
+            </CardTitle>
           </CardHeader>
-          <form className="space-y-4" onSubmit={handleAddEntry}>
+          {detail.goal.isArchived ? (
+            <EmptyState
+              icon={<Archive size={20} />}
+              title="ยังแก้ movement ไม่ได้ในตอนนี้"
+              description="กู้คืนเป้าหมายนี้ก่อน หากต้องการเพิ่ม แก้ไข หรือลบ movement"
+            />
+          ) : (
+          <form className="space-y-4" onSubmit={handleSaveEntry}>
             <label className="space-y-2 text-sm">
               <span className="font-medium text-zinc-700 dark:text-zinc-200">
                 วันที่
@@ -715,11 +957,28 @@ export default function SavingsGoalDetailPage() {
               />
             </label>
 
-            <Button type="submit" disabled={isSubmitting} className="w-full">
-              <Plus size={16} />
-              {isSubmitting ? "กำลังบันทึก..." : "เพิ่ม movement"}
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              <Button type="submit" disabled={isSubmitting} className="flex-1">
+                {editingEntryId ? <Save size={16} /> : <Plus size={16} />}
+                {isSubmitting
+                  ? "กำลังบันทึก..."
+                  : editingEntryId
+                    ? "บันทึกการแก้ไข"
+                    : "เพิ่ม movement"}
+              </Button>
+              {editingEntryId ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={resetEntryForm}
+                  disabled={isSubmitting}
+                >
+                  ยกเลิก
+                </Button>
+              ) : null}
+            </div>
           </form>
+          )}
         </Card>
       </div>
 
@@ -736,7 +995,7 @@ export default function SavingsGoalDetailPage() {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[820px] text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 dark:border-zinc-800">
                   <th className="px-2 py-3 font-medium text-[color:var(--app-text-muted)]">
@@ -750,6 +1009,9 @@ export default function SavingsGoalDetailPage() {
                   </th>
                   <th className="px-2 py-3 text-right font-medium text-[color:var(--app-text-muted)]">
                     จำนวนเงิน
+                  </th>
+                  <th className="px-2 py-3 text-right font-medium text-[color:var(--app-text-muted)]">
+                    จัดการ
                   </th>
                 </tr>
               </thead>
@@ -775,6 +1037,30 @@ export default function SavingsGoalDetailPage() {
                         {entry.type === "contribution" ? <Landmark size={14} /> : null}
                         {formatSignedAmount(entry.type, entry.amount)}
                       </span>
+                    </td>
+                    <td className="px-2 py-3">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleStartEditEntry(entry)}
+                          disabled={detail.goal.isArchived || isSubmitting}
+                        >
+                          <PencilLine size={14} />
+                          แก้ไข
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteEntry(entry)}
+                          disabled={detail.goal.isArchived || isSubmitting}
+                        >
+                          <Trash2 size={14} />
+                          ลบ
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -160,6 +160,7 @@ export interface SavingsGoal {
   category: SavingsGoalCategory;
   icon: string;
   color: string;
+  isArchived: boolean;
   targetAmount: number;
   targetDate?: string;
   strategyLabel?: string;
@@ -208,6 +209,7 @@ export interface SavingsBucket {
   category: SavingsGoalCategory;
   icon: string;
   color: string;
+  isArchived: boolean;
   targetAmount: number;
   targetDate?: string;
   strategyLabel?: string;
@@ -221,8 +223,10 @@ export interface SavingsBucket {
 
 export interface SavingsGoalsPortfolio {
   goals: SavingsBucket[];
+  archivedGoals: SavingsBucket[];
   overview: {
     goalCount: number;
+    archivedGoalCount: number;
     completedGoals: number;
     totalSaved: number;
     totalTarget: number;

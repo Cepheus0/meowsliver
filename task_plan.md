@@ -62,7 +62,7 @@ Phase 5
 - [x] Move manual transaction entry, edit, and delete into Postgres-backed CRUD
 - [x] Add a pre-commit review workflow for `conflict` rows with clear resolution choices
 - [x] Add account reconciliation so account balances can be refreshed or explained from linked transactions
-- [ ] Add lifecycle operations for savings goals and savings-goal entries (edit, archive, delete)
+- [x] Add lifecycle operations for savings goals and savings-goal entries (edit, archive, delete)
 - [ ] Add transaction-to-goal linking or contribution shortcuts where it improves auditability
 - **Status:** in_progress
 
@@ -85,8 +85,8 @@ Phase 5
 
 ## Near-Term Priorities
 
-1. Add edit / archive / delete flows for savings goals and savings-goal entries.
-2. Review homepage copy so "ข้อมูลจริงทั้งหมด" matches the remaining hybrid/reconciliation state.
-3. Add transaction-to-goal linking once CRUD and lifecycle foundations are stable.
-4. Add visual regression coverage for light/dark mode on core pages.
-5. Review whether opening balances should become explicit ledger-opening transactions in a later migration.
+1. Review homepage copy so "ข้อมูลจริงทั้งหมด" matches the remaining hybrid/reconciliation state.
+2. Add transaction-to-goal linking once CRUD and lifecycle foundations are stable.
+3. Add visual regression coverage for light/dark mode on core pages.
+4. Review whether opening balances should become explicit ledger-opening transactions in a later migration.
+5. Revisit whether savings goals should support bulk import or recurring contribution automation later.

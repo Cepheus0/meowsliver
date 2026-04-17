@@ -230,6 +230,7 @@ export const savingsGoals = pgTable(
     category: savingsGoalCategoryEnum("category").notNull().default("custom"),
     icon: text("icon").notNull(),
     color: text("color").notNull(),
+    isArchived: boolean("is_archived").notNull().default(false),
     targetAmountSatang: bigint("target_amount_satang", { mode: "number" })
       .notNull(),
     targetDate: date("target_date", { mode: "string" }),
@@ -243,6 +244,7 @@ export const savingsGoals = pgTable(
       .notNull(),
   },
   (table) => ({
+    archivedIdx: index("savings_goals_archived_idx").on(table.isArchived),
     categoryIdx: index("savings_goals_category_idx").on(table.category),
     targetDateIdx: index("savings_goals_target_date_idx").on(table.targetDate),
   })

@@ -132,6 +132,30 @@
   5. reconcile and confirm the stored balance matches the ledger
 - Regenerated a passing `reports/test-report.md` after the sprint 3 flow landed
 
+### Sprint 4: Savings Goal Lifecycle Operations
+- Added `is_archived` to `savings_goals` plus a new Drizzle migration so goals can move between active and archived states safely
+- Extended savings-goal portfolio responses to separate active and archived goals, and updated overview metrics to expose archived-goal count
+- Added archive/restore/delete goal support through `PATCH /api/savings-goals/[goalId]` lifecycle toggles plus `DELETE /api/savings-goals/[goalId]`
+- Added `PATCH` / `DELETE` entry routes at `/api/savings-goals/[goalId]/entries/[entryId]` for movement correction flows
+- Redesigned the savings-goal detail page so users can:
+  1. archive/restore/delete a goal
+  2. edit an existing movement in place
+  3. delete a movement
+  4. see archived goals switch into read-only mode until restored
+- Updated the savings-goal overview page to show archived goals separately instead of mixing them with active goals
+- Extended API smoke coverage for the full savings-goal lifecycle:
+  1. create goal
+  2. update goal
+  3. create entry
+  4. edit entry
+  5. archive goal
+  6. verify archived portfolio segregation
+  7. block entry mutation while archived
+  8. restore goal
+  9. delete entry
+  10. delete goal
+- Regenerated a passing `reports/test-report.md` after the sprint 4 flow landed
+
 ## Current Status
 
 | Area | Status |
@@ -155,8 +179,8 @@
 
 ## Next Likely Milestones
 
-1. Add edit / archive / delete flows for savings goals and savings movements.
-2. Add transaction-to-goal contribution shortcuts where they improve auditability.
-3. Improve category normalization and reporting accuracy.
-4. Add visual regression checks for the main routes and dark mode.
-5. Decide whether opening balances should stay as stored values or become explicit ledger transactions in a later migration.
+1. Add transaction-to-goal contribution shortcuts where they improve auditability.
+2. Improve category normalization and reporting accuracy.
+3. Add visual regression checks for the main routes and dark mode.
+4. Decide whether opening balances should stay as stored values or become explicit ledger transactions in a later migration.
+5. Revisit whether savings goals should eventually support recurring contribution automation or spreadsheet import.

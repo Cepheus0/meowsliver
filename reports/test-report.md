@@ -1,6 +1,6 @@
 # Test Report
 
-- Generated at: 17 Apr 2026, 20:08:40
+- Generated at: 17 Apr 2026, 20:18:46
 - Target app URL: http://localhost:3000
 - Overall status: PASS
 
@@ -12,7 +12,7 @@
 | Import mapping and dedupe | Unit tests + API smoke preview/commit | Large-file UX, mapping edge cases from real exports |
 | Dashboard analytics | Unit tests for finance analytics | Data storytelling review with real data |
 | Transactions page | Route smoke checks + analytics unit coverage | Search/filter UX and pagination behavior |
-| Savings goals portfolio | Unit tests + API smoke for create/update/entry | Edit/delete/archive UX, long-form content polish |
+| Savings goals portfolio | Unit tests + API smoke for create/update/archive/delete and entry lifecycle | Long-form content polish and mobile form UX |
 | Reports and investments | Build + route smoke checks | Chart readability and empty/loaded visual QA |
 
 ## Execution Summary
@@ -61,14 +61,14 @@ $ eslint
 ▲ Next.js 16.1.3 (Turbopack)
 
   Creating an optimized production build ...
-✓ Compiled successfully in 4.4s
+✓ Compiled successfully in 4.6s
   Running TypeScript ...
   Collecting page data using 7 workers ...
   Generating static pages using 7 workers (0/11) ...
   Generating static pages using 7 workers (2/11) 
   Generating static pages using 7 workers (5/11) 
   Generating static pages using 7 workers (8/11) 
-✓ Generating static pages using 7 workers (11/11) in 342.4ms
+✓ Generating static pages using 7 workers (11/11) in 371.8ms
   Finalizing page optimization ...
 
 Route (app)
@@ -85,6 +85,7 @@ Route (app)
 ├ ƒ /api/savings-goals
 ├ ƒ /api/savings-goals/[goalId]
 ├ ƒ /api/savings-goals/[goalId]/entries
+├ ƒ /api/savings-goals/[goalId]/entries/[entryId]
 ├ ƒ /api/transactions
 ├ ƒ /api/transactions/[transactionId]
 ├ ○ /buckets
@@ -119,22 +120,22 @@ RUN  v4.1.3 /Users/woraweechanlongrat/Documents/projects/meowsliver
 
  Test Files  12 passed (12)
       Tests  58 passed (58)
-   Start at  20:09:00
-   Duration  5.64s (transform 977ms, setup 0ms, import 5.78s, tests 253ms, environment 1ms)
+   Start at  20:19:10
+   Duration  2.24s (transform 546ms, setup 0ms, import 2.50s, tests 317ms, environment 1ms)
 
  % Coverage report from v8
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |   78.53 |    68.57 |   78.37 |   79.07 |                   
- lib               |   80.81 |    69.36 |   80.55 |   81.64 |                   
+All files          |   78.53 |    68.66 |   78.37 |   79.07 |                   
+ lib               |   80.81 |    69.45 |   80.55 |   81.64 |                   
   ...nciliation.ts |     100 |      100 |     100 |     100 |                   
   excel-parser.ts  |      80 |       80 |   83.33 |   79.56 | ...96,227,239,253 
   ...-analytics.ts |   52.41 |    37.64 |   63.63 |   52.25 | 115,189,208-347   
   ...t-pipeline.ts |   91.66 |    63.04 |     100 |   91.66 | 90,95,156         
   import-review.ts |     100 |      100 |     100 |     100 |                   
   ...-analytics.ts |   94.65 |    84.04 |     100 |     100 | ...99,401,403-405 
-  ...-analytics.ts |   96.55 |    74.07 |     100 |   96.29 | 26,65             
+  ...-analytics.ts |   96.55 |       75 |     100 |   96.29 | 26,65             
   savings-goals.ts |     100 |      100 |     100 |     100 |                   
   ...esentation.ts |   66.66 |      100 |   33.33 |   66.66 | 22,30             
   types.ts         |     100 |      100 |     100 |     100 |                   
@@ -179,9 +180,16 @@ PASS account reconcile guard without linked transactions
 PASS account reconcile drift seed transaction
 PASS account reconciliation detail explainability
 PASS account reconciliation action
-PASS savings goal create (11)
+PASS savings goal create (13)
 PASS savings goal update
 PASS savings goal entry
+PASS savings goal entry update
+PASS savings goal archive
+PASS savings goal archived portfolio segregation
+PASS savings goal archive mutation guard
+PASS savings goal restore
+PASS savings goal entry delete
+PASS savings goal delete
 PASS import preview new
 PASS import commit
 PASS import duplicate detection

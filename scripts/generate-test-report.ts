@@ -66,7 +66,7 @@ function buildReport(results: StepResult[]) {
 | Import mapping and dedupe | Unit tests + API smoke preview/commit | Large-file UX, mapping edge cases from real exports |
 | Dashboard analytics | Unit tests for finance analytics | Data storytelling review with real data |
 | Transactions page | Route smoke checks + analytics unit coverage | Search/filter UX and pagination behavior |
-| Savings goals portfolio | Unit tests + API smoke for create/update/entry | Edit/delete/archive UX, long-form content polish |
+| Savings goals portfolio | Unit tests + API smoke for create/update/archive/delete and entry lifecycle | Long-form content polish and mobile form UX |
 | Reports and investments | Build + route smoke checks | Chart readability and empty/loaded visual QA |
 
 ## Execution Summary

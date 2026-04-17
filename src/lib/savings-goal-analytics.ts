@@ -143,6 +143,7 @@ export function buildSavingsBucketSummary(
     category: goal.category,
     icon: goal.icon,
     color: goal.color,
+    isArchived: goal.isArchived,
     targetAmount: goal.targetAmount,
     targetDate: goal.targetDate,
     strategyLabel: goal.strategyLabel,
@@ -156,7 +157,8 @@ export function buildSavingsBucketSummary(
 }
 
 export function buildSavingsGoalsOverview(
-  goals: SavingsBucket[]
+  goals: SavingsBucket[],
+  archivedGoalCount = 0
 ): SavingsGoalsPortfolio["overview"] {
   const totalSaved = goals.reduce((sum, goal) => sum + goal.currentAmount, 0);
   const totalTarget = goals.reduce((sum, goal) => sum + goal.targetAmount, 0);
@@ -166,6 +168,7 @@ export function buildSavingsGoalsOverview(
 
   return {
     goalCount: goals.length,
+    archivedGoalCount,
     completedGoals,
     totalSaved,
     totalTarget,

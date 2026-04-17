@@ -59,12 +59,12 @@ The most reliable working flow today is:
 
 ## Known Gaps
 
-- Savings goals still do not support archive/delete or entry-level edit/delete flows
 - No formal data model for assets, liabilities, or portfolio holdings beyond current scaffolding
 - No production deployment workflow captured in the repo yet
 - There is still no visual regression layer for validating dark mode across main routes
 - Account reconciliation currently excludes `transfer` rows from the transaction-derived balance to avoid double counting across accounts
 - Opening balances are still implicit stored values rather than explicit ledger-opening transactions, so reconciliation is intentionally opt-in and explanatory rather than automatic
+- Savings goals are still independent from transaction rows, so contribution shortcuts and cross-ledger auditability remain follow-on work
 
 ## Recommended Direction
 
@@ -78,7 +78,7 @@ The most reliable working flow today is:
 ### Medium Term
 
 - Expand the financial model to cover assets, liabilities, and investments properly
-- Move manual entry and per-user persistence fully into the backend layer
+- Move the remaining browser-local runtime state and per-user persistence fully into the backend layer
 - Add richer savings-goal operations such as editing targets, reconciling balances, and goal lifecycle states
 
 ### Long Term
@@ -170,6 +170,14 @@ The most reliable working flow today is:
 - Reconciliation is now an explicit API-backed action instead of an implicit overwrite, which is safer while opening balances are still modeled as stored values
 - The reconcile endpoint intentionally rejects accounts with no linked transactions so users do not accidentally zero out manual opening balances
 - Automated coverage now validates both the reconciliation helper logic and the end-to-end account reconcile API flow
+
+### Sprint 4 Outcome
+
+- Savings goals now support the missing lifecycle actions needed for daily use: archive, restore, delete, edit entry, and delete entry
+- The portfolio API now separates active goals from archived goals so the overview page can keep the working set focused without hiding historical goals
+- Archived goals now act as read-only history by design until the user restores them, which preserves auditability for movement history
+- Entry update/delete flows now validate that the resulting goal balance does not become negative, keeping correction flows safe
+- Automated coverage now validates the full goal lifecycle sequence: create -> update -> add entry -> edit entry -> archive -> restore -> delete entry -> delete goal
 
 ### 3. Account Reconciliation and Explainability
 

@@ -420,13 +420,169 @@ async function main() {
     );
     const entryJson = (await entryResponse.json()) as {
       detail?: {
+        goal: { isArchived: boolean };
         metrics: { totalGrowth: number };
-        entries: Array<{ note?: string }>;
+        entries: Array<{ id: number; note?: string }>;
       };
     };
     assert(entryJson.detail, "Expected detail after adding entry");
     assert(entryJson.detail.metrics.totalGrowth === 2500, "Expected growth to accumulate");
     console.log("PASS savings goal entry");
+
+    const createdEntry =
+      entryJson.detail.entries.find((entry) => entry.note === `${smokeTag} growth`) ??
+      null;
+    assert(createdEntry, "Expected newly created savings goal entry to be returned");
+
+    const updateEntryResponse = await request(
+      `/api/savings-goals/${createdGoalId}/entries/${createdEntry.id}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: "2030-02-10",
+          type: "growth",
+          amount: 3000,
+          note: `${smokeTag} growth updated`,
+        }),
+      }
+    );
+    assert(
+      updateEntryResponse.ok,
+      `Expected update savings goal entry to pass, received ${updateEntryResponse.status}`
+    );
+    const updateEntryJson = (await updateEntryResponse.json()) as {
+      detail?: {
+        metrics: { totalGrowth: number };
+        entries: Array<{ id: number; note?: string; amount: number }>;
+      };
+    };
+    assert(updateEntryJson.detail, "Expected detail after updating entry");
+    assert(
+      updateEntryJson.detail.metrics.totalGrowth === 3000 &&
+        updateEntryJson.detail.entries.some(
+          (entry) =>
+            entry.id === createdEntry.id &&
+            entry.note === `${smokeTag} growth updated` &&
+            entry.amount === 3000
+        ),
+      "Expected edited entry to update totals and persisted entry data"
+    );
+    console.log("PASS savings goal entry update");
+
+    const archiveGoalResponse = await request(`/api/savings-goals/${createdGoalId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isArchived: true }),
+    });
+    assert(
+      archiveGoalResponse.ok,
+      `Expected archive savings goal to pass, received ${archiveGoalResponse.status}`
+    );
+    const archiveGoalJson = (await archiveGoalResponse.json()) as {
+      detail?: {
+        goal: { isArchived: boolean };
+      };
+    };
+    assert(
+      archiveGoalJson.detail?.goal.isArchived,
+      "Expected archived goal detail to reflect the archived state"
+    );
+    console.log("PASS savings goal archive");
+
+    const archivedPortfolioResponse = await request("/api/savings-goals");
+    assert(
+      archivedPortfolioResponse.ok,
+      `Expected archived portfolio fetch to pass, received ${archivedPortfolioResponse.status}`
+    );
+    const archivedPortfolioJson = (await archivedPortfolioResponse.json()) as {
+      goals: Array<{ id: number }>;
+      archivedGoals: Array<{ id: number }>;
+      overview: { archivedGoalCount: number };
+    };
+    assert(
+      archivedPortfolioJson.goals.every((goal) => goal.id !== createdGoalId) &&
+        archivedPortfolioJson.archivedGoals.some((goal) => goal.id === createdGoalId) &&
+        archivedPortfolioJson.overview.archivedGoalCount >= 1,
+      "Expected archived goal to move out of the active portfolio and into archived goals"
+    );
+    console.log("PASS savings goal archived portfolio segregation");
+
+    const archivedEntryMutationResponse = await request(
+      `/api/savings-goals/${createdGoalId}/entries`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: "2030-03-01",
+          type: "contribution",
+          amount: 500,
+          note: `${smokeTag} should fail while archived`,
+        }),
+      }
+    );
+    assert(
+      archivedEntryMutationResponse.status === 400,
+      `Expected archived goal entry mutation to return 400, received ${archivedEntryMutationResponse.status}`
+    );
+    console.log("PASS savings goal archive mutation guard");
+
+    const restoreGoalResponse = await request(`/api/savings-goals/${createdGoalId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isArchived: false }),
+    });
+    assert(
+      restoreGoalResponse.ok,
+      `Expected restore savings goal to pass, received ${restoreGoalResponse.status}`
+    );
+    const restoreGoalJson = (await restoreGoalResponse.json()) as {
+      detail?: {
+        goal: { isArchived: boolean };
+      };
+    };
+    assert(
+      restoreGoalJson.detail && !restoreGoalJson.detail.goal.isArchived,
+      "Expected restored goal to become active again"
+    );
+    console.log("PASS savings goal restore");
+
+    const deleteEntryResponse = await request(
+      `/api/savings-goals/${createdGoalId}/entries/${createdEntry.id}`,
+      {
+        method: "DELETE",
+      }
+    );
+    assert(
+      deleteEntryResponse.ok,
+      `Expected delete savings goal entry to pass, received ${deleteEntryResponse.status}`
+    );
+    const deleteEntryJson = (await deleteEntryResponse.json()) as {
+      detail?: {
+        metrics: { totalGrowth: number };
+        entries: Array<{ id: number }>;
+      };
+    };
+    assert(
+      deleteEntryJson.detail?.metrics.totalGrowth === 0 &&
+        deleteEntryJson.detail.entries.every((entry) => entry.id !== createdEntry.id),
+      "Expected deleting the edited entry to remove it and reset growth totals"
+    );
+    console.log("PASS savings goal entry delete");
+
+    const deleteGoalResponse = await request(`/api/savings-goals/${createdGoalId}`, {
+      method: "DELETE",
+    });
+    assert(
+      deleteGoalResponse.ok,
+      `Expected delete savings goal to pass, received ${deleteGoalResponse.status}`
+    );
+    const deleteGoalJson = (await deleteGoalResponse.json()) as {
+      success?: boolean;
+    };
+    assert(deleteGoalJson.success, "Expected delete savings goal response to confirm success");
+    createdGoalId = null;
+    console.log("PASS savings goal delete");
 
     const previewRows = [
       {

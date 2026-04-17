@@ -14,6 +14,7 @@ const goal: SavingsGoal = {
   category: "retirement",
   icon: "🌅",
   color: "#f59e0b",
+  isArchived: false,
   targetAmount: 500000,
   targetDate: "2027-12-31",
   strategyLabel: "RMF",
@@ -104,14 +105,16 @@ describe("savings-goal-analytics", () => {
         ...summary,
         id: 2,
         name: "Home",
+        isArchived: false,
         targetAmount: 200000,
         currentAmount: 200000,
         totalGrowth: 10000,
         progressPercent: 100,
       },
-    ]);
+    ], 1);
 
     expect(overview.goalCount).toBe(2);
+    expect(overview.archivedGoalCount).toBe(1);
     expect(overview.completedGoals).toBe(1);
     expect(overview.totalSaved).toBe(302500);
     expect(overview.totalTarget).toBe(700000);
