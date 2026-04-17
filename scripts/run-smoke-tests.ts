@@ -1,12 +1,6 @@
-import { inArray } from "drizzle-orm";
+import { inArray, sql } from "drizzle-orm";
 import { db } from "../src/db";
-import {
-  importRunRows,
-  importRuns,
-  savingsGoalEntries,
-  savingsGoals,
-  transactions,
-} from "../src/db/schema";
+import { importRunRows, importRuns, savingsGoalEntries, savingsGoals, transactions } from "../src/db/schema";
 
 const appUrl = process.env.APP_URL ?? "http://localhost:3000";
 const smokeTag = `SMOKE_${Date.now()}`;
@@ -55,6 +49,8 @@ async function cleanup() {
       .where(inArray(savingsGoalEntries.savingsGoalId, [createdGoalId]));
     await db.delete(savingsGoals).where(inArray(savingsGoals.id, [createdGoalId]));
   }
+
+  await db.delete(transactions).where(sql`${transactions.note} like ${`${smokeTag}%`}`);
 }
 
 async function main() {
@@ -75,8 +71,151 @@ async function main() {
 
     await expectOk("/api/transactions", "application/json");
     console.log("PASS api /api/transactions");
+    await expectOk("/api/accounts", "application/json");
+    console.log("PASS api /api/accounts");
     await expectOk("/api/savings-goals", "application/json");
     console.log("PASS api /api/savings-goals");
+
+    const accountsResponse = await request("/api/accounts");
+    const accountsJson = (await accountsResponse.json()) as {
+      accounts: Array<{ id: number; currentBalance: number; isArchived: boolean }>;
+    };
+    const targetAccount =
+      accountsJson.accounts.find((account) => !account.isArchived) ?? null;
+    const startingBalance = targetAccount?.currentBalance ?? null;
+
+    const manualCreateResponse = await request("/api/transactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        date: "2030-03-01",
+        amount: 321,
+        type: "expense",
+        category: "อาหาร/เครื่องดื่ม",
+        note: `${smokeTag} manual create`,
+        accountId: targetAccount?.id ?? null,
+      }),
+    });
+    assert(
+      manualCreateResponse.status === 201,
+      `Expected manual transaction create to return 201, received ${manualCreateResponse.status}`
+    );
+    const manualCreateJson = (await manualCreateResponse.json()) as {
+      transaction?: {
+        id: string;
+        source?: string;
+      };
+    };
+    assert(manualCreateJson.transaction, "Expected manual transaction response to return the created row");
+    assert(
+      manualCreateJson.transaction.source === "manual",
+      "Expected manual transaction source to be marked as manual"
+    );
+    console.log("PASS manual transaction create");
+
+    if (targetAccount && startingBalance != null) {
+      const updatedAccountsResponse = await request("/api/accounts");
+      const updatedAccountsJson = (await updatedAccountsResponse.json()) as {
+        accounts: Array<{ id: number; currentBalance: number }>;
+      };
+      const updatedTarget = updatedAccountsJson.accounts.find(
+        (account) => account.id === targetAccount.id
+      );
+      assert(updatedTarget, "Expected target account to remain available after create");
+      assert(
+        updatedTarget.currentBalance === startingBalance - 321,
+        "Expected manual expense create to reduce the linked account balance"
+      );
+      console.log("PASS manual transaction account balance create");
+    }
+
+    const manualUpdateResponse = await request(
+      `/api/transactions/${manualCreateJson.transaction.id}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: "2030-03-02",
+          amount: 500,
+          type: "income",
+          category: "เงินเดือน",
+          note: `${smokeTag} manual updated`,
+          accountId: targetAccount?.id ?? null,
+        }),
+      }
+    );
+    assert(
+      manualUpdateResponse.ok,
+      `Expected manual transaction update to pass, received ${manualUpdateResponse.status}`
+    );
+    const manualUpdateJson = (await manualUpdateResponse.json()) as {
+      transaction?: {
+        category: string;
+        note?: string;
+      };
+    };
+    assert(
+      manualUpdateJson.transaction?.category === "เงินเดือน" &&
+        manualUpdateJson.transaction.note === `${smokeTag} manual updated`,
+      "Expected manual update to return the edited values"
+    );
+    console.log("PASS manual transaction update");
+
+    if (targetAccount && startingBalance != null) {
+      const updatedAccountsResponse = await request("/api/accounts");
+      const updatedAccountsJson = (await updatedAccountsResponse.json()) as {
+        accounts: Array<{ id: number; currentBalance: number }>;
+      };
+      const updatedTarget = updatedAccountsJson.accounts.find(
+        (account) => account.id === targetAccount.id
+      );
+      assert(updatedTarget, "Expected target account to remain available after update");
+      assert(
+        updatedTarget.currentBalance === startingBalance + 500,
+        "Expected manual update to recalculate the linked account balance"
+      );
+      console.log("PASS manual transaction account balance update");
+    }
+
+    const transactionsAfterUpdateResponse = await request("/api/transactions");
+    const transactionsAfterUpdateJson = (await transactionsAfterUpdateResponse.json()) as {
+      transactions: Array<{ id: string; note?: string }>;
+    };
+    assert(
+      transactionsAfterUpdateJson.transactions.some(
+        (transaction) => transaction.note === `${smokeTag} manual updated`
+      ),
+      "Expected updated manual transaction to appear in the transactions feed"
+    );
+    console.log("PASS manual transaction list hydration");
+
+    const manualDeleteResponse = await request(
+      `/api/transactions/${manualCreateJson.transaction.id}`,
+      {
+        method: "DELETE",
+      }
+    );
+    assert(
+      manualDeleteResponse.ok,
+      `Expected manual transaction delete to pass, received ${manualDeleteResponse.status}`
+    );
+    console.log("PASS manual transaction delete");
+
+    if (targetAccount && startingBalance != null) {
+      const updatedAccountsResponse = await request("/api/accounts");
+      const updatedAccountsJson = (await updatedAccountsResponse.json()) as {
+        accounts: Array<{ id: number; currentBalance: number }>;
+      };
+      const updatedTarget = updatedAccountsJson.accounts.find(
+        (account) => account.id === targetAccount.id
+      );
+      assert(updatedTarget, "Expected target account to remain available after delete");
+      assert(
+        updatedTarget.currentBalance === startingBalance,
+        "Expected manual delete to restore the linked account balance"
+      );
+      console.log("PASS manual transaction account balance delete");
+    }
 
     const createResponse = await request("/api/savings-goals", {
       method: "POST",
@@ -399,12 +538,12 @@ async function main() {
     };
     createdImportRunIds.push(batchDuplicateJson.importRunId);
     assert(
-      batchDuplicateJson.summary.newRows === 1,
-      "Expected intra-file duplicate preview to keep only one row as new"
+      batchDuplicateJson.summary.newRows === 2,
+      "Expected intra-file identical rows to remain distinct new rows"
     );
     assert(
-      batchDuplicateJson.summary.duplicateRows === 1,
-      "Expected intra-file duplicate preview to classify the second row as duplicate"
+      batchDuplicateJson.summary.duplicateRows === 0,
+      "Expected intra-file identical rows not to collapse into duplicates"
     );
     console.log("PASS import intra-file duplicate preview");
 
@@ -424,13 +563,13 @@ async function main() {
       summary: { newRows: number; duplicateRows: number };
     };
     assert(
-      batchDuplicateCommitJson.committedRows === 1,
-      "Expected intra-file duplicate commit to insert only one row"
+      batchDuplicateCommitJson.committedRows === 2,
+      "Expected intra-file identical rows to commit as two distinct transactions"
     );
     assert(
-      batchDuplicateCommitJson.summary.newRows === 1 &&
-        batchDuplicateCommitJson.summary.duplicateRows === 1,
-      "Expected commit summary to stay aligned with intra-file duplicate preview"
+      batchDuplicateCommitJson.summary.newRows === 2 &&
+        batchDuplicateCommitJson.summary.duplicateRows === 0,
+      "Expected commit summary to stay aligned with occurrence-aware duplicate handling"
     );
     console.log("PASS import intra-file duplicate commit alignment");
 

@@ -84,3 +84,85 @@ The most reliable working flow today is:
 ### Long Term
 
 - Add user accounts, cloud sync, and production deployment only after the import and analytics model is trustworthy
+
+## 2026-04-17 Dashboard Audit
+
+### Verification Scope
+
+- Verified the homepage at `http://localhost:3000/`
+- Compared live UI output against the homepage data sources:
+  - Postgres tables in the local `meowsliver` database
+  - `GET /api/transactions`
+  - `GET /api/accounts`
+  - `GET /api/savings-goals`
+- Used local browser automation plus a rendered screenshot to confirm what the user actually sees after hydration
+
+### Audit Results
+
+- Homepage transaction count matches the database exactly at `806` rows
+- Homepage accounts count matches the database exactly at `18` active/non-archived account records
+- Homepage savings-goal empty state is correct because the database currently has `0` savings goals and `0` savings-goal entries
+- Dashboard summary cards for the selected year `2026` match the transaction dataset after whole-baht formatting:
+  - Income: DB `811,217.69` -> UI `฿ 811,218`
+  - Expense: DB `877,194.09` -> UI `฿ 877,194`
+  - Net cashflow: DB `-65,976.40` -> UI `-฿ 65,976`
+  - Savings rate: DB `-8.1%` -> UI `-8.1%`
+- Accounts overview and the asset/liability pie use the account balances correctly after whole-baht formatting:
+  - Net worth: DB `3,078,822.32` -> UI `฿ 3,078,822`
+  - Assets: DB `3,152,143.00` -> UI `฿ 3,152,143`
+  - Liabilities: DB `73,320.68` -> UI `฿ 73,321`
+- Yearly comparison table is consistent with the transaction history and cumulative-running-balance logic for `2026`, `2025`, and `2024`
+- The cashflow chart is visually consistent with the underlying monthly distribution for `2026`: activity appears in January through April, with April carrying the only negative net month
+
+### Important Interpretation Notes
+
+- The dashboard is currently a hybrid runtime:
+  - Transactions are hydrated from Postgres into Zustand
+  - Accounts are fetched from Postgres into Zustand
+  - Savings goals are fetched directly from API routes
+- Whole-baht rounding is expected across the UI because `formatBaht()` intentionally suppresses satang
+- Account balances are still their own persisted source of truth; they are not yet a fully reconciled ledger derived from linked transactions
+
+### Product Trust Risks Exposed By The Audit
+
+- The dashboard data is currently correct for the live dataset, but trust still depends on hybrid runtime behavior and multiple sources of truth
+- The status copy on the homepage is directionally true for this dataset, but it still overstates backend completeness because account balances are not yet fully ledger-reconciled
+- There is still no user-facing workflow for reviewing `conflict` rows before import commit, which limits trust when spreadsheet quality is mixed
+
+### Sprint 1 Outcome
+
+- Manual transaction entry now persists through Postgres-backed create/edit/delete flows instead of browser-local Zustand only
+- The transactions page now supports editing and deleting manual rows through the detail drawer
+- Import commit now refreshes account data immediately so dashboard/account balances stay aligned after writes
+- Manual transaction balance effects are applied as deltas against account balances instead of forcing a full ledger reconciliation
+- Explicit account reconciliation remains a separate follow-on feature because the current account model still treats account balances as the primary source of truth
+
+## Recommended Next Feature Sequence
+
+### 1. Postgres-Backed Transaction CRUD
+
+- Why it matters: removes the biggest remaining hybrid-runtime gap and lets users correct or add transactions without relying on browser-local state
+- User impact: high
+- Dependencies: transaction API routes for create/update/delete, optimistic UI updates, migration of manual-entry flow
+- Trade-off: requires careful handling so edits do not break import fingerprints or audit trails
+
+### 2. Import Conflict Review Workflow
+
+- Why it matters: the import pipeline already detects `conflict` rows, but users still cannot resolve them with confidence before commit
+- User impact: high
+- Dependencies: preview-row detail UI, resolution actions, import-run persistence refinements, regression tests around duplicate semantics
+- Trade-off: more workflow complexity in exchange for much better import trust and lower data-cleanup cost later
+
+### 3. Account Reconciliation and Explainability
+
+- Why it matters: homepage balances are correct relative to the `accounts` table, but users cannot yet see whether each balance comes from manual adjustments, imported transactions, or drift
+- User impact: high for repeat users
+- Dependencies: balance-recalc service, account-detail reconciliation UI, transaction/account linkage checks
+- Trade-off: deeper modeling work, but it materially improves credibility for a finance product
+
+### 4. Savings Goal Lifecycle Operations
+
+- Why it matters: the dashboard correctly shows the empty state today, but the feature still lacks edit/archive/delete and entry correction flows needed for everyday use
+- User impact: medium to high
+- Dependencies: goal mutation routes, entry mutation routes, optimistic refresh patterns, confirmation UX
+- Trade-off: lower urgency than transaction trust work, but important for retention once users begin goal tracking

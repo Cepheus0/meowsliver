@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useFinanceStore } from "@/store/finance-store";
 import { useFinanceStoreHydrated } from "@/store/use-finance-store-hydrated";
-import type { Account } from "@/lib/types";
+import { fetchAccountsFromApi } from "@/lib/client/finance-sync";
 
 export function AccountsHydrator() {
   const setAccounts = useFinanceStore((s) => s.setAccounts);
@@ -18,16 +18,10 @@ export function AccountsHydrator() {
     hasAttemptedFetch.current = true;
     let isCancelled = false;
 
-    void fetch("/api/accounts", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch accounts");
-        }
-        return (await response.json()) as { accounts: Account[] };
-      })
-      .then((data) => {
+    void fetchAccountsFromApi()
+      .then((accounts) => {
         if (!isCancelled) {
-          setAccounts(data.accounts);
+          setAccounts(accounts);
         }
       })
       .catch((error) => {

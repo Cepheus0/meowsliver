@@ -1,14 +1,17 @@
 // ===== Core Transaction Types =====
 export type TransactionType = "income" | "expense" | "transfer";
+export type TransactionSource = "manual" | "import";
 
 export interface Transaction {
   id: string;
+  dbId?: number;
   date: string; // ISO date string
   time?: string; // HH:MM local time when available
   amount: number;
   category: string;
   subcategory?: string;
   type: TransactionType;
+  source?: TransactionSource;
   note?: string;
   bucket?: string; // which asset bucket
   // Rich import fields preserved as separate dimensions so the UI can filter

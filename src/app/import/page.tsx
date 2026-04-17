@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Select } from "@/components/ui/Select";
+import { fetchAccountsFromApi } from "@/lib/client/finance-sync";
 import { cn, formatBaht } from "@/lib/utils";
 import { useFinanceStore } from "@/store/finance-store";
 import {
@@ -139,7 +140,7 @@ const MAPPING_FIELDS: {
 
 export default function ImportPage() {
   const router = useRouter();
-  const { replaceImportedTransactions } = useFinanceStore();
+  const { replaceImportedTransactions, setAccounts } = useFinanceStore();
 
   // Wizard state
   const [step, setStep] = useState<ImportStep>("upload");
@@ -320,6 +321,8 @@ export default function ImportPage() {
       const result = (await response.json()) as ImportCommitResponse;
 
       replaceImportedTransactions(result.transactions);
+      const accounts = await fetchAccountsFromApi();
+      setAccounts(accounts);
       setImportStats({
         ...result.summary,
         committedRows: result.committedRows,
@@ -330,7 +333,7 @@ export default function ImportPage() {
     } finally {
       setIsCommitting(false);
     }
-  }, [previewRunId, replaceImportedTransactions]);
+  }, [previewRunId, replaceImportedTransactions, setAccounts]);
 
   // === Reset ===
 

@@ -57,6 +57,14 @@ Phase 5
 - [ ] Add visual regression or screenshot-based checks for key routes
 - **Status:** in_progress
 
+### Phase 5.6: Data Trust and Daily-Use UX
+- [x] Move manual transaction entry, edit, and delete into Postgres-backed CRUD
+- [ ] Add a pre-commit review workflow for `conflict` rows with clear resolution choices
+- [ ] Add account reconciliation so account balances can be refreshed or explained from linked transactions
+- [ ] Add lifecycle operations for savings goals and savings-goal entries (edit, archive, delete)
+- [ ] Add transaction-to-goal linking or contribution shortcuts where it improves auditability
+- **Status:** in_progress
+
 ### Phase 6: Production Readiness
 - [ ] Deployment configuration
 - [ ] Environment variable strategy
@@ -76,8 +84,8 @@ Phase 5
 
 ## Near-Term Priorities
 
-1. Move manual entry and the remaining runtime state into Postgres without breaking the current UX.
-2. Add a user-facing review path for `conflict` rows before import.
+1. Add a user-facing review path for `conflict` rows before import.
+2. Add account reconciliation so dashboard balances and transaction-ledger behavior stay explainable.
 3. Add edit / archive / delete flows for savings goals and savings-goal entries.
-4. Expand real models for assets, liabilities, and investments.
-5. Add visual regression coverage for light/dark mode on core pages.
+4. Add visual regression coverage for light/dark mode on core pages.
+5. Add transaction-to-goal linking once CRUD and lifecycle foundations are stable.

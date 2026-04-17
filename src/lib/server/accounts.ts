@@ -265,6 +265,21 @@ export async function recalcAccountBalance(id: number): Promise<number> {
   return fromSatang(total);
 }
 
+export async function applyAccountBalanceDelta(
+  id: number,
+  deltaAmount: number
+): Promise<Account | null> {
+  await db
+    .update(accounts)
+    .set({
+      currentBalanceSatang: sql`${accounts.currentBalanceSatang} + ${toSatang(deltaAmount)}`,
+      updatedAt: new Date(),
+    })
+    .where(eq(accounts.id, id));
+
+  return getAccount(id);
+}
+
 export interface AccountDetail {
   account: Account;
   recentTransactions: Array<{

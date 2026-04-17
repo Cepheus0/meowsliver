@@ -80,6 +80,34 @@
 - Standardized local browser artifacts into `output/playwright/`
 - Documented the fallback workflow so browser QA can continue even while Codex Playwright MCP remains unstable on this machine
 
+## 2026-04-17
+
+### Dashboard Data Audit
+- Verified `http://localhost:3000/` against the live Postgres dataset, API responses, and rendered UI
+- Confirmed homepage counts and KPI values align with the database after whole-baht UI rounding:
+  - `806` transactions
+  - `18` accounts
+  - `0` savings goals
+  - `2026` income `811,217.69`, expense `877,194.09`, net `-65,976.40`, savings rate `-8.1%`
+  - net worth `3,078,822.32`, assets `3,152,143.00`, liabilities `73,320.68`
+- Confirmed the yearly comparison table aligns with cumulative transaction history for `2026`, `2025`, and `2024`
+- Confirmed the savings-goal empty state is correct for the current dataset
+- Identified the next implementation sequence as:
+  1. Postgres-backed transaction CRUD
+  2. Import conflict review workflow
+  3. Account reconciliation and explainability
+  4. Savings-goal lifecycle operations
+
+### Sprint 1: Postgres-Backed Transaction CRUD
+- Replaced browser-local manual entry with Postgres-backed transaction creation through `POST /api/transactions`
+- Added manual transaction update/delete routes and server-side balance delta handling
+- Added a reusable transaction form modal used by the global FAB and the transactions page edit flow
+- Extended the transactions detail drawer with manual-row edit/delete actions
+- Added client-side finance refresh helpers so transactions and accounts rehydrate together after manual writes and import commits
+- Tightened repo test/lint config to ignore `.claude/`, `.next/`, and other non-project artifacts
+- Added helper unit tests plus API/browser smoke coverage for manual transaction persistence and transaction-page CRUD behavior
+- Generated a passing test report at `reports/test-report.md`
+
 ## Current Status
 
 | Area | Status |

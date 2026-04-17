@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useFinanceStore } from "@/store/finance-store";
 import { useFinanceStoreHydrated } from "@/store/use-finance-store-hydrated";
+import { refreshFinanceStoreFromServer } from "@/lib/client/finance-sync";
 import { formatBaht } from "@/lib/utils";
 import {
   getTransactionAmountPrefix,
@@ -20,12 +21,23 @@ import {
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TransactionDetailDrawer } from "@/components/transactions/TransactionDetailDrawer";
+import {
+  TransactionFormModal,
+  type TransactionFormValues,
+} from "@/components/transactions/TransactionFormModal";
 import type { Transaction } from "@/lib/types";
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
 export default function TransactionsPage() {
-  const { getTransactions, selectedYear } = useFinanceStore();
+  const {
+    getTransactions,
+    selectedYear,
+    setSelectedYear,
+    replaceImportedTransactions,
+    setAccounts,
+    accounts,
+  } = useFinanceStore();
   const storeHydrated = useFinanceStoreHydrated();
   const transactions = getTransactions();
   const visibleTransactions = useMemo(
@@ -40,6 +52,9 @@ export default function TransactionsPage() {
   const [pageSize, setPageSize] = useState<(typeof PAGE_SIZE_OPTIONS)[number]>(50);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [mutationBusy, setMutationBusy] = useState(false);
+  const [mutationError, setMutationError] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     return visibleTransactions.filter((tx) => {
@@ -63,6 +78,78 @@ export default function TransactionsPage() {
   const pageEnd =
     filtered.length === 0 ? 0 : Math.min(safeCurrentPage * pageSize, filtered.length);
 
+  const refreshAfterMutation = async (targetYear: number) => {
+    await refreshFinanceStoreFromServer({
+      replaceImportedTransactions,
+      setAccounts,
+    });
+
+    if (targetYear !== selectedYear) {
+      setSelectedYear(targetYear);
+    }
+  };
+
+  const handleEditSubmit = async (values: TransactionFormValues) => {
+    if (!editingTx) return;
+
+    setMutationBusy(true);
+    setMutationError(null);
+
+    try {
+      const response = await fetch(`/api/transactions/${editingTx.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(data.error ?? "ไม่สามารถอัปเดตรายการได้");
+      }
+
+      await refreshAfterMutation(Number(values.date.slice(0, 4)));
+      setSelectedTx(null);
+      setEditingTx(null);
+    } catch (error) {
+      setMutationError(
+        error instanceof Error ? error.message : "ไม่สามารถอัปเดตรายการได้"
+      );
+    } finally {
+      setMutationBusy(false);
+    }
+  };
+
+  const handleDelete = async (transaction: Transaction) => {
+    if (!confirm(`ลบรายการ "${transaction.category}" ใช่หรือไม่?`)) {
+      return;
+    }
+
+    setMutationBusy(true);
+    setMutationError(null);
+
+    try {
+      const response = await fetch(`/api/transactions/${transaction.id}`, {
+        method: "DELETE",
+      });
+
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(data.error ?? "ไม่สามารถลบรายการได้");
+      }
+
+      await refreshAfterMutation(Number(transaction.date.slice(0, 4)));
+      setSelectedTx(null);
+    } catch (error) {
+      setMutationError(
+        error instanceof Error ? error.message : "ไม่สามารถลบรายการได้"
+      );
+    } finally {
+      setMutationBusy(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -73,6 +160,12 @@ export default function TransactionsPage() {
           ปี {selectedYear} — {storeHydrated ? visibleTransactions.length : "กำลังโหลด..."}
         </p>
       </div>
+
+      {mutationError ? (
+        <Card className="border-red-200 bg-red-50/60 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+          <p className="text-sm font-medium">{mutationError}</p>
+        </Card>
+      ) : null}
 
       {!storeHydrated ? (
         <Card>
@@ -279,8 +372,25 @@ export default function TransactionsPage() {
         transaction={selectedTx}
         scopeTransactions={filtered}
         scopeLabel="ในมุมมองที่กำลังกรอง"
+        onEdit={(transaction) => setEditingTx(transaction)}
+        onDelete={handleDelete}
+        mutationBusy={mutationBusy}
         onClose={() => setSelectedTx(null)}
       />
+
+      {editingTx ? (
+        <TransactionFormModal
+          initial={editingTx}
+          accounts={accounts}
+          busy={mutationBusy}
+          onClose={() => {
+            if (!mutationBusy) {
+              setEditingTx(null);
+            }
+          }}
+          onSubmit={handleEditSubmit}
+        />
+      ) : null}
     </div>
   );
 }

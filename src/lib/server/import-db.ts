@@ -111,6 +111,8 @@ export function dbTransactionToUiTransaction(row: DbTransaction) {
   );
   return {
     ...ui,
+    dbId: row.id,
+    source: row.source,
     importRunId: row.importRunId ?? undefined,
     accountId: row.accountId ?? undefined,
   };

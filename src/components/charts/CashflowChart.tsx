@@ -26,7 +26,6 @@ export function CashflowChart() {
   const data = getMonthlyCashflow();
   const hasData = data.some((month) => month.income > 0 || month.expense > 0);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleBarClick = (barData: any) => {
     const monthIndex = barData?.monthIndex;
     if (monthIndex != null) {

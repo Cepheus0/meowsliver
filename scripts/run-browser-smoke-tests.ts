@@ -80,9 +80,10 @@ async function cleanupTransactions() {
   await client.connect();
 
   try {
-    await client.query("DELETE FROM transactions WHERE fingerprint LIKE $1", [
-      `${smokeTag}%`,
-    ]);
+    await client.query(
+      "DELETE FROM transactions WHERE fingerprint LIKE $1 OR note LIKE $2",
+      [`${smokeTag}%`, `${smokeTag}%`]
+    );
   } finally {
     await client.end();
   }
@@ -199,13 +200,13 @@ async function main() {
       "Expected returning to all transactions to restore the default paginated row count"
     );
 
-    await page.getByRole("button", { name: "25" }).click();
+    await page.getByRole("button", { name: "25", exact: true }).click();
     assert(
       (await tableRows.count()) === 25,
       "Expected page size control to switch to 25 rows"
     );
 
-    await page.getByRole("button", { name: "ถัดไป" }).click();
+    await page.getByRole("button", { name: "ถัดไป", exact: true }).click();
     const footerText = await page.textContent("body");
     assert(
       footerText?.includes("หน้า 2 จาก 3"),
@@ -214,6 +215,35 @@ async function main() {
     assert(
       footerText?.includes("กำลังแสดงรายการที่ 26-50 จากทั้งหมด 60 รายการ"),
       "Expected page 2 range summary to be correct"
+    );
+
+    await page.getByRole("button", { name: "ก่อนหน้า", exact: true }).click();
+    await page.getByRole("button", { name: "50", exact: true }).click();
+
+    await page
+      .locator('button[aria-label="เพิ่มรายการใหม่"]')
+      .evaluate((button: HTMLButtonElement) => button.click());
+    await page.getByRole("heading", { name: "บันทึกรายการใหม่" }).waitFor();
+    await page.getByRole("button", { name: "กินข้าว" }).click();
+    await page.locator('input[type="number"]').first().fill("888");
+    await page.locator('input[type="date"]').fill(`${browserTestYear}-12-01`);
+    await page
+      .getByPlaceholder("รายละเอียดเพิ่มเติม...")
+      .fill(`${smokeTag} browser manual`);
+    await page.getByRole("button", { name: "บันทึกรายการ" }).click();
+
+    await page.waitForFunction(() => document.body.innerText.includes("61 รายการ"));
+    await page.waitForFunction(
+      (note) => document.body.innerText.includes(note),
+      `${smokeTag} browser manual`
+    );
+
+    await page.reload({ waitUntil: "networkidle" });
+    await page.waitForFunction(() => document.body.innerText.includes("61 รายการ"));
+    const reloadedText = await page.textContent("body");
+    assert(
+      reloadedText?.includes(`${smokeTag} browser manual`),
+      "Expected DB-backed manual transaction to survive a full page reload"
     );
 
     await page.screenshot({ path: screenshotPath, fullPage: true });

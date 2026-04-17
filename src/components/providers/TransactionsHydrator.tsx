@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useFinanceStore } from "@/store/finance-store";
 import { useFinanceStoreHydrated } from "@/store/use-finance-store-hydrated";
-import type { Transaction } from "@/lib/types";
+import { fetchTransactionsFromApi } from "@/lib/client/finance-sync";
 
 export function TransactionsHydrator() {
   const { importedTransactions, replaceImportedTransactions } = useFinanceStore();
@@ -28,17 +28,10 @@ export function TransactionsHydrator() {
     hasAttemptedDbHydration.current = true;
     let isCancelled = false;
 
-    void fetch("/api/transactions", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch transactions");
-        }
-
-        return (await response.json()) as { transactions: Transaction[] };
-      })
-      .then((data) => {
+    void fetchTransactionsFromApi()
+      .then((transactions) => {
         if (!isCancelled) {
-          replaceImportedTransactions(data.transactions);
+          replaceImportedTransactions(transactions);
         }
       })
       .catch((error) => {

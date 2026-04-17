@@ -7,11 +7,14 @@ import {
   ArrowUpRight,
   Calendar,
   Hash,
+  PencilLine,
   Receipt,
   Tag,
+  Trash2,
   Wallet,
   X,
 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { formatBaht } from "@/lib/utils";
 import {
   getTransactionAmountPrefix,
@@ -26,6 +29,9 @@ interface TransactionDetailDrawerProps {
   scopeTransactions?: Transaction[];
   scopeLabel?: string;
   onClose: () => void;
+  onEdit?: (transaction: Transaction) => void;
+  onDelete?: (transaction: Transaction) => void;
+  mutationBusy?: boolean;
 }
 
 export function TransactionDetailDrawer({
@@ -33,6 +39,9 @@ export function TransactionDetailDrawer({
   scopeTransactions = [],
   scopeLabel = "ในขอบเขตนี้",
   onClose,
+  onEdit,
+  onDelete,
+  mutationBusy = false,
 }: TransactionDetailDrawerProps) {
   // Lock body scroll while drawer is open. Cheap UX win — without this the
   // background page scrolls behind a tall drawer on mobile.
@@ -86,6 +95,7 @@ export function TransactionDetailDrawer({
       : transaction.type === "transfer"
         ? ArrowRightLeft
         : ArrowDownRight;
+  const isManual = transaction.source === "manual" || !transaction.importRunId;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-50 flex">
@@ -118,7 +128,34 @@ export function TransactionDetailDrawer({
           </button>
         </header>
 
-        <div className="space-y-5 px-5 py-5">
+          <div className="space-y-5 px-5 py-5">
+          {isManual && (onEdit || onDelete) ? (
+            <section className="flex flex-wrap gap-2">
+              {onEdit ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onEdit(transaction)}
+                  disabled={mutationBusy}
+                >
+                  <PencilLine size={14} />
+                  แก้ไขรายการ
+                </Button>
+              ) : null}
+              {onDelete ? (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => onDelete(transaction)}
+                  disabled={mutationBusy}
+                >
+                  <Trash2 size={14} />
+                  ลบรายการ
+                </Button>
+              ) : null}
+            </section>
+          ) : null}
+
           {/* Hero amount */}
           <div className="theme-border rounded-2xl border bg-[color:var(--app-surface-soft)] p-4">
             <div className="flex items-center gap-2 text-xs text-[color:var(--app-text-muted)]">
@@ -179,7 +216,7 @@ export function TransactionDetailDrawer({
                 </>
               ) : (
                 <>
-                  บันทึกด้วยตนเอง — id:{" "}
+                  บันทึกด้วยตนเองในฐานข้อมูล — id:{" "}
                   <code className="rounded bg-[color:var(--app-surface-soft)] px-1.5 py-0.5 text-xs">
                     {transaction.id}
                   </code>

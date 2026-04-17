@@ -5,6 +5,14 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: false,
+    exclude: [
+      "node_modules/**",
+      ".next/**",
+      ".claude/**",
+      "coverage/**",
+      "output/**",
+      "drizzle/**",
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],

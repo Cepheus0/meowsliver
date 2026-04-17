@@ -1,6 +1,6 @@
 # Test Report
 
-- Generated at: 8 Apr 2026, 01:22:34
+- Generated at: 17 Apr 2026, 14:47:26
 - Target app URL: http://localhost:3000
 - Overall status: PASS
 
@@ -64,28 +64,34 @@ $ eslint
 ✓ Compiled successfully in 4.4s
   Running TypeScript ...
   Collecting page data using 7 workers ...
-  Generating static pages using 7 workers (0/10) ...
-  Generating static pages using 7 workers (2/10) 
-  Generating static pages using 7 workers (4/10) 
-  Generating static pages using 7 workers (7/10) 
-✓ Generating static pages using 7 workers (10/10) in 316.4ms
+  Generating static pages using 7 workers (0/11) ...
+  Generating static pages using 7 workers (2/11) 
+  Generating static pages using 7 workers (5/11) 
+  Generating static pages using 7 workers (8/11) 
+✓ Generating static pages using 7 workers (11/11) in 262.0ms
   Finalizing page optimization ...
 
 Route (app)
 ┌ ○ /
 ├ ○ /_not-found
+├ ○ /accounts
+├ ƒ /accounts/[accountId]
+├ ƒ /api/accounts
+├ ƒ /api/accounts/[accountId]
 ├ ƒ /api/import/commit
 ├ ƒ /api/import/preview
 ├ ƒ /api/savings-goals
 ├ ƒ /api/savings-goals/[goalId]
 ├ ƒ /api/savings-goals/[goalId]/entries
 ├ ƒ /api/transactions
+├ ƒ /api/transactions/[transactionId]
 ├ ○ /buckets
 ├ ƒ /buckets/[goalId]
 ├ ○ /goals
 ├ ○ /import
 ├ ○ /investments
 ├ ○ /reports
+├ ƒ /reports/[year]/[month]
 └ ○ /transactions
 
 
@@ -105,33 +111,39 @@ $ next build
 
 ### Stdout
 ```text
-RUN  v4.1.3 /Users/woraweechanlongrat/Documents/projects/meowsliver-clean
+RUN  v4.1.3 /Users/woraweechanlongrat/Documents/projects/meowsliver
       Coverage enabled with v8
 
 
- Test Files  7 passed (7)
-      Tests  24 passed (24)
-   Start at  01:22:55
-   Duration  1.77s (transform 161ms, setup 0ms, import 948ms, tests 79ms, environment 0ms)
+ Test Files  10 passed (10)
+      Tests  53 passed (53)
+   Start at  14:47:49
+   Duration  2.16s (transform 378ms, setup 0ms, import 1.85s, tests 129ms, environment 1ms)
 
  % Coverage report from v8
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |    88.7 |    72.85 |   94.44 |   89.03 |                   
- excel-parser.ts   |   77.77 |    78.12 |   77.77 |   77.27 | 70-99,187         
- ...e-analytics.ts |   94.23 |    82.75 |     100 |   97.72 | 88                
- ...rt-pipeline.ts |   90.62 |     52.5 |     100 |   90.62 | 79,84,137         
- ...l-analytics.ts |   96.55 |    74.07 |     100 |   96.29 | 26,65             
- savings-goals.ts  |     100 |      100 |     100 |     100 |                   
- types.ts          |       0 |      100 |     100 |       0 | 188-221           
- utils.ts          |   91.66 |      100 |      80 |    90.9 | 5                 
+All files          |   77.73 |    67.45 |   77.14 |   78.35 |                   
+ lib               |   80.08 |    68.26 |   79.41 |   80.98 |                   
+  excel-parser.ts  |      80 |       80 |   83.33 |   79.56 | ...96,227,239,253 
+  ...-analytics.ts |   52.41 |    37.64 |   63.63 |   52.25 | 115,189,208-347   
+  ...t-pipeline.ts |   91.66 |    63.04 |     100 |   91.66 | 87,92,153         
+  ...-analytics.ts |   94.65 |    84.04 |     100 |     100 | ...99,401,403-405 
+  ...-analytics.ts |   96.55 |    74.07 |     100 |   96.29 | 26,65             
+  savings-goals.ts |     100 |      100 |     100 |     100 |                   
+  ...esentation.ts |   66.66 |      100 |   33.33 |   66.66 | 22,30             
+  types.ts         |     100 |      100 |     100 |     100 |                   
+  use-mounted.ts   |       0 |      100 |       0 |       0 | 1-11              
+  utils.ts         |   91.66 |      100 |      80 |    90.9 | 5                 
+ lib/client        |       0 |        0 |       0 |       0 |                   
+  finance-sync.ts  |       0 |        0 |       0 |       0 | 1-37              
 -------------------|---------|----------|---------|---------|-------------------
 ```
 
 ### Stderr
 ```text
-$ vitest run --coverage
+$ bash scripts/run-node-tool.sh ./node_modules/vitest/vitest.mjs run --coverage
 ```
 
 ## Smoke Tests
@@ -149,19 +161,34 @@ PASS page /buckets
 PASS page /reports
 PASS page /investments
 PASS api /api/transactions
+PASS api /api/accounts
 PASS api /api/savings-goals
-PASS savings goal create (5)
+PASS manual transaction create
+PASS manual transaction account balance create
+PASS manual transaction update
+PASS manual transaction account balance update
+PASS manual transaction list hydration
+PASS manual transaction delete
+PASS manual transaction account balance delete
+PASS savings goal create (7)
 PASS savings goal update
 PASS savings goal entry
 PASS import preview new
 PASS import commit
 PASS import duplicate detection
+PASS import transfer preview
+PASS import transfer commit
+PASS import intra-file duplicate preview
+PASS import intra-file duplicate commit alignment
 PASS import conflict detection
 Smoke tests completed successfully.
+PASS browser smoke /transactions (/Users/woraweechanlongrat/Documents/projects/meowsliver/output/playwright/transactions-browser-smoke.png)
 ```
 
 ### Stderr
 ```text
-$ tsx scripts/run-smoke-tests.ts
+$ bun run test:smoke:api && bun run test:smoke:browser
+$ bash scripts/run-node-tool.sh ./node_modules/tsx/dist/cli.mjs scripts/run-smoke-tests.ts
+$ bash scripts/run-node-tool.sh ./node_modules/tsx/dist/cli.mjs scripts/run-browser-smoke-tests.ts
 ```
 
