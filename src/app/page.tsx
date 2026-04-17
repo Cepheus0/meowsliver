@@ -72,8 +72,8 @@ export default function DashboardPage() {
                 <EmptyState
                   className="border-0 bg-transparent px-0 py-0"
                   icon={<DatabaseZap size={20} />}
-                  title="ตอนนี้แอปใช้ข้อมูลธุรกรรมจริงแล้ว"
-                  description={`มีข้อมูลที่นำเข้าแล้ว ${importedTransactions.length} รายการ และกำลังแสดงผลตามปี ${selectedYear} ส่วนข้อมูลสินทรัพย์ หนี้สิน และการลงทุน ยังไม่ได้เชื่อมในรอบนี้`}
+                  title="ตอนนี้แอปใช้ข้อมูลจริงทั้งหมดแล้ว"
+                  description={`มีข้อมูลที่นำเข้าแล้ว ${importedTransactions.length} รายการ และกำลังแสดงผลตามปี ${selectedYear} ข้อมูลสินทรัพย์ หนี้สิน และการลงทุน ถูกเชื่อมโยงกับบัญชีจริงเรียบร้อยแล้ว`}
                   actionHref="/transactions"
                   actionLabel="ดูรายการทั้งหมด"
                 />

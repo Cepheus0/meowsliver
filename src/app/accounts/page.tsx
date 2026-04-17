@@ -327,90 +327,90 @@ function AccountCard({
   const isNegative = balance < 0;
 
   return (
-    <Card className="group relative overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-[var(--app-card-shadow)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-2xl"
-            style={{ backgroundColor: `${account.color}20` }}
-          >
-            <AccountIcon
-              icon={account.icon}
-              type={account.type}
-              size={22}
-              className="text-[color:var(--app-text)]"
-            />
-          </div>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="truncate text-base font-semibold text-[color:var(--app-text)]">
-                {account.name}
-              </p>
-              {account.isDefault && (
-                <span
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                  style={{
-                    color: account.color,
-                    backgroundColor: `${account.color}18`,
-                  }}
-                >
-                  <Star size={10} />
-                  หลัก
-                </span>
-              )}
+    <Card className="group relative overflow-hidden p-0 transition-all hover:-translate-y-0.5 hover:shadow-[var(--app-card-shadow)]">
+      <Link href={`/accounts/${account.id}`} className="block p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-2xl"
+              style={{ backgroundColor: `${account.color}20` }}
+            >
+              <AccountIcon
+                icon={account.icon}
+                type={account.type}
+                size={22}
+                className="text-[color:var(--app-text)]"
+              />
             </div>
-            <p className="mt-0.5 text-xs text-[color:var(--app-text-muted)]">
-              {ACCOUNT_TYPE_LABELS[account.type]}
-            </p>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="truncate text-base font-semibold text-[color:var(--app-text)]">
+                  {account.name}
+                </p>
+                {account.isDefault && (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                    style={{
+                      color: account.color,
+                      backgroundColor: `${account.color}18`,
+                    }}
+                  >
+                    <Star size={10} />
+                    หลัก
+                  </span>
+                )}
+              </div>
+              <p className="mt-0.5 text-xs text-[color:var(--app-text-muted)]">
+                {ACCOUNT_TYPE_LABELS[account.type]}
+              </p>
+            </div>
+          </div>
+          <div
+            className="rounded-lg p-1.5 text-[color:var(--app-text-subtle)] opacity-0 transition-opacity group-hover:bg-[color:var(--app-surface-soft)] group-hover:opacity-100"
+          >
+            <ArrowRight size={16} />
           </div>
         </div>
-        <Link
-          href={`/accounts/${account.id}`}
-          className="rounded-lg p-1.5 text-[color:var(--app-text-subtle)] opacity-0 transition-opacity hover:bg-[color:var(--app-surface-soft)] group-hover:opacity-100"
-          aria-label="เปิดรายละเอียด"
-        >
-          <ArrowRight size={16} />
-        </Link>
-      </div>
 
-      <div className="mt-4">
-        <p className="text-xs text-[color:var(--app-text-muted)]">ยอดคงเหลือ</p>
-        <p
-          className={`mt-1 text-2xl font-bold ${
-            isNegative
-              ? "text-red-600 dark:text-red-400"
-              : "text-[color:var(--app-text)]"
-          }`}
-        >
-          {formatBaht(balance)}
-        </p>
-        {account.type === "credit_card" && account.creditLimit != null && (
-          <p className="mt-1 text-xs text-[color:var(--app-text-muted)]">
-            วงเงิน {formatBaht(account.creditLimit)} · เหลือ{" "}
-            {formatBaht(account.creditLimit + balance)}
+        <div className="mt-4">
+          <p className="text-xs text-[color:var(--app-text-muted)]">ยอดคงเหลือ</p>
+          <p
+            className={`mt-1 text-2xl font-bold ${
+              isNegative
+                ? "text-red-600 dark:text-red-400"
+                : "text-[color:var(--app-text)]"
+            }`}
+          >
+            {formatBaht(balance)}
           </p>
-        )}
-      </div>
-
-      {account.aliases.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {account.aliases.slice(0, 4).map((alias) => (
-            <span
-              key={alias}
-              className="rounded-lg border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-2 py-0.5 text-[11px] text-[color:var(--app-text-muted)]"
-            >
-              {alias}
-            </span>
-          ))}
-          {account.aliases.length > 4 && (
-            <span className="text-[11px] text-[color:var(--app-text-subtle)]">
-              +{account.aliases.length - 4}
-            </span>
+          {account.type === "credit_card" && account.creditLimit != null && (
+            <p className="mt-1 text-xs text-[color:var(--app-text-muted)]">
+              วงเงิน {formatBaht(account.creditLimit)} · เหลือ{" "}
+              {formatBaht(account.creditLimit + balance)}
+            </p>
           )}
         </div>
-      )}
 
-      <div className="mt-4 flex items-center justify-between gap-2 border-t border-[color:var(--app-border)] pt-3">
+        {account.aliases.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {account.aliases.slice(0, 4).map((alias) => (
+              <span
+                key={alias}
+                className="rounded-lg border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-2 py-0.5 text-[11px] text-[color:var(--app-text-muted)]"
+              >
+                {alias}
+              </span>
+            ))}
+            {account.aliases.length > 4 && (
+              <span className="text-[11px] text-[color:var(--app-text-subtle)]">
+                +{account.aliases.length - 4}
+              </span>
+            )}
+          </div>
+        )}
+      </Link>
+
+      <div className="flex items-center justify-between gap-2 border-t border-[color:var(--app-border)] px-5 py-3">
         <Button size="sm" variant="ghost" onClick={onEdit}>
           แก้ไข
         </Button>

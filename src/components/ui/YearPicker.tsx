@@ -13,20 +13,26 @@ export function YearPicker() {
     const currentYear = new Date().getFullYear();
 
     if (importedTransactions.length === 0) {
-      return [currentYear];
+      return [currentYear, selectedYear].sort((a, b) => b - a);
     }
 
     const txYears = new Set<number>();
     for (const tx of importedTransactions) {
-      const y = new Date(`${tx.date}T00:00:00`).getFullYear();
-      if (!Number.isNaN(y)) txYears.add(y);
+      // Use transactionDate from the transaction object
+      const dateStr = (tx as any).transactionDate || (tx as any).date;
+      if (dateStr) {
+        const y = new Date(`${dateStr}T00:00:00`).getFullYear();
+        if (!Number.isNaN(y)) txYears.add(y);
+      }
     }
 
     // Always include currentYear so the picker is never empty
     txYears.add(currentYear);
+    // Also include selectedYear to ensure it's always in the list
+    txYears.add(selectedYear);
 
     return Array.from(txYears).sort((a, b) => b - a); // descending
-  }, [importedTransactions]);
+  }, [importedTransactions, selectedYear]);
 
   const minYear = years[years.length - 1];
   const maxYear = years[0];

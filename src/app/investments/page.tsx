@@ -27,7 +27,7 @@ const TABS = [
   { key: "ssf", label: "SSF", color: "#06b6d4" },
   { key: "rmf", label: "RMF", color: "#14b8a6" },
   { key: "stocks", label: "หุ้น/ETF", color: "#8b5cf6" },
-  { key: "others", label: "อื่นๆ", color: "#64748b" },
+  { key: "others", label: "อื่นๆ (ThaiESG)", color: "#64748b" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -53,9 +53,10 @@ export default function InvestmentsPage() {
 
   const totalValue = holdings.reduce((s, h) => s + h.totalValue, 0);
   const totalGainLoss = holdings.reduce((s, h) => s + h.gainLoss, 0);
+  const totalCost = holdings.reduce((s, h) => s + h.avgCost, 0);
   const totalGainLossPercent =
-    totalValue > 0
-      ? (totalGainLoss / (totalValue - totalGainLoss)) * 100
+    totalCost > 0
+      ? (totalGainLoss / totalCost) * 100
       : 0;
 
   // Data for small pie

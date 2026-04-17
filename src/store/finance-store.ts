@@ -18,6 +18,9 @@ import {
   getMonthlyCashflowFromTransactions,
   getTransactionsForYear,
   getYearlySummariesFromTransactions,
+  getInvestmentsFromAccounts,
+  getAssetsFromAccounts,
+  getLiabilitiesFromAccounts,
 } from "@/lib/finance-analytics";
 
 interface FinanceStore {
@@ -92,9 +95,10 @@ export const useFinanceStore = create<FinanceStore>()(
       removeAccount: (id) =>
         set((s) => ({ accounts: s.accounts.filter((a) => a.id !== id) })),
 
-      getAssets: () => EMPTY_ASSETS,
-      getLiabilities: () => EMPTY_LIABILITIES,
-      getInvestments: () => EMPTY_INVESTMENTS,
+      getAssets: () => getAssetsFromAccounts(get().accounts),
+      getLiabilities: () => getLiabilitiesFromAccounts(get().accounts),
+      getInvestments: () =>
+        getInvestmentsFromAccounts(get().accounts, get().importedTransactions),
       getMonthlyCashflow: () =>
         getMonthlyCashflowFromTransactions(
           get().importedTransactions,
