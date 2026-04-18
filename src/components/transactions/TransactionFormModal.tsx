@@ -147,7 +147,7 @@ export function TransactionFormModal({
         </div>
 
         {error && (
-          <div className="mb-3 rounded-md border border-red-300/60 bg-red-50/60 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+          <div className="mb-3 rounded-md border border-[color:var(--expense-soft)] bg-[color:var(--expense-soft)] px-3 py-2 text-sm text-[color:var(--expense-text)]">
             {error}
           </div>
         )}
@@ -155,9 +155,9 @@ export function TransactionFormModal({
         <div className="space-y-4">
           <div className="flex rounded-md bg-[color:var(--app-surface-soft)] p-1">
             {([
-              { value: "expense", label: "รายจ่าย", activeClass: "bg-red-500 text-white shadow" },
+              { value: "expense", label: "รายจ่าย", activeClass: "bg-[color:var(--expense)] text-white shadow" },
               { value: "income", label: "รายรับ", activeClass: "bg-[color:var(--income)] text-white shadow" },
-              { value: "transfer", label: "ย้ายเงิน", activeClass: "bg-sky-500 text-white shadow" },
+              { value: "transfer", label: "ย้ายเงิน", activeClass: "bg-[color:var(--app-brand)] text-white shadow" },
             ] as const).map((option) => (
               <button
                 key={option.value}

@@ -47,17 +47,20 @@ import {
 } from "@/lib/transaction-presentation";
 import { useFinanceStore } from "@/store/finance-store";
 import { useFinanceStoreHydrated } from "@/store/use-finance-store-hydrated";
-import { formatBaht, THAI_MONTHS_FULL } from "@/lib/utils";
+import { formatBaht, formatShortDate, THAI_MONTHS_FULL } from "@/lib/utils";
 import type { Transaction, TransactionType } from "@/lib/types";
 
+// Warm editorial palette matching the rest of the app. Keeps the pie
+// readable on the cream background and stays coherent with finance
+// semantic colours (income-green first, expense-red second).
 const PIE_COLORS = [
-  "#ef4444",
-  "#f59e0b",
-  "#8b5cf6",
-  "#ec4899",
-  "#3b82f6",
-  "#22c55e",
-  "#64748b",
+  "#cf2d56", // expense red
+  "#c08532", // neutral brown/gold
+  "#7c5cd6", // purple
+  "#d14a7e", // pink
+  "#3b82f6", // blue
+  "#1f8a65", // income green
+  "#8b8278", // warm grey
 ];
 
 export default function MonthlyReportPage() {
@@ -307,7 +310,7 @@ export default function MonthlyReportPage() {
                     <Tooltip
                       formatter={(value) => formatBaht(Number(value))}
                       contentStyle={chartTheme.tooltipStyle}
-                      cursor={{ fill: "rgba(34,197,94,0.08)" }}
+                      cursor={{ fill: "var(--app-brand-soft)" }}
                     />
                     <Bar
                       dataKey="income"
@@ -322,7 +325,7 @@ export default function MonthlyReportPage() {
                         return (
                           <Cell
                             key={`income-${entry.label}`}
-                            fill={active ? "#16a34a" : "#22c55e"}
+                            fill={active ? "var(--income-text)" : "var(--income)"}
                             opacity={
                               filters.dateFrom && !active ? 0.35 : 1
                             }
@@ -343,7 +346,7 @@ export default function MonthlyReportPage() {
                         return (
                           <Cell
                             key={`expense-${entry.label}`}
-                            fill={active ? "#dc2626" : "#ef4444"}
+                            fill={active ? "var(--expense-text)" : "var(--expense)"}
                             opacity={
                               filters.dateFrom && !active ? 0.35 : 1
                             }
@@ -440,8 +443,8 @@ export default function MonthlyReportPage() {
 
             <div className="space-y-4">
               {filters.dateRangeLabel && (
-                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/5 px-3 py-2 text-xs">
-                  <span className="text-emerald-700 dark:text-emerald-300">
+                <div className="flex items-center gap-2 rounded-xl border border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] px-3 py-2 text-xs">
+                  <span className="text-[color:var(--app-brand-text)]">
                     กรองจากกราฟ: <strong>{filters.dateRangeLabel}</strong>
                   </span>
                   <button
@@ -463,7 +466,7 @@ export default function MonthlyReportPage() {
                 <div className="relative min-w-[220px] flex-1">
                   <Search
                     size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--app-text-subtle)]"
                   />
                   <input
                     type="text"
@@ -472,7 +475,7 @@ export default function MonthlyReportPage() {
                       setFilters((prev) => ({ ...prev, search: e.target.value }))
                     }
                     placeholder="ค้นหา หมวด/ผู้รับ/หมายเหตุ..."
-                    className="theme-border theme-surface w-full rounded-xl border py-2 pl-9 pr-3 text-sm outline-none focus:border-emerald-500"
+                    className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] py-2 pl-9 pr-3 text-sm text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
                   />
                 </div>
                 <div className="flex items-center gap-1 rounded-xl bg-[color:var(--app-surface-soft)] p-1">
@@ -545,63 +548,73 @@ export default function MonthlyReportPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-[color:var(--app-divider-soft)] text-[color:var(--app-text-muted)]">
-                      <th className="py-2 pr-3 font-medium">วันที่</th>
-                      <th className="py-2 pr-3 font-medium">เวลา</th>
-                      <th className="py-2 pr-3 font-medium">หมวด</th>
-                      <th className="py-2 pr-3 font-medium">ผู้รับ</th>
-                      <th className="py-2 pr-3 text-right font-medium">จำนวน</th>
+                    <tr className="border-b border-[color:var(--app-divider-soft)] text-[11px] font-semibold uppercase tracking-wider text-[color:var(--app-text-subtle)]">
+                      <th className="py-2.5 pr-3">วันที่</th>
+                      <th className="py-2.5 pr-3">ประเภท</th>
+                      <th className="py-2.5 pr-3">หมวด</th>
+                      <th className="py-2.5 pr-3">ผู้รับ / หมายเหตุ</th>
+                      <th className="py-2.5 pr-3 text-right">จำนวน</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[color:var(--app-divider-soft)]">
-                    {filtered.map((tx) => (
-                      <tr
-                        key={tx.id}
-                        onClick={() => setSelectedTx(tx)}
-                        className="cursor-pointer transition-colors hover:bg-[color:var(--app-surface-soft)]"
-                      >
-                        <td className="whitespace-nowrap py-2 pr-3 text-zinc-600 dark:text-zinc-300">
-                          {tx.date}
-                        </td>
-                        <td className="whitespace-nowrap py-2 pr-3 text-[color:var(--app-text-subtle)]">
-                          {tx.time ?? "-"}
-                        </td>
-                        <td className="py-2 pr-3">
-                          <span className="inline-flex items-center gap-1.5">
-                            {tx.type === "income" ? (
-                              <ArrowUpRight size={14} className="text-emerald-500" />
-                            ) : tx.type === "transfer" ? (
-                              <ArrowRightLeft size={14} className="text-sky-500" />
-                            ) : (
-                              <ArrowDownRight size={14} className="text-red-500" />
-                            )}
-                            <span className="text-[color:var(--app-text)]">
-                              {tx.category}
-                            </span>
-                            {tx.tag && (
-                              <span className="rounded bg-[color:var(--app-surface-soft)] px-1.5 py-0.5 text-[10px] text-[color:var(--app-text-muted)]">
-                                {tx.tag}
-                              </span>
-                            )}
-                          </span>
-                        </td>
-                        <td className="py-2 pr-3 text-[color:var(--app-text-muted)]">
-                          {tx.recipient ?? tx.note ?? "-"}
-                        </td>
-                        <td
-                          className={`whitespace-nowrap py-2 pr-3 text-right font-medium ${
-                            tx.type === "income"
-                              ? "text-emerald-600 dark:text-emerald-400"
-                              : tx.type === "transfer"
-                                ? "text-sky-600 dark:text-sky-400"
-                                : "text-red-500"
-                          }`}
+                    {filtered.map((tx) => {
+                      const typeStyle =
+                        tx.type === "income"
+                          ? { bg: "var(--income-soft)", fg: "var(--income-text)", Icon: ArrowUpRight, label: "รายรับ" }
+                          : tx.type === "transfer"
+                            ? { bg: "var(--neutral-soft)", fg: "var(--neutral)", Icon: ArrowRightLeft, label: "โอน" }
+                            : { bg: "var(--expense-soft)", fg: "var(--expense-text)", Icon: ArrowDownRight, label: "รายจ่าย" };
+                      const Icon = typeStyle.Icon;
+                      return (
+                        <tr
+                          key={tx.id}
+                          onClick={() => setSelectedTx(tx)}
+                          className="cursor-pointer transition-colors hover:bg-[color:var(--app-surface-soft)]"
                         >
-                          {getTransactionAmountPrefix(tx.type)}
-                          {formatBaht(tx.amount)}
-                        </td>
-                      </tr>
-                    ))}
+                          <td className="whitespace-nowrap py-2.5 pr-3">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-[color:var(--app-text)]">
+                                {formatShortDate(tx.date)}
+                              </span>
+                              <span className="text-[10px] text-[color:var(--app-text-subtle)]">
+                                {tx.time ?? "-"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap py-2.5 pr-3">
+                            <span
+                              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                              style={{ backgroundColor: typeStyle.bg, color: typeStyle.fg }}
+                            >
+                              <Icon size={11} />
+                              {typeStyle.label}
+                            </span>
+                          </td>
+                          <td className="py-2.5 pr-3">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium text-[color:var(--app-text)]">
+                                {tx.category}
+                              </span>
+                              {tx.tag && (
+                                <span className="rounded-full bg-[color:var(--app-surface-soft)] px-1.5 py-0.5 text-[10px] text-[color:var(--app-text-muted)]">
+                                  {tx.tag}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-2.5 pr-3 text-[color:var(--app-text-muted)]">
+                            {tx.recipient ?? tx.note ?? "-"}
+                          </td>
+                          <td
+                            className="whitespace-nowrap py-2.5 pr-3 text-right font-[family-name:var(--font-geist-mono)] font-semibold"
+                            style={{ color: typeStyle.fg }}
+                          >
+                            {getTransactionAmountPrefix(tx.type)}
+                            {formatBaht(tx.amount)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -687,43 +700,56 @@ function SummaryCards({
       label: "รายรับ",
       amount: totals.income,
       count: totals.incomeCount,
-      tone: "text-emerald-600 dark:text-emerald-400",
+      color: "var(--income-text)",
+      accent: "var(--income)",
     },
     {
       label: "รายจ่าย",
       amount: totals.expense,
       count: totals.expenseCount,
-      tone: "text-red-500",
+      color: "var(--expense-text)",
+      accent: "var(--expense)",
     },
     {
       label: "ย้ายเงิน",
       amount: totals.transfer,
       count: totals.transferCount,
-      tone: "text-sky-600 dark:text-sky-400",
+      color: "var(--neutral)",
+      accent: "var(--neutral)",
     },
     {
       label: "สุทธิ",
       amount: totals.net,
       count: totals.count,
-      tone:
-        totals.net >= 0
-          ? "text-emerald-600 dark:text-emerald-400"
-          : "text-red-500",
+      color: totals.net >= 0 ? "var(--income-text)" : "var(--expense-text)",
+      accent: totals.net >= 0 ? "var(--income)" : "var(--expense)",
     },
   ];
 
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {cells.map((cell) => (
-        <Card key={cell.label}>
-          <p className="text-xs text-[color:var(--app-text-muted)]">{cell.label}</p>
-          <p className={`mt-1 text-xl font-bold ${cell.tone}`}>
+        <div
+          key={cell.label}
+          className="card-hover relative overflow-hidden rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-4 shadow-[var(--app-card-shadow)]"
+        >
+          <div
+            className="absolute inset-y-0 left-0 w-[3px]"
+            style={{ backgroundColor: cell.accent }}
+          />
+          <p className="pl-1.5 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--app-text-subtle)]">
+            {cell.label}
+          </p>
+          <p
+            className="mt-1 pl-1.5 font-[family-name:var(--font-geist-mono)] text-xl font-bold leading-none"
+            style={{ color: cell.color }}
+          >
             {formatBaht(cell.amount)}
           </p>
-          <p className="mt-0.5 text-xs text-[color:var(--app-text-subtle)]">
+          <p className="mt-1.5 pl-1.5 text-[11px] text-[color:var(--app-text-subtle)]">
             {cell.count} รายการ
           </p>
-        </Card>
+        </div>
       ))}
     </div>
   );
@@ -769,10 +795,10 @@ function RangeDetailSection({
   const noTaggedExpense = tagPie.length === 0;
 
   return (
-    <section className="space-y-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.04] p-4">
+    <section className="space-y-4 rounded-2xl border border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold text-[color:var(--app-text)]">
-          สรุปของช่วง <span className="text-emerald-700 dark:text-emerald-300">{label}</span>
+          สรุปของช่วง <span className="text-[color:var(--app-brand-text)]">{label}</span>
         </h2>
         <p className="text-xs text-[color:var(--app-text-muted)]">
           ตัวเลขนี้คิดจากธุรกรรมทั้งหมดในช่วงที่เลือกเท่านั้น (ไม่ขึ้นกับ filter อื่น)

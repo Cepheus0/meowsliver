@@ -2,6 +2,7 @@
 
 import { useFinanceStore } from "@/store/finance-store";
 import { formatBaht } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 import {
   ArrowUpRight,
   ArrowDownRight,
@@ -77,6 +78,7 @@ function StatCard({ label, value, subtext, icon, trend, accentColor, delay }: St
 }
 
 export function SummaryCards() {
+  const t = useT();
   const { getMonthlyCashflow, importedTransactions, selectedYear } = useFinanceStore();
   const cashflow = getMonthlyCashflow();
 
@@ -90,17 +92,15 @@ export function SummaryCards() {
   const hasAnyTransactions = importedTransactions.length > 0;
   const hasYearData = cashflow.some((month) => month.income > 0 || month.expense > 0);
   const subtext = !hasAnyTransactions
-    ? "ยังไม่มีข้อมูลที่นำเข้า"
+    ? t("summary.noData")
     : hasYearData
-      ? `สรุปจากรายการปี ${selectedYear}`
-      : `ยังไม่มีรายการในปี ${selectedYear}`;
-
-  const netColor = netCashflow >= 0 ? "var(--income)" : "var(--expense)";
+      ? `${t("summary.yearSummary")} ${selectedYear}`
+      : `${t("summary.noYearData")} ${selectedYear}`;
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        label="รายรับรวม"
+        label={t("summary.totalIncome")}
         value={formatBaht(totalIncome)}
         subtext={subtext}
         icon={<TrendingUp size={22} />}
@@ -109,7 +109,7 @@ export function SummaryCards() {
         delay={0}
       />
       <StatCard
-        label="รายจ่ายรวม"
+        label={t("summary.totalExpense")}
         value={formatBaht(totalExpense)}
         subtext={subtext}
         icon={<ShoppingCart size={22} />}
@@ -118,18 +118,18 @@ export function SummaryCards() {
         delay={1}
       />
       <StatCard
-        label="เงินคงเหลือ"
+        label={t("summary.netCashflow")}
         value={formatBaht(netCashflow)}
-        subtext={hasYearData ? (netCashflow >= 0 ? "เหลือเก็บ" : "ขาดดุล") : subtext}
+        subtext={hasYearData ? (netCashflow >= 0 ? t("summary.surplus") : t("summary.deficit")) : subtext}
         icon={<PiggyBank size={22} />}
         trend={hasYearData ? (netCashflow >= 0 ? "up" : "down") : "neutral"}
         accentColor={netCashflow >= 0 ? "#1f8a65" : "#cf2d56"}
         delay={2}
       />
       <StatCard
-        label="อัตราการออม"
+        label={t("summary.savingsRate")}
         value={`${savingsRate}%`}
-        subtext={hasYearData ? (savingsRate >= 20 ? "เป้าหมายผ่าน ✓" : "ต้องปรับปรุง") : subtext}
+        subtext={hasYearData ? (savingsRate >= 20 ? `${t("summary.goalHit")} ✓` : t("summary.needsWork")) : subtext}
         icon={<Percent size={22} />}
         trend={hasYearData ? (savingsRate >= 20 ? "up" : "down") : "neutral"}
         accentColor="#f54e00"

@@ -12,7 +12,18 @@
 
 # testing
 /coverage
-/output/playwright/
+/output/
+/reports/
+
+# logs
+*.log
+server.log
+
+# claude session artifacts
+.claude/worktrees/
+task_plan.md
+findings.md
+progress.md
 
 # next.js
 /.next/

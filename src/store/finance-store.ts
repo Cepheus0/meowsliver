@@ -23,6 +23,8 @@ import {
   getLiabilitiesFromAccounts,
 } from "@/lib/finance-analytics";
 
+type Language = "th" | "en";
+
 interface FinanceStore {
   // Year selector
   selectedYear: number;
@@ -31,6 +33,17 @@ interface FinanceStore {
   // Theme
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
+
+  // Language (i18n)
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  toggleLanguage: () => void;
+
+  // Dashboard prefs
+  accountOrder: number[]; // account IDs in user-preferred order
+  setAccountOrder: (order: number[]) => void;
+  accountsExpanded: boolean;
+  toggleAccountsExpanded: () => void;
 
   // Imported transactions
   importedTransactions: Transaction[];
@@ -69,6 +82,16 @@ export const useFinanceStore = create<FinanceStore>()(
 
       sidebarCollapsed: false,
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+
+      language: "th",
+      setLanguage: (lang) => set({ language: lang }),
+      toggleLanguage: () => set((s) => ({ language: s.language === "th" ? "en" : "th" })),
+
+      accountOrder: [],
+      setAccountOrder: (order) => set({ accountOrder: order }),
+      accountsExpanded: false,
+      toggleAccountsExpanded: () =>
+        set((s) => ({ accountsExpanded: !s.accountsExpanded })),
 
       // Imported transactions
       importedTransactions: [],
@@ -138,6 +161,9 @@ export const useFinanceStore = create<FinanceStore>()(
         importedTransactions: state.importedTransactions,
         selectedYear: state.selectedYear,
         sidebarCollapsed: state.sidebarCollapsed,
+        language: state.language,
+        accountOrder: state.accountOrder,
+        accountsExpanded: state.accountsExpanded,
       }),
     }
   )

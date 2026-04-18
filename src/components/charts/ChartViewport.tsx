@@ -50,7 +50,7 @@ export function ChartViewport({
       ) : (
         <div
           className={cn(
-            "h-full w-full animate-pulse rounded-2xl bg-zinc-100/80 dark:bg-zinc-800/60",
+            "h-full w-full animate-pulse rounded-2xl bg-[color:var(--app-surface-soft)]",
             fallbackClassName
           )}
         />

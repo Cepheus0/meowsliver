@@ -16,7 +16,8 @@ const variantStyles: Record<Variant, string> = {
     "border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] text-[color:var(--app-text)] hover:bg-[color:var(--app-surface-strong)]",
   ghost:
     "text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]",
-  danger: "bg-red-600 text-white hover:bg-red-700",
+  danger:
+    "bg-[color:var(--expense)] text-white hover:brightness-95 dark:hover:brightness-110",
 };
 
 const sizeStyles = {

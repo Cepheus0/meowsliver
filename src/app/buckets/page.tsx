@@ -176,7 +176,7 @@ export default function BucketsPage() {
       </div>
 
       {error ? (
-        <Card className="border-red-200 bg-red-50/60 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+        <Card className="border-[color:var(--expense-soft)] bg-[color:var(--expense-soft)] text-[color:var(--expense-text)]">
           <p className="text-sm font-medium">{error}</p>
         </Card>
       ) : null}
@@ -242,7 +242,7 @@ export default function BucketsPage() {
               </label>
 
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text-muted)]">
                   ประเภทเป้าหมาย
                 </span>
                 <Select
@@ -269,7 +269,7 @@ export default function BucketsPage() {
               </label>
 
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text-muted)]">
                   เป้าหมาย (บาท)
                 </span>
                 <input
@@ -535,7 +535,7 @@ export default function BucketsPage() {
                         </div>
                         <div>
                           <p className="text-xs text-[color:var(--app-text-muted)]">เป้าหมาย</p>
-                          <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                          <p className="mt-1 text-sm font-semibold text-[color:var(--app-text)]">
                             {formatBaht(goal.targetAmount)}
                           </p>
                         </div>
@@ -600,7 +600,7 @@ export default function BucketsPage() {
                               <h2 className="text-base font-semibold text-[color:var(--app-text)]">
                                 {goal.name}
                               </h2>
-                              <span className="rounded-xl bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                              <span className="rounded-xl bg-[color:var(--app-surface-soft)] px-2.5 py-1 text-xs font-semibold text-[color:var(--app-text-muted)]">
                                 เก็บขึ้นหิ้ง
                               </span>
                             </div>

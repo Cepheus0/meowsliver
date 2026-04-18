@@ -189,7 +189,7 @@ export default function AccountsPage() {
       </div>
 
       {error && (
-        <Card className="border-red-200 bg-red-50/60 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+        <Card className="border-[color:var(--expense-soft)] bg-[color:var(--expense-soft)] text-[color:var(--expense-text)]">
           <p className="text-sm font-medium">{error}</p>
         </Card>
       )}
@@ -210,7 +210,7 @@ export default function AccountsPage() {
           <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
             สินทรัพย์รวม
           </p>
-          <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+          <p className="mt-2 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--income-text)]">
             {formatBaht(totals.assets)}
           </p>
           <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
@@ -221,7 +221,7 @@ export default function AccountsPage() {
           <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
             หนี้สินรวม
           </p>
-          <p className="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">
+          <p className="mt-2 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--expense-text)]">
             {formatBaht(totals.liabilities)}
           </p>
           <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
@@ -375,9 +375,9 @@ function AccountCard({
         <div className="mt-4">
           <p className="text-xs text-[color:var(--app-text-muted)]">ยอดคงเหลือ</p>
           <p
-            className={`mt-1 text-2xl font-bold ${
+            className={`mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold ${
               isNegative
-                ? "text-red-600 dark:text-red-400"
+                ? "text-[color:var(--expense-text)]"
                 : "text-[color:var(--app-text)]"
             }`}
           >

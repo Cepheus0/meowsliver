@@ -84,10 +84,10 @@ export function TransactionDetailDrawer({
 
   const typeColor =
     transaction.type === "income"
-      ? "text-emerald-600 dark:text-emerald-400"
+      ? "text-[color:var(--income-text)]"
       : transaction.type === "transfer"
-        ? "text-sky-600 dark:text-sky-400"
-        : "text-red-500";
+        ? "text-[color:var(--app-brand-text)]"
+        : "text-[color:var(--expense-text)]";
 
   const TypeIcon =
     transaction.type === "income"
@@ -294,7 +294,7 @@ function ProvenanceRow({
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-[color:var(--app-surface-strong)]">
         <div
-          className="h-full bg-emerald-500"
+          className="h-full bg-[color:var(--app-brand)]"
           style={{ width: `${Math.min(100, Math.max(0, share * 100))}%` }}
         />
       </div>

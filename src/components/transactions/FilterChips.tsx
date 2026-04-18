@@ -56,10 +56,10 @@ export function FilterChips({
             <button
               key={slice.label}
               onClick={() => slice.value !== undefined && onToggle(slice.value)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                 isActive
-                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                  : "theme-border bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+                  ? "border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft-strong)] text-[color:var(--app-brand-text)]"
+                  : "border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)] hover:border-[color:var(--app-border-strong)] hover:text-[color:var(--app-text)]"
               }`}
               title={`${formatBaht(slice.amount)} · ${slice.count} รายการ`}
             >

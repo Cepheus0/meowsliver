@@ -50,10 +50,14 @@ import type {
 import { formatBaht, formatPercent } from "@/lib/utils";
 
 const entryTypeStyles: Record<SavingsGoalEntryType, string> = {
-  contribution: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  growth: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  withdrawal: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  adjustment: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+  contribution:
+    "bg-[color:var(--income-soft)] text-[color:var(--income-text)]",
+  growth:
+    "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)]",
+  withdrawal:
+    "bg-[color:var(--neutral-soft)] text-[color:var(--neutral)]",
+  adjustment:
+    "bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)]",
 };
 
 function DetailStatCard({
@@ -70,7 +74,7 @@ function DetailStatCard({
       <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+      <p className="mt-2 text-2xl font-bold text-[color:var(--app-text)]">
         {value}
       </p>
       <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">{helper}</p>
@@ -458,12 +462,12 @@ export default function SavingsGoalDetailPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-10 w-40 animate-pulse rounded-xl bg-zinc-100 dark:bg-zinc-800" />
+        <div className="h-10 w-40 animate-pulse rounded-xl bg-[color:var(--app-surface-soft)]" />
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="h-32 animate-pulse rounded-2xl bg-zinc-100 dark:bg-zinc-800"
+              className="h-32 animate-pulse rounded-2xl bg-[color:var(--app-surface-soft)]"
             />
           ))}
         </div>
@@ -498,11 +502,11 @@ export default function SavingsGoalDetailPage() {
             <ArrowLeft size={16} />
             กลับไปหน้า Savings
           </Link>
-          <span className="rounded-xl bg-zinc-100 px-3 py-2 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+          <span className="rounded-xl bg-[color:var(--app-surface-soft)] px-3 py-2 text-xs font-medium text-[color:var(--app-text-muted)]">
             {GOAL_CATEGORY_LABELS[detail.goal.category]}
           </span>
           {detail.goal.isArchived && (
-            <span className="inline-flex items-center gap-2 rounded-xl bg-zinc-100 px-3 py-2 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+            <span className="inline-flex items-center gap-2 rounded-xl bg-[color:var(--app-surface-soft)] px-3 py-2 text-xs font-medium text-[color:var(--app-text-muted)]">
               <Archive size={14} />
               เก็บขึ้นหิ้ง
             </span>
@@ -557,13 +561,13 @@ export default function SavingsGoalDetailPage() {
       </div>
 
       {error ? (
-        <Card className="border-red-200 bg-red-50/60 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+        <Card className="border-[color:var(--expense-soft)] bg-[color:var(--expense-soft)] text-[color:var(--expense-text)]">
           <p className="text-sm font-medium">{error}</p>
         </Card>
       ) : null}
 
       {detail.goal.isArchived && (
-        <Card className="border-amber-200 bg-amber-50/60 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-200">
+        <Card className="border-[color:var(--neutral-soft)] bg-[color:var(--neutral-soft)] text-[color:var(--neutral)]">
           <p className="text-sm font-medium">
             เป้าหมายนี้ถูกเก็บขึ้นหิ้งแล้ว จึงหยุดรับ movement ใหม่และแก้ไขประวัติเดิมชั่วคราว
             คุณสามารถกู้คืนเพื่อกลับมาใช้งานต่อ หรือเลือกลบถาวรได้
@@ -581,7 +585,7 @@ export default function SavingsGoalDetailPage() {
               {detail.goal.icon}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+              <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
                 {detail.goal.name}
               </h1>
               <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
@@ -595,17 +599,17 @@ export default function SavingsGoalDetailPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl bg-emerald-50 px-5 py-4 text-right dark:bg-emerald-500/10">
+          <div className="rounded-3xl bg-[color:var(--income-soft)] px-5 py-4 text-right">
             <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
               Goal progress
             </p>
-            <p className="mt-1 text-4xl font-bold text-emerald-600 dark:text-emerald-400">
+            <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-4xl font-bold text-[color:var(--income-text)]">
               {Math.round(detail.metrics.progressPercent)}%
             </p>
           </div>
         </div>
 
-        <div className="mt-6 h-3 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+        <div className="mt-6 h-3 overflow-hidden rounded-full bg-[color:var(--app-surface-soft)]">
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
@@ -624,7 +628,7 @@ export default function SavingsGoalDetailPage() {
           <form className="space-y-4" onSubmit={handleUpdateGoal}>
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text-muted)]">
                   ชื่อเป้าหมาย
                 </span>
                 <input
@@ -636,12 +640,12 @@ export default function SavingsGoalDetailPage() {
                       name: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
                 />
               </label>
 
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text-muted)]">
                   ประเภทเป้าหมาย
                 </span>
                 <Select
@@ -668,7 +672,7 @@ export default function SavingsGoalDetailPage() {
               </label>
 
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text-muted)]">
                   เป้าหมาย (บาท)
                 </span>
                 <input
@@ -683,12 +687,12 @@ export default function SavingsGoalDetailPage() {
                       targetAmount: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
                 />
               </label>
 
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text-muted)]">
                   วันเป้าหมาย
                 </span>
                 <input
@@ -700,12 +704,12 @@ export default function SavingsGoalDetailPage() {
                       targetDate: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
                 />
               </label>
 
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text-muted)]">
                   ช่องทางออม / กลยุทธ์
                 </span>
                 <input
@@ -716,12 +720,12 @@ export default function SavingsGoalDetailPage() {
                       strategyLabel: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
                 />
               </label>
 
               <label className="space-y-2 text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="font-medium text-[color:var(--app-text-muted)]">
                   ไอคอน
                 </span>
                 <input
@@ -732,13 +736,13 @@ export default function SavingsGoalDetailPage() {
                       icon: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
                 />
               </label>
             </div>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-zinc-700 dark:text-zinc-200">
+              <span className="font-medium text-[color:var(--app-text-muted)]">
                 บันทึกเพิ่มเติม
               </span>
               <textarea
@@ -750,7 +754,7 @@ export default function SavingsGoalDetailPage() {
                     notes: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-3 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
               />
             </label>
 
@@ -879,7 +883,7 @@ export default function SavingsGoalDetailPage() {
           ) : (
           <form className="space-y-4" onSubmit={handleSaveEntry}>
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-zinc-700 dark:text-zinc-200">
+              <span className="font-medium text-[color:var(--app-text-muted)]">
                 วันที่
               </span>
               <input
@@ -892,12 +896,12 @@ export default function SavingsGoalDetailPage() {
                     date: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
               />
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-zinc-700 dark:text-zinc-200">
+              <span className="font-medium text-[color:var(--app-text-muted)]">
                 ประเภทรายการ
               </span>
               <Select
@@ -916,7 +920,7 @@ export default function SavingsGoalDetailPage() {
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-zinc-700 dark:text-zinc-200">
+              <span className="font-medium text-[color:var(--app-text-muted)]">
                 จำนวนเงิน (บาท)
               </span>
               <input
@@ -930,7 +934,7 @@ export default function SavingsGoalDetailPage() {
                     amount: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
                 placeholder={
                   form.type === "adjustment"
                     ? "ใช้ค่าบวกหรือลบได้"
@@ -940,7 +944,7 @@ export default function SavingsGoalDetailPage() {
             </label>
 
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-zinc-700 dark:text-zinc-200">
+              <span className="font-medium text-[color:var(--app-text-muted)]">
                 หมายเหตุ
               </span>
               <textarea
@@ -952,7 +956,7 @@ export default function SavingsGoalDetailPage() {
                     note: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 outline-none transition-colors focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-3 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
                 placeholder="เช่น เติมเงินเดือนนี้, ดอกเบี้ยประจำงวด, ปรับยอดหลัง reconcile"
               />
             </label>
@@ -997,7 +1001,7 @@ export default function SavingsGoalDetailPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px] text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                <tr className="theme-border border-b">
                   <th className="px-2 py-3 font-medium text-[color:var(--app-text-muted)]">
                     วันที่
                   </th>
@@ -1015,10 +1019,10 @@ export default function SavingsGoalDetailPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              <tbody className="divide-y divide-[color:var(--app-divider)]">
                 {detail.entries.map((entry) => (
                   <tr key={entry.id}>
-                    <td className="px-2 py-3 text-zinc-700 dark:text-zinc-300">
+                    <td className="px-2 py-3 text-[color:var(--app-text-muted)]">
                       {formatGoalDate(entry.date)}
                     </td>
                     <td className="px-2 py-3">
@@ -1031,7 +1035,7 @@ export default function SavingsGoalDetailPage() {
                     <td className="px-2 py-3 text-[color:var(--app-text-muted)]">
                       {entry.note || "-"}
                     </td>
-                    <td className="px-2 py-3 text-right font-semibold text-zinc-900 dark:text-zinc-100">
+                    <td className="px-2 py-3 text-right font-semibold text-[color:var(--app-text)]">
                       <span className="inline-flex items-center gap-1">
                         {entry.type === "growth" ? <ArrowUpRight size={14} /> : null}
                         {entry.type === "contribution" ? <Landmark size={14} /> : null}

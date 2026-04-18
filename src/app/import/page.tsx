@@ -75,18 +75,20 @@ const TRANSACTION_TYPE_BADGE_CLASS: Record<
   string
 > = {
   income:
-    "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
-  expense: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400",
-  transfer: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400",
+    "bg-[color:var(--income-soft)] text-[color:var(--income-text)]",
+  expense:
+    "bg-[color:var(--expense-soft)] text-[color:var(--expense-text)]",
+  transfer:
+    "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)]",
 };
 
 const TRANSACTION_TYPE_AMOUNT_CLASS: Record<
   "income" | "expense" | "transfer",
   string
 > = {
-  income: "text-emerald-600 dark:text-emerald-400",
-  expense: "text-red-500",
-  transfer: "text-sky-600 dark:text-sky-400",
+  income: "text-[color:var(--income-text)]",
+  expense: "text-[color:var(--expense-text)]",
+  transfer: "text-[color:var(--app-brand-text)]",
 };
 
 const PREVIEW_STATUS_META: Record<
@@ -96,22 +98,22 @@ const PREVIEW_STATUS_META: Record<
   new: {
     label: "ใหม่",
     className:
-      "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
+      "bg-[color:var(--income-soft)] text-[color:var(--income-text)]",
   },
   duplicate: {
     label: "ซ้ำ",
     className:
-      "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400",
+      "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)]",
   },
   conflict: {
     label: "ต้องตรวจสอบ",
     className:
-      "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
+      "bg-[color:var(--neutral-soft)] text-[color:var(--neutral)]",
   },
   skipped: {
     label: "ข้าม",
     className:
-      "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
+      "bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)]",
   },
 };
 
@@ -122,17 +124,17 @@ const REVIEW_ACTION_META: Record<
   import_as_new: {
     label: "นำเข้าเป็นรายการใหม่",
     className:
-      "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+      "border-[color:var(--income-soft)] bg-[color:var(--income-soft)] text-[color:var(--income-text)]",
   },
   keep_existing: {
     label: "ใช้รายการเดิม",
     className:
-      "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300",
+      "border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)]",
   },
   skip: {
     label: "ข้ามรายการนี้",
     className:
-      "border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+      "border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)]",
   },
 };
 
@@ -501,10 +503,10 @@ export default function ImportPage() {
                 className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors",
                   i === stepIndex
-                    ? "bg-emerald-500 text-white"
+                    ? "bg-[color:var(--app-brand)] text-white"
                     : i < stepIndex
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400"
-                      : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"
+                      ? "bg-[color:var(--app-brand-soft-strong)] text-[color:var(--app-brand-text)]"
+                      : "bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-subtle)]"
                 )}
               >
                 {i < stepIndex ? <CheckCircle size={16} /> : i + 1}
@@ -513,8 +515,8 @@ export default function ImportPage() {
                 className={cn(
                   "hidden text-xs font-medium sm:block",
                   i === stepIndex
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-zinc-400"
+                    ? "text-[color:var(--app-brand-text)]"
+                    : "text-[color:var(--app-text-subtle)]"
                 )}
               >
                 {label}
@@ -524,7 +526,9 @@ export default function ImportPage() {
               <div
                 className={cn(
                   "mx-1 h-0.5 w-6 sm:w-10",
-                  i < stepIndex ? "bg-emerald-400" : "bg-zinc-200 dark:bg-zinc-700"
+                  i < stepIndex
+                    ? "bg-[color:var(--app-brand)]"
+                    : "bg-[color:var(--app-border)]"
                 )}
               />
             )}
@@ -534,17 +538,17 @@ export default function ImportPage() {
 
       {/* Error display */}
       {error && (
-        <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/40 dark:bg-red-500/5">
-          <FileWarning size={20} className="shrink-0 text-red-500" />
+        <div className="flex items-center gap-3 rounded-xl border border-[color:var(--expense-soft)] bg-[color:var(--expense-soft)] p-4">
+          <FileWarning size={20} className="shrink-0 text-[color:var(--expense-text)]" />
           <div>
-            <p className="text-sm font-medium text-red-700 dark:text-red-400">
+            <p className="text-sm font-medium text-[color:var(--expense-text)]">
               เกิดข้อผิดพลาด
             </p>
-            <p className="text-xs text-red-600 dark:text-red-500">{error}</p>
+            <p className="text-xs text-[color:var(--expense-text)] opacity-80">{error}</p>
           </div>
           <button
             onClick={() => setError(null)}
-            className="ml-auto text-red-400 hover:text-red-600"
+            className="ml-auto text-[color:var(--expense-text)] opacity-60 hover:opacity-100"
           >
             <X size={16} />
           </button>
@@ -561,28 +565,28 @@ export default function ImportPage() {
             className={cn(
               "flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 transition-all sm:p-16",
               isDragging
-                ? "border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-500/5"
-                : "border-zinc-300 hover:border-zinc-400 dark:border-zinc-700 dark:hover:border-zinc-500",
+                ? "border-[color:var(--app-brand)] bg-[color:var(--app-brand-soft)]"
+                : "border-[color:var(--app-border-strong)] hover:border-[color:var(--app-brand-border)]",
               isProcessing && "pointer-events-none opacity-60"
             )}
           >
             {isProcessing ? (
               <>
-                <Loader2 size={48} className="mb-4 animate-spin text-emerald-500" />
-                <p className="text-lg font-semibold text-zinc-700 dark:text-zinc-200">
+                <Loader2 size={48} className="mb-4 animate-spin text-[color:var(--app-brand)]" />
+                <p className="text-lg font-semibold text-[color:var(--app-text)]">
                   กำลังอ่านไฟล์...
                 </p>
               </>
             ) : (
               <>
-                <Upload size={48} className="mb-4 text-zinc-400" />
-                <p className="mb-2 text-lg font-semibold text-zinc-700 dark:text-zinc-200">
+                <Upload size={48} className="mb-4 text-[color:var(--app-text-subtle)]" />
+                <p className="mb-2 text-lg font-semibold text-[color:var(--app-text)]">
                   ลากไฟล์มาวางที่นี่
                 </p>
                 <p className="mb-1 text-sm text-[color:var(--app-text-muted)]">
                   รองรับ .xlsx, .xls, .csv (สูงสุด 10MB)
                 </p>
-                <p className="mb-6 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                <p className="mb-6 flex items-center gap-1.5 text-xs text-[color:var(--app-brand-text)]">
                   <Sparkles size={14} />
                   ตรวจจับรูปแบบ เหมียวจด อัตโนมัติ
                 </p>
@@ -593,7 +597,7 @@ export default function ImportPage() {
                     onChange={handleFileInput}
                     className="hidden"
                   />
-                  <span className="cursor-pointer rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700">
+                  <span className="cursor-pointer rounded-xl bg-[color:var(--app-brand)] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[color:var(--app-brand-hover)]">
                     <Download size={16} className="mr-2 inline" />
                     เลือกไฟล์
                   </span>
@@ -614,7 +618,7 @@ export default function ImportPage() {
             </CardTitle>
             <button
               onClick={resetWizard}
-              className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+              className="text-[color:var(--app-text-subtle)] hover:text-[color:var(--app-text)]"
             >
               <X size={16} />
             </button>
@@ -622,25 +626,25 @@ export default function ImportPage() {
 
           {/* Detection banner */}
           {isMeowjot ? (
-            <div className="mb-4 flex items-center gap-3 rounded-xl bg-emerald-50 p-3 dark:bg-emerald-500/5">
-              <Sparkles size={18} className="shrink-0 text-emerald-500" />
+            <div className="mb-4 flex items-center gap-3 rounded-xl bg-[color:var(--income-soft)] p-3">
+              <Sparkles size={18} className="shrink-0 text-[color:var(--income-text)]" />
               <div>
-                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                <p className="text-sm font-semibold text-[color:var(--income-text)]">
                   ตรวจพบรูปแบบ เหมียวจด! (ความเชื่อมั่น {Math.round(confidence * 100)}%)
                 </p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-500">
+                <p className="text-xs text-[color:var(--income-text)] opacity-80">
                   จับคู่คอลัมน์อัตโนมัติแล้ว — กรุณาตรวจสอบก่อนดำเนินการ
                 </p>
               </div>
             </div>
           ) : (
-            <div className="mb-4 flex items-center gap-3 rounded-xl bg-amber-50 p-3 dark:bg-amber-500/5">
-              <AlertTriangle size={18} className="shrink-0 text-amber-500" />
+            <div className="mb-4 flex items-center gap-3 rounded-xl bg-[color:var(--neutral-soft)] p-3">
+              <AlertTriangle size={18} className="shrink-0 text-[color:var(--neutral)]" />
               <div>
-                <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                <p className="text-sm font-semibold text-[color:var(--neutral)]">
                   ไม่ใช่รูปแบบ เหมียวจด — กรุณาจับคู่คอลัมน์เอง
                 </p>
-                <p className="text-xs text-amber-600 dark:text-amber-500">
+                <p className="text-xs text-[color:var(--neutral)] opacity-80">
                   พบ {parseResult.columns.length} คอลัมน์,{" "}
                   {parseResult.totalRows} แถวข้อมูล (ชีท: {parseResult.sheetName})
                 </p>
@@ -650,19 +654,19 @@ export default function ImportPage() {
 
           {/* File info */}
           <div className="mb-4 grid grid-cols-3 gap-3">
-            <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/50">
+            <div className="rounded-lg bg-[color:var(--app-surface-soft)] p-3">
               <p className="text-xs text-[color:var(--app-text-muted)]">จำนวนแถว</p>
               <p className="text-lg font-bold text-[color:var(--app-text)]">
                 {parseResult.totalRows.toLocaleString()}
               </p>
             </div>
-            <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/50">
+            <div className="rounded-lg bg-[color:var(--app-surface-soft)] p-3">
               <p className="text-xs text-[color:var(--app-text-muted)]">จำนวนคอลัมน์</p>
               <p className="text-lg font-bold text-[color:var(--app-text)]">
                 {parseResult.columns.length}
               </p>
             </div>
-            <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/50">
+            <div className="rounded-lg bg-[color:var(--app-surface-soft)] p-3">
               <p className="text-xs text-[color:var(--app-text-muted)]">ชีท</p>
               <p className="truncate text-lg font-bold text-[color:var(--app-text)]">
                 {parseResult.sheetName}
@@ -680,10 +684,10 @@ export default function ImportPage() {
                   className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-4"
                 >
                   <div className="w-full sm:w-52">
-                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                    <label className="text-sm font-medium text-[color:var(--app-text)]">
                       {field.label}
                       {field.required && (
-                        <span className="ml-1 text-red-500">*</span>
+                        <span className="ml-1 text-[color:var(--expense-text)]">*</span>
                       )}
                     </label>
                     <p className="text-xs text-[color:var(--app-text-subtle)]">
@@ -719,29 +723,29 @@ export default function ImportPage() {
 
           {/* Raw data preview */}
           <details className="mt-5">
-            <summary className="cursor-pointer text-xs font-medium text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200">
+            <summary className="cursor-pointer text-xs font-medium text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]">
               ดูข้อมูลดิบ (5 แถวแรก)
             </summary>
-            <div className="mt-2 overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
+            <div className="theme-border mt-2 overflow-x-auto rounded-lg border">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-zinc-50 dark:bg-zinc-800">
-                    <th className="px-3 py-2 font-medium text-zinc-500">#</th>
+                  <tr className="bg-[color:var(--app-surface-soft)]">
+                    <th className="px-3 py-2 font-medium text-[color:var(--app-text-muted)]">#</th>
                     {parseResult.columns.map((col) => (
-                      <th key={col} className="whitespace-nowrap px-3 py-2 font-medium text-zinc-500">
+                      <th key={col} className="whitespace-nowrap px-3 py-2 font-medium text-[color:var(--app-text-muted)]">
                         {col}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <tbody className="divide-y divide-[color:var(--app-divider)]">
                   {parseResult.rows.slice(0, 5).map((row, i) => (
                     <tr key={i}>
-                      <td className="px-3 py-1.5 text-zinc-400">{i + 1}</td>
+                      <td className="px-3 py-1.5 text-[color:var(--app-text-subtle)]">{i + 1}</td>
                       {parseResult.columns.map((col) => (
                         <td
                           key={col}
-                          className="max-w-[200px] truncate whitespace-nowrap px-3 py-1.5 text-zinc-600 dark:text-zinc-300"
+                          className="max-w-[200px] truncate whitespace-nowrap px-3 py-1.5 text-[color:var(--app-text-muted)]"
                         >
                           {row[col] || "-"}
                         </td>
@@ -784,67 +788,67 @@ export default function ImportPage() {
         <>
           {/* Import summary cards */}
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-8">
-            <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
+            <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">พร้อมตรวจสอบ</p>
               <p className="mt-1 text-2xl font-bold text-[color:var(--app-text)]">
                 {importStats.readyRows}
               </p>
             </div>
-            <div className="rounded-xl bg-emerald-50 p-4 shadow-sm dark:bg-emerald-500/5">
-              <p className="text-xs text-emerald-600 dark:text-emerald-400">
+            <div className="rounded-xl bg-[color:var(--income-soft)] p-4 shadow-sm">
+              <p className="text-xs text-[color:var(--income-text)]">
                 รายการใหม่
               </p>
-              <p className="mt-1 text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--income-text)]">
                 {importStats.newRows}
               </p>
             </div>
-            <div className="rounded-xl bg-sky-50 p-4 shadow-sm dark:bg-sky-500/5">
-              <p className="text-xs text-sky-600 dark:text-sky-400">รายการซ้ำ</p>
-              <p className="mt-1 text-2xl font-bold text-sky-700 dark:text-sky-300">
+            <div className="rounded-xl bg-[color:var(--app-brand-soft)] p-4 shadow-sm">
+              <p className="text-xs text-[color:var(--app-brand-text)]">รายการซ้ำ</p>
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--app-brand-text)]">
                 {importStats.duplicateRows}
               </p>
             </div>
-            <div className="rounded-xl bg-amber-50 p-4 shadow-sm dark:bg-amber-500/5">
-              <p className="text-xs text-amber-600 dark:text-amber-400">
+            <div className="rounded-xl bg-[color:var(--neutral-soft)] p-4 shadow-sm">
+              <p className="text-xs text-[color:var(--neutral)]">
                 ต้องตรวจสอบ
               </p>
-              <p className="mt-1 text-2xl font-bold text-amber-700 dark:text-amber-300">
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--neutral)]">
                 {importStats.conflictRows}
               </p>
             </div>
-            <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
+            <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">
                 รายรับ ({importStats.incomeRows})
               </p>
-              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--income-text)]">
                 {formatBaht(importStats.totalIncome)}
               </p>
             </div>
-            <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
+            <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">
                 รายจ่าย ({importStats.expenseRows})
               </p>
-              <p className="mt-1 text-2xl font-bold text-red-500">
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--expense-text)]">
                 {formatBaht(importStats.totalExpense)}
               </p>
             </div>
-            <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
+            <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">
                 ย้ายเงิน ({importStats.transferRows})
               </p>
-              <p className="mt-1 text-2xl font-bold text-sky-600 dark:text-sky-400">
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--app-brand-text)]">
                 {formatBaht(importStats.totalTransfer)}
               </p>
             </div>
-            <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
+            <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">ข้ามรายการ</p>
-              <p className="mt-1 text-2xl font-bold text-amber-500">
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--neutral)]">
                 {importStats.skippedRows}
               </p>
             </div>
           </div>
           {importStats.transferRows > 0 && (
-            <p className="text-sm text-sky-700 dark:text-sky-300">
+            <p className="text-sm text-[color:var(--app-brand-text)]">
               รายการประเภท “ย้ายเงิน” จะถูกบันทึกไว้เพื่อใช้ตามรอยการเคลื่อนเงิน แต่จะไม่ถูกรวมเป็นรายรับหรือรายจ่ายใน dashboard และ reports
             </p>
           )}
@@ -857,7 +861,7 @@ export default function ImportPage() {
                   <p className="text-sm text-[color:var(--app-text-muted)]">
                     เลือกว่าจะนำเข้าแถวที่ใกล้เคียงเป็นรายการใหม่ ใช้รายการเดิม หรือข้ามรายการนี้
                     ระบบจะยังไม่อนุญาตให้ commit จนกว่ารายการสถานะ{" "}
-                    <span className="font-medium text-amber-600 dark:text-amber-400">
+                    <span className="font-medium text-[color:var(--neutral)]">
                       ต้องตรวจสอบ
                     </span>{" "}
                     จะถูกตัดสินใจครบทุกแถว
@@ -907,7 +911,7 @@ export default function ImportPage() {
 
                       <div className="mt-4 grid gap-4 lg:grid-cols-2">
                         <div className="rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-4">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--income-text)]">
                             รายการจากไฟล์
                           </p>
                           <div className="mt-3 space-y-1.5 text-sm text-[color:var(--app-text)]">
@@ -925,7 +929,7 @@ export default function ImportPage() {
                         </div>
 
                         <div className="rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-4">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-sky-600 dark:text-sky-400">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-brand-text)]">
                             รายการเดิมที่ใกล้เคียง
                           </p>
                           <div className="mt-3 space-y-1.5 text-sm text-[color:var(--app-text)]">
@@ -988,16 +992,16 @@ export default function ImportPage() {
               <div className="space-y-2">
                 <CardTitle>ตัวอย่างข้อมูลหลังตรวจซ้ำกับฐานข้อมูล (20 แถวแรก)</CardTitle>
                 <p className="text-sm text-[color:var(--app-text-muted)]">
-                  ระบบจะเพิ่มเฉพาะรายการสถานะ <span className="font-medium text-emerald-600 dark:text-emerald-400">ใหม่</span>{" "}
+                  ระบบจะเพิ่มเฉพาะรายการสถานะ <span className="font-medium text-[color:var(--income-text)]">ใหม่</span>{" "}
                   เท่านั้น ส่วนรายการซ้ำจะกันออกไว้ และรายการ conflict ต้องผ่านการตัดสินใจก่อน
                 </p>
                 {hasReviewExceptions && (
-                  <p className="text-sm text-amber-600 dark:text-amber-400">
+                  <p className="text-sm text-[color:var(--neutral)]">
                     พบรายการซ้ำหรือรายการที่ควรตรวจสอบก่อนนำเข้า กรุณาเช็กแถวที่มีสถานะไม่ใช่ “ใหม่”
                   </p>
                 )}
                 {pendingConflictRows > 0 && (
-                  <p className="text-sm text-amber-600 dark:text-amber-400">
+                  <p className="text-sm text-[color:var(--neutral)]">
                     ยังมี {pendingConflictRows} รายการ conflict ที่รอการตัดสินใจ
                   </p>
                 )}
@@ -1007,29 +1011,29 @@ export default function ImportPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 dark:border-zinc-800">
-                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">#</th>
-                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">สถานะ</th>
-                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">วันที่</th>
-                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">เวลา</th>
-                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">ประเภท</th>
-                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">หมวดหมู่</th>
-                    <th className="py-2.5 pr-3 text-right text-xs font-medium text-zinc-500">จำนวน</th>
-                    <th className="py-2.5 pr-3 text-xs font-medium text-zinc-500">โน้ต</th>
-                    <th className="py-2.5 text-xs font-medium text-zinc-500">ช่องทาง</th>
-                    <th className="py-2.5 pl-3 text-xs font-medium text-zinc-500">การตัดสินใจ</th>
+                  <tr className="theme-border border-b">
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">#</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">สถานะ</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">วันที่</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">เวลา</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">ประเภท</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">หมวดหมู่</th>
+                    <th className="py-2.5 pr-3 text-right text-xs font-medium text-[color:var(--app-text-muted)]">จำนวน</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">โน้ต</th>
+                    <th className="py-2.5 text-xs font-medium text-[color:var(--app-text-muted)]">ช่องทาง</th>
+                    <th className="py-2.5 pl-3 text-xs font-medium text-[color:var(--app-text-muted)]">การตัดสินใจ</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <tbody className="divide-y divide-[color:var(--app-divider)]">
                   {previewRows.slice(0, 20).map((row, i) => {
                     const tx = row.transaction;
 
                     return (
                       <tr
                         key={`${row.rowNumber}-${row.previewStatus}`}
-                        className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                        className="hover:bg-[color:var(--app-surface-soft)]"
                       >
-                        <td className="py-2 pr-3 text-xs text-zinc-400">{i + 1}</td>
+                        <td className="py-2 pr-3 text-xs text-[color:var(--app-text-subtle)]">{i + 1}</td>
                         <td className="py-2 pr-3">
                           <span
                             className={cn(
@@ -1040,10 +1044,10 @@ export default function ImportPage() {
                             {PREVIEW_STATUS_META[row.previewStatus].label}
                           </span>
                         </td>
-                        <td className="whitespace-nowrap py-2 pr-3 text-zinc-600 dark:text-zinc-300">
+                        <td className="whitespace-nowrap py-2 pr-3 text-[color:var(--app-text)]">
                           {tx?.date ?? "-"}
                         </td>
-                        <td className="whitespace-nowrap py-2 pr-3 text-zinc-500 dark:text-zinc-400">
+                        <td className="whitespace-nowrap py-2 pr-3 text-[color:var(--app-text-muted)]">
                           {tx?.time ?? "-"}
                         </td>
                         <td className="py-2 pr-3">
@@ -1057,17 +1061,17 @@ export default function ImportPage() {
                               {getTransactionTypeLabel(tx.type)}
                             </span>
                           ) : (
-                            <span className="text-xs text-zinc-400">-</span>
+                            <span className="text-xs text-[color:var(--app-text-subtle)]">-</span>
                           )}
                         </td>
-                        <td className="py-2 pr-3 text-zinc-700 dark:text-zinc-200">
+                        <td className="py-2 pr-3 text-[color:var(--app-text)]">
                           {tx?.category || "-"}
                         </td>
                         <td
                           className={cn(
-                            "whitespace-nowrap py-2 pr-3 text-right font-medium",
+                            "whitespace-nowrap py-2 pr-3 text-right font-medium font-[family-name:var(--font-geist-mono)]",
                             tx && TRANSACTION_TYPE_AMOUNT_CLASS[tx.type],
-                            !tx && "text-zinc-400"
+                            !tx && "text-[color:var(--app-text-subtle)]"
                           )}
                         >
                           {tx ? (
@@ -1098,14 +1102,14 @@ export default function ImportPage() {
                 </tbody>
               </table>
               {previewRows.length > 20 && (
-                <p className="py-3 text-center text-xs text-zinc-400">
+                <p className="py-3 text-center text-xs text-[color:var(--app-text-subtle)]">
                   ...และอีก {previewRows.length - 20} รายการ
                 </p>
               )}
             </div>
 
             {/* Actions */}
-            <div className="mt-5 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800">
+            <div className="mt-5 flex items-center justify-between border-t border-[color:var(--app-divider)] pt-4">
               <Button variant="ghost" onClick={() => setStep("mapping")}>
                 <ArrowLeft size={16} />
                 แก้ไขการจับคู่
@@ -1134,7 +1138,7 @@ export default function ImportPage() {
       {/* ============ STEP 4: DONE ============ */}
       {step === "done" && (
         <Card className="py-10 text-center">
-          <CheckCircle size={64} className="mx-auto mb-4 text-emerald-500" />
+          <CheckCircle size={64} className="mx-auto mb-4 text-[color:var(--income)]" />
           <h2 className="text-2xl font-bold text-[color:var(--app-text)]">
             {importStats.committedRows > 0 ? "นำเข้าสำเร็จ!" : "ตรวจสอบข้อมูลเสร็จสิ้น"}
           </h2>
@@ -1144,65 +1148,65 @@ export default function ImportPage() {
               {importStats.committedRows.toLocaleString()}
             </span>{" "}
             รายการจาก{" "}
-            <span className="font-medium text-zinc-700 dark:text-zinc-200">
+            <span className="font-medium text-[color:var(--app-text)]">
               {fileName}
             </span>
           </p>
 
           {/* Summary */}
           <div className="mx-auto mt-6 grid max-w-3xl grid-cols-2 gap-4 lg:grid-cols-4">
-            <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-500/5">
-              <p className="text-xs text-emerald-600 dark:text-emerald-400">
+            <div className="rounded-xl bg-[color:var(--income-soft)] p-3">
+              <p className="text-xs text-[color:var(--income-text)]">
                 เพิ่มสำเร็จ
               </p>
-              <p className="mt-1 text-lg font-bold text-emerald-700 dark:text-emerald-300">
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--income-text)]">
                 {importStats.committedRows.toLocaleString()}
               </p>
             </div>
-            <div className="rounded-xl bg-sky-50 p-3 dark:bg-sky-500/5">
-              <p className="text-xs text-sky-600 dark:text-sky-400">รายการซ้ำ</p>
-              <p className="mt-1 text-lg font-bold text-sky-700 dark:text-sky-300">
+            <div className="rounded-xl bg-[color:var(--app-brand-soft)] p-3">
+              <p className="text-xs text-[color:var(--app-brand-text)]">รายการซ้ำ</p>
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--app-brand-text)]">
                 {importStats.duplicateRows.toLocaleString()}
               </p>
             </div>
-            <div className="rounded-xl bg-amber-50 p-3 dark:bg-amber-500/5">
-              <p className="text-xs text-amber-600 dark:text-amber-400">
+            <div className="rounded-xl bg-[color:var(--neutral-soft)] p-3">
+              <p className="text-xs text-[color:var(--neutral)]">
                 ต้องตรวจสอบ
               </p>
-              <p className="mt-1 text-lg font-bold text-amber-700 dark:text-amber-300">
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--neutral)]">
                 {importStats.conflictRows.toLocaleString()}
               </p>
             </div>
-            <div className="rounded-xl bg-zinc-100 p-3 dark:bg-zinc-800">
+            <div className="rounded-xl bg-[color:var(--app-surface-soft)] p-3">
               <p className="text-xs text-[color:var(--app-text-muted)]">ข้ามรายการ</p>
-              <p className="mt-1 text-lg font-bold text-zinc-700 dark:text-zinc-200">
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--app-text)]">
                 {importStats.skippedRows.toLocaleString()}
               </p>
             </div>
           </div>
 
           <div className="mx-auto mt-4 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-zinc-900">
+            <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-3 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">
                 รายรับ ({importStats.incomeRows})
               </p>
-              <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--income-text)]">
                 {formatBaht(importStats.totalIncome)}
               </p>
             </div>
-            <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-zinc-900">
+            <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-3 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">
                 รายจ่าย ({importStats.expenseRows})
               </p>
-              <p className="mt-1 text-lg font-bold text-red-500">
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--expense-text)]">
                 {formatBaht(importStats.totalExpense)}
               </p>
             </div>
-            <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-zinc-900">
+            <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-3 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">
                 ย้ายเงิน ({importStats.transferRows})
               </p>
-              <p className="mt-1 text-lg font-bold text-sky-600 dark:text-sky-400">
+              <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--app-brand-text)]">
                 {formatBaht(importStats.totalTransfer)}
               </p>
             </div>
@@ -1210,12 +1214,12 @@ export default function ImportPage() {
 
           <div className="mx-auto mt-3 max-w-2xl space-y-2">
             {(importStats.duplicateRows > 0 || importStats.conflictRows > 0) && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">
+              <p className="text-xs text-[color:var(--neutral)]">
                 ระบบกันรายการซ้ำและรายการที่ใกล้เคียงออกจากการเพิ่มอัตโนมัติแล้ว เพื่อป้องกันข้อมูลซ้ำใน dashboard
               </p>
             )}
             {importStats.transferRows > 0 && (
-              <p className="text-xs text-sky-700 dark:text-sky-300">
+              <p className="text-xs text-[color:var(--app-brand-text)]">
                 รายการ “ย้ายเงิน” ถูกบันทึกไว้แยกต่างหากและจะไม่ถูกรวมในตัวเลขรายรับหรือรายจ่าย
               </p>
             )}

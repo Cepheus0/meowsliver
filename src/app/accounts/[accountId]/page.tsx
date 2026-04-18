@@ -57,21 +57,21 @@ const reconciliationStatusMeta: Record<
   aligned: {
     label: "ยอดตรงกับรายการที่เชื่อมแล้ว",
     className:
-      "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+      "bg-[color:var(--income-soft)] text-[color:var(--income-text)]",
     description:
       "ยอดคงเหลือที่บันทึกไว้ตรงกับยอดที่ derive จากธุรกรรมที่เชื่อมกับบัญชีนี้",
   },
   needs_attention: {
     label: "ยอดต่างจากรายการที่เชื่อมแล้ว",
     className:
-      "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+      "bg-[color:var(--neutral-soft)] text-[color:var(--neutral)]",
     description:
       "ยอดคงเหลือในบัญชีนี้ยังไม่ตรงกับธุรกรรมที่เชื่อมอยู่ อาจเกิดจาก opening balance หรือการปรับยอดด้วยมือ",
   },
   no_linked_transactions: {
     label: "ยังไม่มีรายการที่เชื่อมไว้",
     className:
-      "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+      "bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)]",
     description:
       "ตอนนี้ระบบยังอธิบายยอดด้วย transaction ledger ไม่ได้ เพราะยังไม่มีรายการที่ผูกกับบัญชีนี้",
   },
@@ -296,7 +296,7 @@ export default function AccountDetailPage() {
       </div>
 
       {error && (
-        <Card className="border-red-200 bg-red-50/60 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+        <Card className="border-[color:var(--expense-soft)] bg-[color:var(--expense-soft)] text-[color:var(--expense-text)]">
           <p className="text-sm font-medium">{error}</p>
         </Card>
       )}
@@ -379,10 +379,10 @@ export default function AccountDetailPage() {
                   Difference
                 </p>
                 <p
-                  className={`mt-1 text-xl font-semibold ${
+                  className={`mt-1 font-[family-name:var(--font-geist-mono)] text-xl font-semibold ${
                     Math.abs(detail.reconciliation.balanceDifference) < 0.01
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-amber-600 dark:text-amber-400"
+                      ? "text-[color:var(--income-text)]"
+                      : "text-[color:var(--neutral)]"
                   }`}
                 >
                   {formatBalanceDifference(detail.reconciliation.balanceDifference)}
@@ -395,7 +395,7 @@ export default function AccountDetailPage() {
                 <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
                   Linked income
                 </p>
-                <p className="mt-1 text-base font-semibold text-emerald-600 dark:text-emerald-400">
+                <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-base font-semibold text-[color:var(--income-text)]">
                   {formatBaht(detail.reconciliation.linkedIncome)}
                 </p>
               </div>
@@ -403,7 +403,7 @@ export default function AccountDetailPage() {
                 <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
                   Linked expense
                 </p>
-                <p className="mt-1 text-base font-semibold text-red-600 dark:text-red-400">
+                <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-base font-semibold text-[color:var(--expense-text)]">
                   {formatBaht(detail.reconciliation.linkedExpense)}
                 </p>
               </div>
@@ -465,7 +465,7 @@ export default function AccountDetailPage() {
                       </span>
                     )}
                     {detail.account.isArchived && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--app-surface-soft)] px-2 py-0.5 text-xs font-semibold text-[color:var(--app-text-muted)]">
                         <Archive size={12} />
                         เก็บขึ้นหิ้ง
                       </span>
@@ -521,9 +521,9 @@ export default function AccountDetailPage() {
                   ยอดคงเหลือ
                 </p>
                 <p
-                  className={`mt-1 text-3xl font-bold ${
+                  className={`mt-1 font-[family-name:var(--font-geist-mono)] text-3xl font-bold ${
                     detail.account.currentBalance < 0
-                      ? "text-red-600 dark:text-red-400"
+                      ? "text-[color:var(--expense-text)]"
                       : "text-[color:var(--app-text)]"
                   }`}
                 >
@@ -545,7 +545,7 @@ export default function AccountDetailPage() {
                       <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
                         เหลือใช้
                       </p>
-                      <p className="mt-1 text-xl font-semibold text-emerald-600 dark:text-emerald-400">
+                      <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-xl font-semibold text-[color:var(--income-text)]">
                         {formatBaht(
                           detail.account.creditLimit +
                             detail.account.currentBalance
@@ -624,9 +624,9 @@ export default function AccountDetailPage() {
                             : "";
                       const color =
                         txn.type === "income"
-                          ? "text-emerald-600 dark:text-emerald-400"
+                          ? "text-[color:var(--income-text)]"
                           : txn.type === "expense"
-                            ? "text-red-600 dark:text-red-400"
+                            ? "text-[color:var(--expense-text)]"
                             : "text-[color:var(--app-text-muted)]";
                       return (
                         <tr key={txn.id} className="align-top">

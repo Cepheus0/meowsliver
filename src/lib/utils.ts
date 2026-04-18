@@ -48,3 +48,16 @@ export const THAI_MONTHS_FULL = [
   "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
   "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
 ] as const;
+
+/**
+ * Format a YYYY-MM-DD date string to a short Thai "D MMM" label.
+ * Returns empty string on malformed input.
+ */
+export function formatShortDate(dateStr: string): string {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  const month = parseInt(parts[1] ?? "0", 10);
+  const day = parseInt(parts[2] ?? "0", 10);
+  if (!month || !day) return dateStr;
+  return `${day} ${THAI_MONTHS[month - 1] ?? ""}`;
+}
