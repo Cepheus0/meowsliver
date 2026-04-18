@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 
 export function SplashScreen() {
   const [isFading, setIsFading] = useState(false);
@@ -43,14 +42,9 @@ export function SplashScreen() {
 
           {/* Logo Centerpiece */}
           <div className="relative z-10 flex shrink-0 items-center justify-center">
-            <Image
-              src="/logo.png"
-              alt="Meowsliver Logo"
-              width={100}
-              height={100}
-              className="object-cover mix-blend-multiply dark:mix-blend-normal"
-              unoptimized
-              priority
+            <span
+              aria-hidden="true"
+              className="theme-logo-mark theme-logo-splash block h-[100px] w-[100px]"
             />
           </div>
         </div>

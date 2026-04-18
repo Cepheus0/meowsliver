@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -8,10 +7,10 @@ import {
   Receipt,
   Upload,
   Wallet,
-  TrendingUp,
   BarChart3,
-  Menu,
   Landmark,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFinanceStore } from "@/store/finance-store";
@@ -19,12 +18,11 @@ import { useT } from "@/lib/i18n";
 
 const NAV_ITEMS = [
   { href: "/", icon: LayoutDashboard, key: "nav.dashboard" },
-  { href: "/accounts", icon: Landmark, key: "nav.accounts" },
   { href: "/transactions", icon: Receipt, key: "nav.transactions" },
-  { href: "/import", icon: Upload, key: "nav.import" },
+  { href: "/accounts", icon: Landmark, key: "nav.accounts" },
   { href: "/buckets", icon: Wallet, key: "nav.buckets" },
-  { href: "/investments", icon: TrendingUp, key: "nav.investments" },
   { href: "/reports", icon: BarChart3, key: "nav.reports" },
+  { href: "/import", icon: Upload, key: "nav.import" },
 ] as const;
 
 export function Sidebar() {
@@ -39,86 +37,92 @@ export function Sidebar() {
         sidebarCollapsed ? "w-[52px]" : "w-[220px]"
       )}
     >
-      {/* Logo */}
-      <div className="flex h-[52px] items-center gap-2.5 px-3 shadow-[inset_0_-1px_0_color-mix(in_srgb,var(--app-shell-border)_30%,transparent)]">
+      {/* Header: logo (expanded) + collapse button pinned top-right */}
+      <div
+        className={cn(
+          "flex h-[52px] items-center shadow-[inset_0_-1px_0_color-mix(in_srgb,var(--app-shell-border)_30%,transparent)]",
+          sidebarCollapsed ? "justify-center px-2" : "justify-between px-3"
+        )}
+      >
+        {!sidebarCollapsed && (
+          <div className="flex items-center gap-2 overflow-hidden">
+            <div className="flex shrink-0 items-center justify-center overflow-hidden rounded-md">
+              <span
+                aria-hidden="true"
+                className="theme-logo-mark block h-[34px] w-[34px] rounded-md animate-logo-reveal"
+              />
+            </div>
+            <div className="flex shrink-0 items-center overflow-hidden">
+              <span
+                aria-hidden="true"
+                className="theme-logo-wordmark block h-[26px] w-[90px]"
+              />
+            </div>
+          </div>
+        )}
         <button
           onClick={toggleSidebar}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[color:var(--app-text-subtle)] transition-colors hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text-muted)]"
           aria-label={t("tooltip.toggleSidebar")}
           title={t("tooltip.toggleSidebar")}
         >
-          <Menu size={16} />
+          {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
         </button>
-        {!sidebarCollapsed && (
-          <div className="flex items-center gap-2 overflow-hidden">
-            <div className="flex shrink-0 items-center justify-center overflow-hidden rounded-md">
-              <Image 
-                src="/logo.png" 
-                alt="Meowsliver Logo" 
-                width={34} 
-                height={34}
-                className="rounded-md object-cover animate-logo-reveal"
-                unoptimized
-              />
-            </div>
-            <div className="flex shrink-0 items-center overflow-hidden">
-              <Image
-                src="/logo_text.png"
-                alt="Meowsliver"
-                width={90}
-                height={26}
-                className="object-contain"
-                unoptimized
-              />
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
-        {NAV_ITEMS.map((item) => {
-          const isActive =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(item.href);
-          const label = t(item.key);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={sidebarCollapsed ? label : undefined}
-              className={cn(
-                "group flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] font-medium transition-all duration-150",
-                isActive
-                  ? "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)]"
-                  : "text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
-              )}
-            >
-              <item.icon
-                size={16}
-                className={cn(
-                  "shrink-0 transition-transform duration-150",
-                  !isActive && "group-hover:scale-110"
+      <nav
+        className={cn(
+          "flex-1 overflow-y-auto pb-2 pt-3",
+          sidebarCollapsed ? "px-2" : "pl-0 pr-2"
+        )}
+      >
+        {!sidebarCollapsed && (
+          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--app-text-subtle)]">
+            Navigation
+          </p>
+        )}
+        <div className={cn("space-y-0.5", sidebarCollapsed && "px-0")}>
+          {NAV_ITEMS.map((item) => {
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
+            const label = t(item.key);
+            return (
+              <div key={item.href} className="relative">
+                {/* Active left indicator — hangs at the sidebar's left edge */}
+                {isActive && (
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[color:var(--app-brand)]"
+                  />
                 )}
-              />
-              {!sidebarCollapsed && <span className="truncate">{label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Footer */}
-      {!sidebarCollapsed && (
-        <div className="p-3 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--app-shell-border)_30%,transparent)]">
-          <p className="text-[11px] text-[color:var(--app-text-subtle)]">
-            {t("app.version")}
-          </p>
-          <p className="text-[11px] text-[color:var(--app-text-subtle)]">
-            {t("brand.tagline")}
-          </p>
+                <Link
+                  href={item.href}
+                  title={sidebarCollapsed ? label : undefined}
+                  className={cn(
+                    "group flex h-9 items-center rounded-lg text-[13px] font-medium transition-all duration-150",
+                    sidebarCollapsed ? "justify-center px-0" : "gap-2.5 pl-3 pr-2",
+                    isActive
+                      ? "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)]"
+                      : "text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
+                  )}
+                >
+                  <item.icon
+                    size={16}
+                    className={cn(
+                      "shrink-0 transition-transform duration-150",
+                      !isActive && "group-hover:scale-110"
+                    )}
+                  />
+                  {!sidebarCollapsed && <span className="truncate">{label}</span>}
+                </Link>
+              </div>
+            );
+          })}
         </div>
-      )}
+      </nav>
     </aside>
   );
 }

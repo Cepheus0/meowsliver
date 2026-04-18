@@ -150,6 +150,36 @@ body {
 .theme-border-strong { border-color: var(--app-border-strong); }
 .theme-dashed-border { border-color: var(--app-dashed-border); }
 
+.theme-logo-mark {
+  background-image: url("/logo.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.theme-logo-wordmark {
+  background-image: url("/logo_text.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.theme-logo-splash {
+  mix-blend-mode: multiply;
+}
+
+.dark .theme-logo-mark {
+  background-image: url("/logo_dark_theme.png");
+}
+
+.dark .theme-logo-wordmark {
+  background-image: url("/logo_text_dark_theme.png");
+}
+
+.dark .theme-logo-splash {
+  mix-blend-mode: normal;
+}
+
 /* ── Selection ───────────────────────────────────── */
 ::selection {
   background: var(--app-selection);
