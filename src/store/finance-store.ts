@@ -45,6 +45,10 @@ interface FinanceStore {
   accountsExpanded: boolean;
   toggleAccountsExpanded: () => void;
 
+  // Savings-goal ordering (client-only; goals live on the server)
+  bucketOrder: number[];
+  setBucketOrder: (order: number[]) => void;
+
   // Imported transactions
   importedTransactions: Transaction[];
   addTransaction: (txn: Transaction) => void;
@@ -92,6 +96,9 @@ export const useFinanceStore = create<FinanceStore>()(
       accountsExpanded: false,
       toggleAccountsExpanded: () =>
         set((s) => ({ accountsExpanded: !s.accountsExpanded })),
+
+      bucketOrder: [],
+      setBucketOrder: (order) => set({ bucketOrder: order }),
 
       // Imported transactions
       importedTransactions: [],
@@ -164,6 +171,7 @@ export const useFinanceStore = create<FinanceStore>()(
         language: state.language,
         accountOrder: state.accountOrder,
         accountsExpanded: state.accountsExpanded,
+        bucketOrder: state.bucketOrder,
       }),
     }
   )

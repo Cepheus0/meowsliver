@@ -592,7 +592,7 @@ export default function SavingsGoalDetailPage() {
           },
           {
             icon: <PiggyBank size={14} />,
-            label: `ยอดปัจจุบัน ${formatBaht(detail.goal.currentAmount)}`,
+            label: `ยอดปัจจุบัน ${formatBaht(detail.metrics.currentAmount)}`,
             tone: "brand",
           },
           {

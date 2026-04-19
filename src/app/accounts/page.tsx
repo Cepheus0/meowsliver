@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   Archive,
+  ArchiveRestore,
   ArrowRight,
   ChevronRight,
   PencilLine,
@@ -21,6 +22,7 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import {
@@ -71,6 +73,7 @@ export default function AccountsPage() {
   const [error, setError] = useState<string | null>(null);
   // selectedId === null means "use default", which the memo resolves below
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [pendingArchive, setPendingArchive] = useState<Account | null>(null);
 
   const { active, archived, totals, grouped } = useMemo(() => {
     const active = accounts
@@ -172,6 +175,37 @@ export default function AccountsPage() {
         submitError instanceof Error
           ? submitError.message
           : tr("ไม่สามารถบันทึกบัญชีได้", "Could not save account")
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleArchive = async () => {
+    if (!pendingArchive) return;
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/accounts/${pendingArchive.id}`, {
+        method: "DELETE",
+      });
+      const data = (await response.json()) as {
+        account?: Account;
+        error?: string;
+      };
+      if (!response.ok || !data.account) {
+        throw new Error(
+          data.error ?? tr("ไม่สามารถเก็บบัญชีได้", "Could not archive account")
+        );
+      }
+      upsertAccount(data.account);
+      setSelectedId(null);
+      setPendingArchive(null);
+    } catch (e) {
+      console.error(e);
+      setError(
+        e instanceof Error
+          ? e.message
+          : tr("ไม่สามารถเก็บบัญชีได้", "Could not archive account")
       );
     } finally {
       setBusy(false);
@@ -285,6 +319,7 @@ export default function AccountsPage() {
                 account={selectedAccount}
                 transactions={transactions}
                 onEdit={() => setModal({ mode: "edit", account: selectedAccount })}
+                onArchive={() => setPendingArchive(selectedAccount)}
               />
             ) : (
               <Card>
@@ -340,14 +375,17 @@ export default function AccountsPage() {
                       </p>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => handleUnarchive(account)}
-                    disabled={busy}
-                  >
-                    {tr("กู้คืน", "Restore")}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleUnarchive(account)}
+                      disabled={busy}
+                    >
+                      <ArchiveRestore size={14} />
+                      {tr("กู้คืน", "Restore")}
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
@@ -364,6 +402,24 @@ export default function AccountsPage() {
           busy={busy}
         />
       )}
+
+      <ConfirmDialog
+        open={pendingArchive !== null}
+        busy={busy}
+        tone="warning"
+        title={tr("เก็บบัญชีนี้ขึ้นหิ้ง?", "Archive this account?")}
+        description={
+          pendingArchive
+            ? tr(
+                `"${pendingArchive.name}" จะถูกย้ายไปหมวดบัญชีที่เก็บไว้ คุณสามารถกู้คืนได้ภายหลัง`,
+                `"${pendingArchive.name}" will move to archived accounts. You can restore it later.`
+              )
+            : undefined
+        }
+        confirmLabel={tr("เก็บขึ้นหิ้ง", "Archive")}
+        onCancel={() => setPendingArchive(null)}
+        onConfirm={handleArchive}
+      />
     </div>
   );
 }
@@ -517,10 +573,12 @@ function AccountDetailPanel({
   account,
   transactions,
   onEdit,
+  onArchive,
 }: {
   account: Account;
   transactions: Transaction[];
   onEdit: () => void;
+  onArchive: () => void;
 }) {
   const tr = useTr();
   const typeLabels = useAccountTypeLabels();
@@ -618,6 +676,14 @@ function AccountDetailPanel({
           >
             <PencilLine size={12} />
             {tr("แก้ไข", "Edit")}
+          </button>
+          <button
+            onClick={onArchive}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-500/70"
+            title={tr("เก็บบัญชีนี้ขึ้นหิ้ง", "Archive this account")}
+          >
+            <Archive size={12} />
+            {tr("เก็บ", "Archive")}
           </button>
         </div>
       </div>

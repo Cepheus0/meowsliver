@@ -1,21 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Archive,
   ArrowRight,
+  GripVertical,
   PiggyBank,
   Plus,
   Sparkles,
   Target,
+  Trash2,
   TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
+import { useDragReorder } from "@/lib/use-drag-reorder";
+import { useFinanceStore } from "@/store/finance-store";
 import {
   DEFAULT_GOAL_COLOR,
   DEFAULT_GOAL_ICON,
@@ -57,11 +62,15 @@ function PortfolioStatCard({
 export default function BucketsPage() {
   const tr = useTr();
   const language = useLanguage();
+  const bucketOrder = useFinanceStore((s) => s.bucketOrder);
+  const setBucketOrder = useFinanceStore((s) => s.setBucketOrder);
   const [portfolio, setPortfolio] = useState<SavingsGoalsPortfolio | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [form, setForm] = useState({
     name: "",
     category: "custom" as SavingsGoalCategory,
@@ -99,6 +108,59 @@ export default function BucketsPage() {
   useEffect(() => {
     void loadPortfolio();
   }, []);
+
+  const orderedGoals = useMemo(() => {
+    if (!portfolio) return [];
+    const byId = new Map(portfolio.goals.map((g) => [g.id, g] as const));
+    const result: typeof portfolio.goals = [];
+    const seen = new Set<number>();
+    for (const id of bucketOrder) {
+      const g = byId.get(id);
+      if (g) {
+        result.push(g);
+        seen.add(id);
+      }
+    }
+    for (const g of portfolio.goals) {
+      if (!seen.has(g.id)) result.push(g);
+    }
+    return result;
+  }, [portfolio, bucketOrder]);
+
+  const goalIds = useMemo(() => orderedGoals.map((g) => g.id), [orderedGoals]);
+  const dr = useDragReorder<number>(goalIds, setBucketOrder);
+
+  const pendingGoal = pendingDeleteId
+    ? portfolio?.goals.find((g) => g.id === pendingDeleteId) ??
+      portfolio?.archivedGoals.find((g) => g.id === pendingDeleteId) ??
+      null
+    : null;
+
+  const handleDeleteGoal = async () => {
+    if (!pendingDeleteId) return;
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/savings-goals/${pendingDeleteId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? tr("ลบเป้าหมายไม่สำเร็จ", "Could not delete goal"));
+      }
+      setBucketOrder(bucketOrder.filter((id) => id !== pendingDeleteId));
+      setPendingDeleteId(null);
+      await loadPortfolio();
+    } catch (deleteError) {
+      console.error(deleteError);
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : tr("ลบเป้าหมายไม่สำเร็จ", "Could not delete goal")
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const applyPreset = (presetIndex: number) => {
     const preset = SAVINGS_GOAL_PRESETS[presetIndex];
@@ -512,12 +574,49 @@ export default function BucketsPage() {
               />
             </Card>
           ) : (
+            <>
+              {orderedGoals.length > 1 && (
+                <p className="-mt-1 flex items-center gap-1.5 text-[11px] text-[color:var(--app-text-subtle)]">
+                  <GripVertical size={11} />
+                  {tr("ลากการ์ดเพื่อจัดเรียงใหม่", "Drag cards to reorder")}
+                </p>
+              )}
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-              {portfolio.goals.map((goal) => {
+              {orderedGoals.map((goal) => {
                 const progressWidth = Math.min(goal.progressPercent, 100);
 
                 return (
-                  <Link key={goal.id} href={`/buckets/${goal.id}`} className="block">
+                  <div
+                    key={goal.id}
+                    {...dr.itemProps(goal.id)}
+                    className={`group relative ${
+                      dr.isDragging(goal.id) ? "opacity-40" : ""
+                    } ${
+                      dr.isOver(goal.id)
+                        ? "ring-2 ring-[color:var(--app-brand-text)] ring-offset-2 ring-offset-[color:var(--app-surface)] rounded-2xl"
+                        : ""
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setPendingDeleteId(goal.id);
+                      }}
+                      aria-label={tr("ลบเป้าหมาย", "Delete goal")}
+                      title={tr("ลบเป้าหมาย", "Delete goal")}
+                      className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-transparent bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)] opacity-0 shadow-sm transition-all hover:border-[color:var(--expense-soft)] hover:bg-[color:var(--expense-soft)] hover:text-[color:var(--expense-text)] group-hover:opacity-100 focus:opacity-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                    <span
+                      className="pointer-events-none absolute left-3 top-3 z-10 opacity-0 transition-opacity group-hover:opacity-60"
+                      aria-hidden
+                    >
+                      <GripVertical size={14} className="text-[color:var(--app-text-subtle)]" />
+                    </span>
+                    <Link href={`/buckets/${goal.id}`} className="block">
                     <Card className="overflow-hidden transition-all hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)] hover:shadow-md">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-4">
@@ -616,9 +715,11 @@ export default function BucketsPage() {
                       </div>
                     </Card>
                   </Link>
+                  </div>
                 );
               })}
             </div>
+            </>
           )}
 
           {portfolio.archivedGoals.length > 0 && (
@@ -630,7 +731,21 @@ export default function BucketsPage() {
 
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {portfolio.archivedGoals.map((goal) => (
-                  <Link key={goal.id} href={`/buckets/${goal.id}`} className="block">
+                  <div key={goal.id} className="group relative">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setPendingDeleteId(goal.id);
+                      }}
+                      aria-label={tr("ลบเป้าหมาย", "Delete goal")}
+                      title={tr("ลบเป้าหมายถาวร", "Delete goal permanently")}
+                      className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)] opacity-0 shadow-sm transition-all hover:bg-[color:var(--expense-soft)] hover:text-[color:var(--expense-text)] group-hover:opacity-100 focus:opacity-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                    <Link href={`/buckets/${goal.id}`} className="block">
                     <Card className="transition-all hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)] hover:shadow-md">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-4">
@@ -662,12 +777,31 @@ export default function BucketsPage() {
                       </div>
                     </Card>
                   </Link>
+                  </div>
                 ))}
               </div>
             </div>
           )}
         </>
       ) : null}
+
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        busy={isDeleting}
+        tone="danger"
+        title={tr("ลบเป้าหมายการออม?", "Delete savings goal?")}
+        description={
+          pendingGoal
+            ? tr(
+                `เป้าหมาย "${pendingGoal.name}" และรายการทั้งหมดจะถูกลบถาวร การกระทำนี้ย้อนกลับไม่ได้`,
+                `The goal "${pendingGoal.name}" and all its entries will be permanently deleted. This cannot be undone.`
+              )
+            : undefined
+        }
+        confirmLabel={tr("ลบถาวร", "Delete permanently")}
+        onCancel={() => setPendingDeleteId(null)}
+        onConfirm={handleDeleteGoal}
+      />
     </div>
   );
 }

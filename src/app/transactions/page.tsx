@@ -11,6 +11,7 @@ import {
   getTransactionTypeLabel,
 } from "@/lib/transaction-presentation";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PageHeader } from "@/components/ui/PageHeader";
 import {
   CalendarDays,
@@ -22,6 +23,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sliders,
+  Trash2,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TransactionDetailDrawer } from "@/components/transactions/TransactionDetailDrawer";
@@ -66,6 +68,7 @@ export default function TransactionsPage() {
   const [mutationBusy, setMutationBusy] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [pendingDeleteTx, setPendingDeleteTx] = useState<Transaction | null>(null);
 
   /**
    * Dimension breakdowns are computed from the *unfiltered* year dataset so the
@@ -187,17 +190,13 @@ export default function TransactionsPage() {
     }
   };
 
-  const handleDelete = async (transaction: Transaction) => {
-    if (
-      !confirm(
-        tr(
-          `ลบรายการ "${transaction.category}" ใช่หรือไม่?`,
-          `Delete transaction "${transaction.category}"?`
-        )
-      )
-    )
-      return;
+  const handleDelete = (transaction: Transaction) => {
+    setPendingDeleteTx(transaction);
+  };
 
+  const confirmDeleteTx = async () => {
+    if (!pendingDeleteTx) return;
+    const transaction = pendingDeleteTx;
     setMutationBusy(true);
     setMutationError(null);
 
@@ -215,6 +214,7 @@ export default function TransactionsPage() {
 
       await refreshAfterMutation(Number(transaction.date.slice(0, 4)));
       setSelectedTx(null);
+      setPendingDeleteTx(null);
     } catch (error) {
       setMutationError(
         error instanceof Error
@@ -464,6 +464,7 @@ export default function TransactionsPage() {
                     <th className="py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
                       {tr("จำนวน", "Amount")}
                     </th>
+                    <th className="w-10 py-3" aria-label={tr("การกระทำ", "Actions")} />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[color:var(--app-divider-soft)]">
@@ -481,7 +482,7 @@ export default function TransactionsPage() {
                       <tr
                         key={tx.id}
                         onClick={() => setSelectedTx(tx)}
-                        className="cursor-pointer transition-colors hover:bg-[color:var(--app-surface-soft)]"
+                        className="group cursor-pointer transition-colors hover:bg-[color:var(--app-surface-soft)]"
                       >
                         <td className="whitespace-nowrap py-3 pr-4">
                           <p className="text-sm font-medium text-[color:var(--app-text)]">
@@ -525,6 +526,20 @@ export default function TransactionsPage() {
                             {getTransactionAmountPrefix(tx.type)}
                             {formatBaht(tx.amount)}
                           </span>
+                        </td>
+                        <td className="py-3 pl-2 pr-1 text-right">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(tx);
+                            }}
+                            aria-label={tr("ลบรายการ", "Delete transaction")}
+                            title={tr("ลบรายการ", "Delete transaction")}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[color:var(--app-text-muted)] opacity-0 transition-all hover:bg-[color:var(--expense-soft)] hover:text-[color:var(--expense-text)] group-hover:opacity-100 focus:opacity-100"
+                          >
+                            <Trash2 size={13} />
+                          </button>
                         </td>
                       </tr>
                     );
@@ -623,6 +638,26 @@ export default function TransactionsPage() {
           onSubmit={handleEditSubmit}
         />
       ) : null}
+
+      <ConfirmDialog
+        open={pendingDeleteTx !== null}
+        busy={mutationBusy}
+        tone="danger"
+        title={tr("ลบรายการนี้?", "Delete this transaction?")}
+        description={
+          pendingDeleteTx
+            ? tr(
+                `"${pendingDeleteTx.category}" (${formatBaht(pendingDeleteTx.amount)}) จะถูกลบถาวร`,
+                `"${pendingDeleteTx.category}" (${formatBaht(pendingDeleteTx.amount)}) will be permanently removed.`
+              )
+            : undefined
+        }
+        confirmLabel={tr("ลบ", "Delete")}
+        onCancel={() => {
+          if (!mutationBusy) setPendingDeleteTx(null);
+        }}
+        onConfirm={confirmDeleteTx}
+      />
     </div>
   );
 }
