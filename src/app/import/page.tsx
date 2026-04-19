@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
 import { fetchAccountsFromApi } from "@/lib/client/finance-sync";
 import { cn, formatBaht } from "@/lib/utils";
@@ -39,16 +40,15 @@ import {
 import {
   canReviewPreviewRow,
   countPendingConflictRows,
-  IMPORT_REVIEW_ACTION_LABELS,
+  getImportReviewActionLabel,
 } from "@/lib/import-review";
 import {
   getTransactionAmountPrefix,
   getTransactionTypeLabel,
 } from "@/lib/transaction-presentation";
+import { useLanguage, useTr } from "@/lib/i18n";
 
 type ImportStep = "upload" | "mapping" | "preview" | "done";
-
-const STEP_LABELS = ["อัปโหลดไฟล์", "จับคู่คอลัมน์", "ตรวจสอบข้อมูล", "เสร็จสิ้น"];
 
 interface ImportStats extends ImportPreviewSummary {
   committedRows: number;
@@ -91,51 +91,24 @@ const TRANSACTION_TYPE_AMOUNT_CLASS: Record<
   transfer: "text-[color:var(--app-brand-text)]",
 };
 
-const PREVIEW_STATUS_META: Record<
+const PREVIEW_STATUS_CLASSES: Record<
   ImportPreviewRow["previewStatus"],
-  { label: string; className: string }
+  string
 > = {
-  new: {
-    label: "ใหม่",
-    className:
-      "bg-[color:var(--income-soft)] text-[color:var(--income-text)]",
-  },
-  duplicate: {
-    label: "ซ้ำ",
-    className:
-      "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)]",
-  },
-  conflict: {
-    label: "ต้องตรวจสอบ",
-    className:
-      "bg-[color:var(--neutral-soft)] text-[color:var(--neutral)]",
-  },
-  skipped: {
-    label: "ข้าม",
-    className:
-      "bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)]",
-  },
+  new: "bg-[color:var(--income-soft)] text-[color:var(--income-text)]",
+  duplicate:
+    "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)]",
+  conflict: "bg-[color:var(--neutral-soft)] text-[color:var(--neutral)]",
+  skipped:
+    "bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)]",
 };
 
-const REVIEW_ACTION_META: Record<
-  ImportReviewAction,
-  { label: string; className: string }
-> = {
-  import_as_new: {
-    label: "นำเข้าเป็นรายการใหม่",
-    className:
-      "border-[color:var(--income-soft)] bg-[color:var(--income-soft)] text-[color:var(--income-text)]",
-  },
-  keep_existing: {
-    label: "ใช้รายการเดิม",
-    className:
-      "border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)]",
-  },
-  skip: {
-    label: "ข้ามรายการนี้",
-    className:
-      "border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)]",
-  },
+const REVIEW_ACTION_CLASSES: Record<ImportReviewAction, string> = {
+  import_as_new:
+    "border-[color:var(--income-soft)] bg-[color:var(--income-soft)] text-[color:var(--income-text)]",
+  keep_existing:
+    "border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)]",
+  skip: "border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)]",
 };
 
 function recalculateImportStatsFromRows(
@@ -151,38 +124,65 @@ function recalculateImportStatsFromRows(
   };
 }
 
-/** The mapping fields we need users to confirm */
-const MAPPING_FIELDS: {
+type MappingField = {
   key: keyof ColumnMapping;
   label: string;
   required: boolean;
   description: string;
-}[] = [
-  { key: "date", label: "วันที่", required: true, description: "คอลัมน์วันที่ของรายการ" },
-  { key: "time", label: "เวลา", required: false, description: "เวลาในแต่ละรายการ (ถ้ามี)" },
-  {
-    key: "amount",
-    label: "จำนวนเงิน",
-    required: true,
-    description: "จำนวนเงินรายการ (ติดลบ = รายจ่าย, บวก = รายรับ, ย้ายเงินควรมีคอลัมน์ประเภท)"
-  },
-  {
-    key: "type",
-    label: "ประเภท",
-    required: false,
-    description: "รายรับ / รายจ่าย / ย้ายเงิน (ถ้าไม่มี จะดูจากเครื่องหมาย +/- เฉพาะรายรับและรายจ่าย)"
-  },
-  { key: "category", label: "หมวดหมู่", required: false, description: "หมวดหมู่ เช่น อาหาร, ช้อปปิ้ง" },
-  { key: "note", label: "โน้ต / หมายเหตุ", required: false, description: "รายละเอียดเพิ่มเติม" },
-  { key: "paymentChannel", label: "ช่องทางจ่าย", required: false, description: "บัตรเครดิต, บัญชี, เงินสด" },
-  { key: "payFrom", label: "จ่ายจาก", required: false, description: "ชื่อบัตร/บัญชีที่จ่าย" },
-  { key: "recipient", label: "ผู้รับ", required: false, description: "ร้านค้า/ผู้รับเงิน" },
-  { key: "tag", label: "แท็ก", required: false, description: "แท็กเพิ่มเติม" },
-];
+};
+
+function buildMappingFields(tr: (th: string, en: string) => string): MappingField[] {
+  return [
+    { key: "date", label: tr("วันที่", "Date"), required: true, description: tr("คอลัมน์วันที่ของรายการ", "Transaction date column") },
+    { key: "time", label: tr("เวลา", "Time"), required: false, description: tr("เวลาในแต่ละรายการ (ถ้ามี)", "Time of each row (optional)") },
+    {
+      key: "amount",
+      label: tr("จำนวนเงิน", "Amount"),
+      required: true,
+      description: tr(
+        "จำนวนเงินรายการ (ติดลบ = รายจ่าย, บวก = รายรับ, ย้ายเงินควรมีคอลัมน์ประเภท)",
+        "Row amount (negative = expense, positive = income; transfers need a type column)"
+      ),
+    },
+    {
+      key: "type",
+      label: tr("ประเภท", "Type"),
+      required: false,
+      description: tr(
+        "รายรับ / รายจ่าย / ย้ายเงิน (ถ้าไม่มี จะดูจากเครื่องหมาย +/- เฉพาะรายรับและรายจ่าย)",
+        "Income / Expense / Transfer (otherwise inferred from +/- for income and expense only)"
+      ),
+    },
+    { key: "category", label: tr("หมวดหมู่", "Category"), required: false, description: tr("หมวดหมู่ เช่น อาหาร, ช้อปปิ้ง", "Category, e.g. Food, Shopping") },
+    { key: "note", label: tr("โน้ต / หมายเหตุ", "Note"), required: false, description: tr("รายละเอียดเพิ่มเติม", "Additional details") },
+    { key: "paymentChannel", label: tr("ช่องทางจ่าย", "Payment channel"), required: false, description: tr("บัตรเครดิต, บัญชี, เงินสด", "Credit card, bank, cash") },
+    { key: "payFrom", label: tr("จ่ายจาก", "Pay from"), required: false, description: tr("ชื่อบัตร/บัญชีที่จ่าย", "Name of paying card/account") },
+    { key: "recipient", label: tr("ผู้รับ", "Recipient"), required: false, description: tr("ร้านค้า/ผู้รับเงิน", "Merchant / recipient") },
+    { key: "tag", label: tr("แท็ก", "Tag"), required: false, description: tr("แท็กเพิ่มเติม", "Additional tag") },
+  ];
+}
 
 export default function ImportPage() {
   const router = useRouter();
+  const tr = useTr();
+  const language = useLanguage();
   const { replaceImportedTransactions, setAccounts } = useFinanceStore();
+
+  const STEP_LABELS = [
+    tr("อัปโหลดไฟล์", "Upload file"),
+    tr("จับคู่คอลัมน์", "Map columns"),
+    tr("ตรวจสอบข้อมูล", "Review data"),
+    tr("เสร็จสิ้น", "Done"),
+  ];
+
+  const MAPPING_FIELDS = buildMappingFields(tr);
+
+  const PREVIEW_STATUS_LABELS: Record<ImportPreviewRow["previewStatus"], string> = {
+    new: tr("ใหม่", "New"),
+    duplicate: tr("ซ้ำ", "Duplicate"),
+    conflict: tr("ต้องตรวจสอบ", "Needs review"),
+    skipped: tr("ข้าม", "Skipped"),
+  };
 
   // Wizard state
   const [step, setStep] = useState<ImportStep>("upload");
@@ -215,12 +215,17 @@ export default function ImportPage() {
       // Validate file type
       const ext = file.name.split(".").pop()?.toLowerCase();
       if (!ext || !["xlsx", "xls", "csv"].includes(ext)) {
-        throw new Error("รองรับเฉพาะไฟล์ .xlsx, .xls, .csv เท่านั้น");
+        throw new Error(
+          tr(
+            "รองรับเฉพาะไฟล์ .xlsx, .xls, .csv เท่านั้น",
+            "Only .xlsx, .xls, .csv files are supported"
+          )
+        );
       }
 
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        throw new Error("ไฟล์ใหญ่เกินไป (สูงสุด 10MB)");
+        throw new Error(tr("ไฟล์ใหญ่เกินไป (สูงสุด 10MB)", "File is too large (max 10MB)"));
       }
 
       setFileName(file.name);
@@ -229,11 +234,21 @@ export default function ImportPage() {
       const result = await parseFile(file);
 
       if (result.rows.length === 0) {
-        throw new Error("ไม่พบข้อมูลในไฟล์ กรุณาตรวจสอบว่าไฟล์มีข้อมูลอยู่");
+        throw new Error(
+          tr(
+            "ไม่พบข้อมูลในไฟล์ กรุณาตรวจสอบว่าไฟล์มีข้อมูลอยู่",
+            "No data found in file. Please verify the file has content."
+          )
+        );
       }
 
       if (result.columns.length === 0) {
-        throw new Error("ไม่พบคอลัมน์ในไฟล์ กรุณาตรวจสอบว่าแถวแรกเป็นหัวคอลัมน์");
+        throw new Error(
+          tr(
+            "ไม่พบคอลัมน์ในไฟล์ กรุณาตรวจสอบว่าแถวแรกเป็นหัวคอลัมน์",
+            "No columns found. Please check that the first row is the header."
+          )
+        );
       }
 
       setParseResult(result);
@@ -246,11 +261,15 @@ export default function ImportPage() {
 
       setStep("mapping");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการอ่านไฟล์");
+      setError(
+        err instanceof Error
+          ? err.message
+          : tr("เกิดข้อผิดพลาดในการอ่านไฟล์", "An error occurred while reading the file")
+      );
     } finally {
       setIsProcessing(false);
     }
-  }, []);
+  }, [tr]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -316,7 +335,10 @@ export default function ImportPage() {
         const payload = (await response.json().catch(() => null)) as
           | { error?: string }
           | null;
-        throw new Error(payload?.error ?? "ไม่สามารถสร้าง preview import ได้");
+        throw new Error(
+          payload?.error ??
+            tr("ไม่สามารถสร้าง preview import ได้", "Could not build import preview")
+        );
       }
 
       const result = (await response.json()) as ImportPreviewResponse;
@@ -329,11 +351,15 @@ export default function ImportPage() {
       });
       setStep("preview");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "ไม่สามารถสร้าง preview import ได้");
+      setError(
+        err instanceof Error
+          ? err.message
+          : tr("ไม่สามารถสร้าง preview import ได้", "Could not build import preview")
+      );
     } finally {
       setIsPreviewLoading(false);
     }
-  }, [fileName, mapping, parseResult]);
+  }, [fileName, mapping, parseResult, tr]);
 
   // === Step 3 → Done: Confirm import ===
 
@@ -358,7 +384,10 @@ export default function ImportPage() {
         const payload = (await response.json().catch(() => null)) as
           | { error?: string }
           | null;
-        throw new Error(payload?.error ?? "ไม่สามารถยืนยันการนำเข้าได้");
+        throw new Error(
+          payload?.error ??
+            tr("ไม่สามารถยืนยันการนำเข้าได้", "Could not confirm import")
+        );
       }
 
       const result = (await response.json()) as ImportCommitResponse;
@@ -372,11 +401,15 @@ export default function ImportPage() {
       });
       setStep("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "ไม่สามารถยืนยันการนำเข้าได้");
+      setError(
+        err instanceof Error
+          ? err.message
+          : tr("ไม่สามารถยืนยันการนำเข้าได้", "Could not confirm import")
+      );
     } finally {
       setIsCommitting(false);
     }
-  }, [previewRunId, replaceImportedTransactions, setAccounts]);
+  }, [previewRunId, replaceImportedTransactions, setAccounts, tr]);
 
   const reviewConflictRow = useCallback(
     async (rowNumber: number, action: ImportReviewAction) => {
@@ -408,7 +441,11 @@ export default function ImportPage() {
 
         if (!response.ok || !payload.rowNumber || !payload.previewStatus) {
           throw new Error(
-            payload.error ?? "ไม่สามารถบันทึกการตัดสินใจสำหรับรายการนี้ได้"
+            payload.error ??
+              tr(
+                "ไม่สามารถบันทึกการตัดสินใจสำหรับรายการนี้ได้",
+                "Could not save the decision for this row"
+              )
           );
         }
 
@@ -441,13 +478,16 @@ export default function ImportPage() {
         setError(
           reviewError instanceof Error
             ? reviewError.message
-            : "ไม่สามารถบันทึกการตัดสินใจสำหรับรายการนี้ได้"
+            : tr(
+                "ไม่สามารถบันทึกการตัดสินใจสำหรับรายการนี้ได้",
+                "Could not save the decision for this row"
+              )
         );
       } finally {
         setReviewingRowNumber(null);
       }
     },
-    [previewRunId]
+    [previewRunId, tr]
   );
 
   // === Reset ===
@@ -474,66 +514,99 @@ export default function ImportPage() {
   const reviewableRows = previewRows.filter(canReviewPreviewRow);
   const confirmActionLabel =
     pendingConflictRows > 0
-      ? `เคลียร์ ${pendingConflictRows} conflict ก่อน`
+      ? tr(
+          `เคลียร์ ${pendingConflictRows} conflict ก่อน`,
+          `Resolve ${pendingConflictRows} conflict${pendingConflictRows === 1 ? "" : "s"} first`
+        )
       : importStats.newRows > 0
-      ? `ยืนยันเพิ่ม ${importStats.newRows.toLocaleString()} รายการใหม่`
-      : "บันทึกผลตรวจสอบ";
+      ? tr(
+          `ยืนยันเพิ่ม ${importStats.newRows.toLocaleString()} รายการใหม่`,
+          `Confirm adding ${importStats.newRows.toLocaleString()} new row${importStats.newRows === 1 ? "" : "s"}`
+        )
+      : tr("บันทึกผลตรวจสอบ", "Save review result");
 
   // === Step indicator index ===
   const stepIndex = ["upload", "mapping", "preview", "done"].indexOf(step);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
-          นำเข้าข้อมูล
-        </h1>
-        <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-          Import Excel / CSV จาก เหมียวจด หรือแอปบัญชีอื่นๆ
-        </p>
-      </div>
+      <PageHeader
+        eyebrow={tr("IMPORT WORKFLOW", "IMPORT WORKFLOW")}
+        title={tr("นำเข้าข้อมูล", "Import data")}
+        description={tr(
+          "อัปโหลดไฟล์จาก เหมียวจด หรือ CSV/Excel อื่น ๆ แล้วให้ระบบจับคู่คอลัมน์ ตรวจ duplicate และเปิด conflict review ก่อน commit จริง",
+          "Upload a Meowjot export or other CSV/Excel file, then map columns, detect duplicates, and resolve conflicts before a real commit."
+        )}
+        meta={[
+          {
+            icon: <Upload size={14} />,
+            label: tr("รองรับ .xlsx / .xls / .csv", "Supports .xlsx / .xls / .csv"),
+            tone: "brand",
+          },
+          {
+            icon: <Sparkles size={14} />,
+            label: tr("มี auto-detect และ conflict review", "Includes auto-detect and conflict review"),
+          },
+          {
+            icon: <CheckCircle size={14} />,
+            label: fileName
+              ? tr(`ไฟล์ล่าสุด: ${fileName}`, `Current file: ${fileName}`)
+              : tr("ยังไม่ได้เลือกไฟล์", "No file selected yet"),
+            tone: fileName ? "success" : "neutral",
+          },
+        ]}
+        actions={
+          step !== "upload" ? (
+            <Button variant="secondary" onClick={resetWizard}>
+              <ArrowLeft size={16} />
+              {tr("เริ่มใหม่", "Start over")}
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Progress Steps */}
-      <div className="flex items-center gap-1">
-        {STEP_LABELS.map((label, i) => (
-          <div key={label} className="flex items-center gap-1">
-            <div className="flex items-center gap-2">
-              <div
-                className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors",
-                  i === stepIndex
-                    ? "bg-[color:var(--app-brand)] text-white"
-                    : i < stepIndex
-                      ? "bg-[color:var(--app-brand-soft-strong)] text-[color:var(--app-brand-text)]"
-                      : "bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-subtle)]"
-                )}
-              >
-                {i < stepIndex ? <CheckCircle size={16} /> : i + 1}
+      <div className="overflow-x-auto rounded-[24px] border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-4 shadow-[0_22px_60px_-48px_rgba(24,18,12,0.5)]">
+        <div className="flex min-w-max items-center gap-1">
+          {STEP_LABELS.map((label, i) => (
+            <div key={label} className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
+                <div
+                  className={cn(
+                    "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors",
+                    i === stepIndex
+                      ? "bg-[color:var(--app-brand)] text-white"
+                      : i < stepIndex
+                        ? "bg-[color:var(--app-brand-soft-strong)] text-[color:var(--app-brand-text)]"
+                        : "bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-subtle)]"
+                  )}
+                >
+                  {i < stepIndex ? <CheckCircle size={16} /> : i + 1}
+                </div>
+                <span
+                  className={cn(
+                    "hidden text-xs font-medium sm:block",
+                    i === stepIndex
+                      ? "text-[color:var(--app-brand-text)]"
+                      : "text-[color:var(--app-text-subtle)]"
+                  )}
+                >
+                  {label}
+                </span>
               </div>
-              <span
-                className={cn(
-                  "hidden text-xs font-medium sm:block",
-                  i === stepIndex
-                    ? "text-[color:var(--app-brand-text)]"
-                    : "text-[color:var(--app-text-subtle)]"
-                )}
-              >
-                {label}
-              </span>
+              {i < 3 && (
+                <div
+                  className={cn(
+                    "mx-1 h-0.5 w-6 sm:w-10",
+                    i < stepIndex
+                      ? "bg-[color:var(--app-brand)]"
+                      : "bg-[color:var(--app-border)]"
+                  )}
+                />
+              )}
             </div>
-            {i < 3 && (
-              <div
-                className={cn(
-                  "mx-1 h-0.5 w-6 sm:w-10",
-                  i < stepIndex
-                    ? "bg-[color:var(--app-brand)]"
-                    : "bg-[color:var(--app-border)]"
-                )}
-              />
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Error display */}
@@ -542,7 +615,7 @@ export default function ImportPage() {
           <FileWarning size={20} className="shrink-0 text-[color:var(--expense-text)]" />
           <div>
             <p className="text-sm font-medium text-[color:var(--expense-text)]">
-              เกิดข้อผิดพลาด
+              {tr("เกิดข้อผิดพลาด", "An error occurred")}
             </p>
             <p className="text-xs text-[color:var(--expense-text)] opacity-80">{error}</p>
           </div>
@@ -574,21 +647,24 @@ export default function ImportPage() {
               <>
                 <Loader2 size={48} className="mb-4 animate-spin text-[color:var(--app-brand)]" />
                 <p className="text-lg font-semibold text-[color:var(--app-text)]">
-                  กำลังอ่านไฟล์...
+                  {tr("กำลังอ่านไฟล์...", "Reading file...")}
                 </p>
               </>
             ) : (
               <>
                 <Upload size={48} className="mb-4 text-[color:var(--app-text-subtle)]" />
                 <p className="mb-2 text-lg font-semibold text-[color:var(--app-text)]">
-                  ลากไฟล์มาวางที่นี่
+                  {tr("ลากไฟล์มาวางที่นี่", "Drop your file here")}
                 </p>
                 <p className="mb-1 text-sm text-[color:var(--app-text-muted)]">
-                  รองรับ .xlsx, .xls, .csv (สูงสุด 10MB)
+                  {tr(
+                    "รองรับ .xlsx, .xls, .csv (สูงสุด 10MB)",
+                    "Supports .xlsx, .xls, .csv (max 10MB)"
+                  )}
                 </p>
                 <p className="mb-6 flex items-center gap-1.5 text-xs text-[color:var(--app-brand-text)]">
                   <Sparkles size={14} />
-                  ตรวจจับรูปแบบ เหมียวจด อัตโนมัติ
+                  {tr("ตรวจจับรูปแบบ เหมียวจด อัตโนมัติ", "Auto-detects Meowjot format")}
                 </p>
                 <label>
                   <input
@@ -599,7 +675,7 @@ export default function ImportPage() {
                   />
                   <span className="cursor-pointer rounded-xl bg-[color:var(--app-brand)] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[color:var(--app-brand-hover)]">
                     <Download size={16} className="mr-2 inline" />
-                    เลือกไฟล์
+                    {tr("เลือกไฟล์", "Choose file")}
                   </span>
                 </label>
               </>
@@ -614,7 +690,7 @@ export default function ImportPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileSpreadsheet size={16} />
-              จับคู่คอลัมน์ — {fileName}
+              {tr("จับคู่คอลัมน์", "Map columns")} — {fileName}
             </CardTitle>
             <button
               onClick={resetWizard}
@@ -630,10 +706,16 @@ export default function ImportPage() {
               <Sparkles size={18} className="shrink-0 text-[color:var(--income-text)]" />
               <div>
                 <p className="text-sm font-semibold text-[color:var(--income-text)]">
-                  ตรวจพบรูปแบบ เหมียวจด! (ความเชื่อมั่น {Math.round(confidence * 100)}%)
+                  {tr(
+                    `ตรวจพบรูปแบบ เหมียวจด! (ความเชื่อมั่น ${Math.round(confidence * 100)}%)`,
+                    `Meowjot format detected! (${Math.round(confidence * 100)}% confidence)`
+                  )}
                 </p>
                 <p className="text-xs text-[color:var(--income-text)] opacity-80">
-                  จับคู่คอลัมน์อัตโนมัติแล้ว — กรุณาตรวจสอบก่อนดำเนินการ
+                  {tr(
+                    "จับคู่คอลัมน์อัตโนมัติแล้ว — กรุณาตรวจสอบก่อนดำเนินการ",
+                    "Columns auto-mapped — please review before continuing"
+                  )}
                 </p>
               </div>
             </div>
@@ -642,11 +724,16 @@ export default function ImportPage() {
               <AlertTriangle size={18} className="shrink-0 text-[color:var(--neutral)]" />
               <div>
                 <p className="text-sm font-semibold text-[color:var(--neutral)]">
-                  ไม่ใช่รูปแบบ เหมียวจด — กรุณาจับคู่คอลัมน์เอง
+                  {tr(
+                    "ไม่ใช่รูปแบบ เหมียวจด — กรุณาจับคู่คอลัมน์เอง",
+                    "Not a Meowjot format — please map columns manually"
+                  )}
                 </p>
                 <p className="text-xs text-[color:var(--neutral)] opacity-80">
-                  พบ {parseResult.columns.length} คอลัมน์,{" "}
-                  {parseResult.totalRows} แถวข้อมูล (ชีท: {parseResult.sheetName})
+                  {tr(
+                    `พบ ${parseResult.columns.length} คอลัมน์, ${parseResult.totalRows} แถวข้อมูล (ชีท: ${parseResult.sheetName})`,
+                    `Found ${parseResult.columns.length} columns, ${parseResult.totalRows} rows (sheet: ${parseResult.sheetName})`
+                  )}
                 </p>
               </div>
             </div>
@@ -655,19 +742,19 @@ export default function ImportPage() {
           {/* File info */}
           <div className="mb-4 grid grid-cols-3 gap-3">
             <div className="rounded-lg bg-[color:var(--app-surface-soft)] p-3">
-              <p className="text-xs text-[color:var(--app-text-muted)]">จำนวนแถว</p>
+              <p className="text-xs text-[color:var(--app-text-muted)]">{tr("จำนวนแถว", "Rows")}</p>
               <p className="text-lg font-bold text-[color:var(--app-text)]">
                 {parseResult.totalRows.toLocaleString()}
               </p>
             </div>
             <div className="rounded-lg bg-[color:var(--app-surface-soft)] p-3">
-              <p className="text-xs text-[color:var(--app-text-muted)]">จำนวนคอลัมน์</p>
+              <p className="text-xs text-[color:var(--app-text-muted)]">{tr("จำนวนคอลัมน์", "Columns")}</p>
               <p className="text-lg font-bold text-[color:var(--app-text)]">
                 {parseResult.columns.length}
               </p>
             </div>
             <div className="rounded-lg bg-[color:var(--app-surface-soft)] p-3">
-              <p className="text-xs text-[color:var(--app-text-muted)]">ชีท</p>
+              <p className="text-xs text-[color:var(--app-text-muted)]">{tr("ชีท", "Sheet")}</p>
               <p className="truncate text-lg font-bold text-[color:var(--app-text)]">
                 {parseResult.sheetName}
               </p>
@@ -703,14 +790,19 @@ export default function ImportPage() {
                       options={[
                         {
                           value: "",
-                          label: field.required ? "-- เลือก (จำเป็น) --" : "-- ไม่เลือก --",
+                          label: field.required
+                            ? tr("-- เลือก (จำเป็น) --", "-- Select (required) --")
+                            : tr("-- ไม่เลือก --", "-- None --"),
                         },
                         ...parseResult.columns.map((col) => ({
                           value: col,
                           label:
                             col +
                             (parseResult.rows[0]?.[col]
-                              ? ` (ตัวอย่าง: ${parseResult.rows[0][col].slice(0, 30)})`
+                              ? tr(
+                                  ` (ตัวอย่าง: ${parseResult.rows[0][col].slice(0, 30)})`,
+                                  ` (sample: ${parseResult.rows[0][col].slice(0, 30)})`
+                                )
                               : ""),
                         })),
                       ]}
@@ -724,7 +816,7 @@ export default function ImportPage() {
           {/* Raw data preview */}
           <details className="mt-5">
             <summary className="cursor-pointer text-xs font-medium text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]">
-              ดูข้อมูลดิบ (5 แถวแรก)
+              {tr("ดูข้อมูลดิบ (5 แถวแรก)", "View raw data (first 5 rows)")}
             </summary>
             <div className="theme-border mt-2 overflow-x-auto rounded-lg border">
               <table className="w-full text-left text-xs">
@@ -761,7 +853,7 @@ export default function ImportPage() {
           <div className="mt-5 flex items-center justify-between">
             <Button variant="ghost" onClick={resetWizard}>
               <ArrowLeft size={16} />
-              เลือกไฟล์ใหม่
+              {tr("เลือกไฟล์ใหม่", "Choose another file")}
             </Button>
             <Button
               onClick={() => void buildPreview()}
@@ -770,11 +862,11 @@ export default function ImportPage() {
               {isPreviewLoading ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  กำลังตรวจสอบกับฐานข้อมูล...
+                  {tr("กำลังตรวจสอบกับฐานข้อมูล...", "Checking against database...")}
                 </>
               ) : (
                 <>
-                  ดูตัวอย่าง
+                  {tr("ดูตัวอย่าง", "Preview")}
                   <ArrowRight size={16} />
                 </>
               )}
@@ -789,28 +881,28 @@ export default function ImportPage() {
           {/* Import summary cards */}
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-8">
             <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
-              <p className="text-xs text-[color:var(--app-text-muted)]">พร้อมตรวจสอบ</p>
+              <p className="text-xs text-[color:var(--app-text-muted)]">{tr("พร้อมตรวจสอบ", "Ready to review")}</p>
               <p className="mt-1 text-2xl font-bold text-[color:var(--app-text)]">
                 {importStats.readyRows}
               </p>
             </div>
             <div className="rounded-xl bg-[color:var(--income-soft)] p-4 shadow-sm">
               <p className="text-xs text-[color:var(--income-text)]">
-                รายการใหม่
+                {tr("รายการใหม่", "New rows")}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--income-text)]">
                 {importStats.newRows}
               </p>
             </div>
             <div className="rounded-xl bg-[color:var(--app-brand-soft)] p-4 shadow-sm">
-              <p className="text-xs text-[color:var(--app-brand-text)]">รายการซ้ำ</p>
+              <p className="text-xs text-[color:var(--app-brand-text)]">{tr("รายการซ้ำ", "Duplicates")}</p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--app-brand-text)]">
                 {importStats.duplicateRows}
               </p>
             </div>
             <div className="rounded-xl bg-[color:var(--neutral-soft)] p-4 shadow-sm">
               <p className="text-xs text-[color:var(--neutral)]">
-                ต้องตรวจสอบ
+                {tr("ต้องตรวจสอบ", "Needs review")}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--neutral)]">
                 {importStats.conflictRows}
@@ -818,7 +910,7 @@ export default function ImportPage() {
             </div>
             <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">
-                รายรับ ({importStats.incomeRows})
+                {tr(`รายรับ (${importStats.incomeRows})`, `Income (${importStats.incomeRows})`)}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--income-text)]">
                 {formatBaht(importStats.totalIncome)}
@@ -826,7 +918,7 @@ export default function ImportPage() {
             </div>
             <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">
-                รายจ่าย ({importStats.expenseRows})
+                {tr(`รายจ่าย (${importStats.expenseRows})`, `Expense (${importStats.expenseRows})`)}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--expense-text)]">
                 {formatBaht(importStats.totalExpense)}
@@ -834,14 +926,14 @@ export default function ImportPage() {
             </div>
             <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">
-                ย้ายเงิน ({importStats.transferRows})
+                {tr(`ย้ายเงิน (${importStats.transferRows})`, `Transfer (${importStats.transferRows})`)}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--app-brand-text)]">
                 {formatBaht(importStats.totalTransfer)}
               </p>
             </div>
             <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
-              <p className="text-xs text-[color:var(--app-text-muted)]">ข้ามรายการ</p>
+              <p className="text-xs text-[color:var(--app-text-muted)]">{tr("ข้ามรายการ", "Skipped")}</p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--neutral)]">
                 {importStats.skippedRows}
               </p>
@@ -849,7 +941,10 @@ export default function ImportPage() {
           </div>
           {importStats.transferRows > 0 && (
             <p className="text-sm text-[color:var(--app-brand-text)]">
-              รายการประเภท “ย้ายเงิน” จะถูกบันทึกไว้เพื่อใช้ตามรอยการเคลื่อนเงิน แต่จะไม่ถูกรวมเป็นรายรับหรือรายจ่ายใน dashboard และ reports
+              {tr(
+                "รายการประเภท “ย้ายเงิน” จะถูกบันทึกไว้เพื่อใช้ตามรอยการเคลื่อนเงิน แต่จะไม่ถูกรวมเป็นรายรับหรือรายจ่ายใน dashboard และ reports",
+                "“Transfer” rows are saved for money-trail tracking but are not counted as income or expense in the dashboard or reports."
+              )}
             </p>
           )}
 
@@ -857,14 +952,16 @@ export default function ImportPage() {
             <Card>
               <CardHeader>
                 <div className="space-y-2">
-                  <CardTitle>Conflict Review Queue</CardTitle>
+                  <CardTitle>{tr("คิวตรวจสอบ Conflict", "Conflict Review Queue")}</CardTitle>
                   <p className="text-sm text-[color:var(--app-text-muted)]">
-                    เลือกว่าจะนำเข้าแถวที่ใกล้เคียงเป็นรายการใหม่ ใช้รายการเดิม หรือข้ามรายการนี้
-                    ระบบจะยังไม่อนุญาตให้ commit จนกว่ารายการสถานะ{" "}
+                    {tr(
+                      "เลือกว่าจะนำเข้าแถวที่ใกล้เคียงเป็นรายการใหม่ ใช้รายการเดิม หรือข้ามรายการนี้ ระบบจะยังไม่อนุญาตให้ commit จนกว่ารายการสถานะ",
+                      "Choose whether to import the near-match row as new, keep the existing one, or skip it. Commit is blocked until every row with status"
+                    )}{" "}
                     <span className="font-medium text-[color:var(--neutral)]">
-                      ต้องตรวจสอบ
+                      {tr("ต้องตรวจสอบ", "Needs review")}
                     </span>{" "}
-                    จะถูกตัดสินใจครบทุกแถว
+                    {tr("จะถูกตัดสินใจครบทุกแถว", "has a decision.")}
                   </p>
                 </div>
               </CardHeader>
@@ -882,24 +979,24 @@ export default function ImportPage() {
                     >
                       <div className="flex flex-wrap items-center gap-3">
                         <span className="text-sm font-semibold text-[color:var(--app-text)]">
-                          แถว {row.rowNumber}
+                          {tr(`แถว ${row.rowNumber}`, `Row ${row.rowNumber}`)}
                         </span>
                         <span
                           className={cn(
                             "inline-flex rounded-md px-2 py-0.5 text-xs font-medium",
-                            PREVIEW_STATUS_META[row.previewStatus].className
+                            PREVIEW_STATUS_CLASSES[row.previewStatus]
                           )}
                         >
-                          {PREVIEW_STATUS_META[row.previewStatus].label}
+                          {PREVIEW_STATUS_LABELS[row.previewStatus]}
                         </span>
                         {row.reviewAction ? (
                           <span
                             className={cn(
                               "inline-flex rounded-md border px-2 py-0.5 text-xs font-medium",
-                              REVIEW_ACTION_META[row.reviewAction].className
+                              REVIEW_ACTION_CLASSES[row.reviewAction]
                             )}
                           >
-                            {IMPORT_REVIEW_ACTION_LABELS[row.reviewAction]}
+                            {getImportReviewActionLabel(row.reviewAction, language)}
                           </span>
                         ) : null}
                         {row.reason ? (
@@ -912,7 +1009,7 @@ export default function ImportPage() {
                       <div className="mt-4 grid gap-4 lg:grid-cols-2">
                         <div className="rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-4">
                           <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--income-text)]">
-                            รายการจากไฟล์
+                            {tr("รายการจากไฟล์", "Row from file")}
                           </p>
                           <div className="mt-3 space-y-1.5 text-sm text-[color:var(--app-text)]">
                             <p>{tx?.date ?? "-"} {tx?.time ? `· ${tx.time}` : ""}</p>
@@ -930,7 +1027,7 @@ export default function ImportPage() {
 
                         <div className="rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-4">
                           <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-brand-text)]">
-                            รายการเดิมที่ใกล้เคียง
+                            {tr("รายการเดิมที่ใกล้เคียง", "Existing near-match")}
                           </p>
                           <div className="mt-3 space-y-1.5 text-sm text-[color:var(--app-text)]">
                             <p>
@@ -953,7 +1050,7 @@ export default function ImportPage() {
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
-                        {(Object.keys(REVIEW_ACTION_META) as ImportReviewAction[]).map(
+                        {(Object.keys(REVIEW_ACTION_CLASSES) as ImportReviewAction[]).map(
                           (action) => (
                             <button
                               key={action}
@@ -962,7 +1059,7 @@ export default function ImportPage() {
                               onClick={() => void reviewConflictRow(row.rowNumber, action)}
                               className={cn(
                                 "rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-                                REVIEW_ACTION_META[action].className,
+                                REVIEW_ACTION_CLASSES[action],
                                 row.reviewAction === action &&
                                   "ring-2 ring-offset-2 ring-offset-[color:var(--app-surface)] ring-[color:var(--app-brand)]"
                               )}
@@ -970,10 +1067,10 @@ export default function ImportPage() {
                               {isReviewing && row.reviewAction !== action ? (
                                 <span className="inline-flex items-center gap-2">
                                   <Loader2 size={14} className="animate-spin" />
-                                  กำลังบันทึก...
+                                  {tr("กำลังบันทึก...", "Saving...")}
                                 </span>
                               ) : (
-                                IMPORT_REVIEW_ACTION_LABELS[action]
+                                getImportReviewActionLabel(action, language)
                               )}
                             </button>
                           )
@@ -990,19 +1087,39 @@ export default function ImportPage() {
           <Card>
             <CardHeader>
               <div className="space-y-2">
-                <CardTitle>ตัวอย่างข้อมูลหลังตรวจซ้ำกับฐานข้อมูล (20 แถวแรก)</CardTitle>
+                <CardTitle>
+                  {tr(
+                    "ตัวอย่างข้อมูลหลังตรวจซ้ำกับฐานข้อมูล (20 แถวแรก)",
+                    "Preview after duplicate check (first 20 rows)"
+                  )}
+                </CardTitle>
                 <p className="text-sm text-[color:var(--app-text-muted)]">
-                  ระบบจะเพิ่มเฉพาะรายการสถานะ <span className="font-medium text-[color:var(--income-text)]">ใหม่</span>{" "}
-                  เท่านั้น ส่วนรายการซ้ำจะกันออกไว้ และรายการ conflict ต้องผ่านการตัดสินใจก่อน
+                  {tr(
+                    "ระบบจะเพิ่มเฉพาะรายการสถานะ",
+                    "Only rows with status"
+                  )}{" "}
+                  <span className="font-medium text-[color:var(--income-text)]">
+                    {tr("ใหม่", "New")}
+                  </span>{" "}
+                  {tr(
+                    "เท่านั้น ส่วนรายการซ้ำจะกันออกไว้ และรายการ conflict ต้องผ่านการตัดสินใจก่อน",
+                    "will be added. Duplicates are skipped, and conflicts must be resolved first."
+                  )}
                 </p>
                 {hasReviewExceptions && (
                   <p className="text-sm text-[color:var(--neutral)]">
-                    พบรายการซ้ำหรือรายการที่ควรตรวจสอบก่อนนำเข้า กรุณาเช็กแถวที่มีสถานะไม่ใช่ “ใหม่”
+                    {tr(
+                      "พบรายการซ้ำหรือรายการที่ควรตรวจสอบก่อนนำเข้า กรุณาเช็กแถวที่มีสถานะไม่ใช่ “ใหม่”",
+                      "Found duplicates or rows that need review before import. Please check rows with status other than “New”."
+                    )}
                   </p>
                 )}
                 {pendingConflictRows > 0 && (
                   <p className="text-sm text-[color:var(--neutral)]">
-                    ยังมี {pendingConflictRows} รายการ conflict ที่รอการตัดสินใจ
+                    {tr(
+                      `ยังมี ${pendingConflictRows} รายการ conflict ที่รอการตัดสินใจ`,
+                      `${pendingConflictRows} conflict row${pendingConflictRows === 1 ? "" : "s"} still pending decision`
+                    )}
                   </p>
                 )}
               </div>
@@ -1013,15 +1130,15 @@ export default function ImportPage() {
                 <thead>
                   <tr className="theme-border border-b">
                     <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">#</th>
-                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">สถานะ</th>
-                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">วันที่</th>
-                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">เวลา</th>
-                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">ประเภท</th>
-                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">หมวดหมู่</th>
-                    <th className="py-2.5 pr-3 text-right text-xs font-medium text-[color:var(--app-text-muted)]">จำนวน</th>
-                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">โน้ต</th>
-                    <th className="py-2.5 text-xs font-medium text-[color:var(--app-text-muted)]">ช่องทาง</th>
-                    <th className="py-2.5 pl-3 text-xs font-medium text-[color:var(--app-text-muted)]">การตัดสินใจ</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">{tr("สถานะ", "Status")}</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">{tr("วันที่", "Date")}</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">{tr("เวลา", "Time")}</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">{tr("ประเภท", "Type")}</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">{tr("หมวดหมู่", "Category")}</th>
+                    <th className="py-2.5 pr-3 text-right text-xs font-medium text-[color:var(--app-text-muted)]">{tr("จำนวน", "Amount")}</th>
+                    <th className="py-2.5 pr-3 text-xs font-medium text-[color:var(--app-text-muted)]">{tr("โน้ต", "Note")}</th>
+                    <th className="py-2.5 text-xs font-medium text-[color:var(--app-text-muted)]">{tr("ช่องทาง", "Channel")}</th>
+                    <th className="py-2.5 pl-3 text-xs font-medium text-[color:var(--app-text-muted)]">{tr("การตัดสินใจ", "Decision")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[color:var(--app-divider)]">
@@ -1038,10 +1155,10 @@ export default function ImportPage() {
                           <span
                             className={cn(
                               "inline-block rounded-md px-2 py-0.5 text-xs font-medium",
-                              PREVIEW_STATUS_META[row.previewStatus].className
+                              PREVIEW_STATUS_CLASSES[row.previewStatus]
                             )}
                           >
-                            {PREVIEW_STATUS_META[row.previewStatus].label}
+                            {PREVIEW_STATUS_LABELS[row.previewStatus]}
                           </span>
                         </td>
                         <td className="whitespace-nowrap py-2 pr-3 text-[color:var(--app-text)]">
@@ -1058,7 +1175,7 @@ export default function ImportPage() {
                                 TRANSACTION_TYPE_BADGE_CLASS[tx.type]
                               )}
                             >
-                              {getTransactionTypeLabel(tx.type)}
+                              {getTransactionTypeLabel(tx.type, language)}
                             </span>
                           ) : (
                             <span className="text-xs text-[color:var(--app-text-subtle)]">-</span>
@@ -1091,9 +1208,9 @@ export default function ImportPage() {
                         </td>
                         <td className="py-2 pl-3 text-xs text-[color:var(--app-text-muted)]">
                           {row.reviewAction
-                            ? IMPORT_REVIEW_ACTION_LABELS[row.reviewAction]
+                            ? getImportReviewActionLabel(row.reviewAction, language)
                             : row.previewStatus === "conflict"
-                              ? "รอการตัดสินใจ"
+                              ? tr("รอการตัดสินใจ", "Pending decision")
                               : "-"}
                         </td>
                       </tr>
@@ -1103,7 +1220,10 @@ export default function ImportPage() {
               </table>
               {previewRows.length > 20 && (
                 <p className="py-3 text-center text-xs text-[color:var(--app-text-subtle)]">
-                  ...และอีก {previewRows.length - 20} รายการ
+                  {tr(
+                    `...และอีก ${previewRows.length - 20} รายการ`,
+                    `...and ${previewRows.length - 20} more rows`
+                  )}
                 </p>
               )}
             </div>
@@ -1112,7 +1232,7 @@ export default function ImportPage() {
             <div className="mt-5 flex items-center justify-between border-t border-[color:var(--app-divider)] pt-4">
               <Button variant="ghost" onClick={() => setStep("mapping")}>
                 <ArrowLeft size={16} />
-                แก้ไขการจับคู่
+                {tr("แก้ไขการจับคู่", "Edit mapping")}
               </Button>
               <Button
                 onClick={() => void confirmImport()}
@@ -1121,7 +1241,7 @@ export default function ImportPage() {
                 {isCommitting ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    กำลังบันทึกลงฐานข้อมูล...
+                    {tr("กำลังบันทึกลงฐานข้อมูล...", "Saving to database...")}
                   </>
                 ) : (
                   <>
@@ -1140,14 +1260,16 @@ export default function ImportPage() {
         <Card className="py-10 text-center">
           <CheckCircle size={64} className="mx-auto mb-4 text-[color:var(--income)]" />
           <h2 className="text-2xl font-bold text-[color:var(--app-text)]">
-            {importStats.committedRows > 0 ? "นำเข้าสำเร็จ!" : "ตรวจสอบข้อมูลเสร็จสิ้น"}
+            {importStats.committedRows > 0
+              ? tr("นำเข้าสำเร็จ!", "Import successful!")
+              : tr("ตรวจสอบข้อมูลเสร็จสิ้น", "Review complete")}
           </h2>
           <p className="mt-2 text-sm text-[color:var(--app-text-muted)]">
-            เพิ่มใหม่{" "}
+            {tr("เพิ่มใหม่ ", "Added ")}
             <span className="font-bold text-[color:var(--app-text)]">
               {importStats.committedRows.toLocaleString()}
             </span>{" "}
-            รายการจาก{" "}
+            {tr("รายการจาก ", "rows from ")}
             <span className="font-medium text-[color:var(--app-text)]">
               {fileName}
             </span>
@@ -1157,28 +1279,28 @@ export default function ImportPage() {
           <div className="mx-auto mt-6 grid max-w-3xl grid-cols-2 gap-4 lg:grid-cols-4">
             <div className="rounded-xl bg-[color:var(--income-soft)] p-3">
               <p className="text-xs text-[color:var(--income-text)]">
-                เพิ่มสำเร็จ
+                {tr("เพิ่มสำเร็จ", "Added")}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--income-text)]">
                 {importStats.committedRows.toLocaleString()}
               </p>
             </div>
             <div className="rounded-xl bg-[color:var(--app-brand-soft)] p-3">
-              <p className="text-xs text-[color:var(--app-brand-text)]">รายการซ้ำ</p>
+              <p className="text-xs text-[color:var(--app-brand-text)]">{tr("รายการซ้ำ", "Duplicates")}</p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--app-brand-text)]">
                 {importStats.duplicateRows.toLocaleString()}
               </p>
             </div>
             <div className="rounded-xl bg-[color:var(--neutral-soft)] p-3">
               <p className="text-xs text-[color:var(--neutral)]">
-                ต้องตรวจสอบ
+                {tr("ต้องตรวจสอบ", "Needs review")}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--neutral)]">
                 {importStats.conflictRows.toLocaleString()}
               </p>
             </div>
             <div className="rounded-xl bg-[color:var(--app-surface-soft)] p-3">
-              <p className="text-xs text-[color:var(--app-text-muted)]">ข้ามรายการ</p>
+              <p className="text-xs text-[color:var(--app-text-muted)]">{tr("ข้ามรายการ", "Skipped")}</p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--app-text)]">
                 {importStats.skippedRows.toLocaleString()}
               </p>
@@ -1188,7 +1310,7 @@ export default function ImportPage() {
           <div className="mx-auto mt-4 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-3 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">
-                รายรับ ({importStats.incomeRows})
+                {tr(`รายรับ (${importStats.incomeRows})`, `Income (${importStats.incomeRows})`)}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--income-text)]">
                 {formatBaht(importStats.totalIncome)}
@@ -1196,7 +1318,7 @@ export default function ImportPage() {
             </div>
             <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-3 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">
-                รายจ่าย ({importStats.expenseRows})
+                {tr(`รายจ่าย (${importStats.expenseRows})`, `Expense (${importStats.expenseRows})`)}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--expense-text)]">
                 {formatBaht(importStats.totalExpense)}
@@ -1204,7 +1326,7 @@ export default function ImportPage() {
             </div>
             <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-3 shadow-sm">
               <p className="text-xs text-[color:var(--app-text-muted)]">
-                ย้ายเงิน ({importStats.transferRows})
+                {tr(`ย้ายเงิน (${importStats.transferRows})`, `Transfer (${importStats.transferRows})`)}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-lg font-bold text-[color:var(--app-brand-text)]">
                 {formatBaht(importStats.totalTransfer)}
@@ -1215,22 +1337,28 @@ export default function ImportPage() {
           <div className="mx-auto mt-3 max-w-2xl space-y-2">
             {(importStats.duplicateRows > 0 || importStats.conflictRows > 0) && (
               <p className="text-xs text-[color:var(--neutral)]">
-                ระบบกันรายการซ้ำและรายการที่ใกล้เคียงออกจากการเพิ่มอัตโนมัติแล้ว เพื่อป้องกันข้อมูลซ้ำใน dashboard
+                {tr(
+                  "ระบบกันรายการซ้ำและรายการที่ใกล้เคียงออกจากการเพิ่มอัตโนมัติแล้ว เพื่อป้องกันข้อมูลซ้ำใน dashboard",
+                  "Duplicates and near-matches were excluded from the automatic import to prevent duplicate data on the dashboard."
+                )}
               </p>
             )}
             {importStats.transferRows > 0 && (
               <p className="text-xs text-[color:var(--app-brand-text)]">
-                รายการ “ย้ายเงิน” ถูกบันทึกไว้แยกต่างหากและจะไม่ถูกรวมในตัวเลขรายรับหรือรายจ่าย
+                {tr(
+                  "รายการ “ย้ายเงิน” ถูกบันทึกไว้แยกต่างหากและจะไม่ถูกรวมในตัวเลขรายรับหรือรายจ่าย",
+                  "“Transfer” rows are saved separately and are not counted as income or expense."
+                )}
               </p>
             )}
           </div>
 
           <div className="mt-6 flex justify-center gap-3">
             <Button variant="secondary" onClick={resetWizard}>
-              นำเข้าไฟล์อื่น
+              {tr("นำเข้าไฟล์อื่น", "Import another file")}
             </Button>
             <Button onClick={() => router.push("/transactions")}>
-              ดูรายการ
+              {tr("ดูรายการ", "View transactions")}
               <ArrowRight size={16} />
             </Button>
           </div>

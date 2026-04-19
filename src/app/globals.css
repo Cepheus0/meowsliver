@@ -15,8 +15,8 @@
   --app-bg:          #f2f1ed;
   --app-bg-elevated: #f7f7f4;
 
-  --app-glow-primary:   transparent;
-  --app-glow-secondary: transparent;
+  --app-glow-primary:   rgba(245, 78, 0, 0.12);
+  --app-glow-secondary: rgba(192, 133, 50, 0.12);
 
   /* ── Surfaces ────────────────────────────────────── */
   --app-surface:        #ffffff;
@@ -45,6 +45,8 @@
   /* ── Brand Accent → Cursor Orange (#f54e00) ──────── */
   --app-brand-soft:        rgba(245, 78, 0, 0.07);
   --app-brand-soft-strong: rgba(245, 78, 0, 0.13);
+  --app-brand:             #f54e00;
+  --app-brand-hover:       #d44400;
   --app-brand-text:        #c23500;
   --app-brand-border:      rgba(245, 78, 0, 0.22);
   --app-brand-shadow:      rgba(245, 78, 0, 0.18);
@@ -75,8 +77,8 @@
   --app-bg:          #1a1916;
   --app-bg-elevated: #211f1c;
 
-  --app-glow-primary:   transparent;
-  --app-glow-secondary: transparent;
+  --app-glow-primary:   rgba(245, 78, 0, 0.16);
+  --app-glow-secondary: rgba(224, 160, 48, 0.12);
 
   /* ── Surfaces ────────────────────────────────────── */
   --app-surface:        #221f1b;
@@ -104,6 +106,8 @@
   /* ── Brand Accent → Cursor Orange (lighter for dark) */
   --app-brand-soft:        rgba(245, 78, 0, 0.12);
   --app-brand-soft-strong: rgba(245, 78, 0, 0.20);
+  --app-brand:             #ff7a45;
+  --app-brand-hover:       #ff6729;
   --app-brand-text:        #ff7a45;
   --app-brand-border:      rgba(245, 78, 0, 0.32);
   --app-brand-shadow:      rgba(245, 78, 0, 0.30);

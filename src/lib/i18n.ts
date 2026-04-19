@@ -1,6 +1,11 @@
 "use client";
 
 import { useFinanceStore } from "@/store/finance-store";
+import {
+  ACCOUNT_TYPE_LABELS,
+  ACCOUNT_TYPE_LABELS_EN,
+  type AccountType,
+} from "@/lib/types";
 
 export type Language = "th" | "en";
 
@@ -208,4 +213,49 @@ export function useT() {
 /** Non-hook accessor for cases where a component isn't available (server helpers, etc). */
 export function translate(language: Language, key: string): string {
   return (dictionaries[language] ?? dictionaries.th)[key] ?? key;
+}
+
+/**
+ * Inline-pair translator — returns a function that picks between Thai and
+ * English strings based on the current UI language.
+ *
+ * Use this for one-off strings (page copy, button labels tied to a specific
+ * screen, modal text) where a dict key is overkill. Keeps both languages
+ * next to each other in the JSX so translations are easy to review and
+ * nothing can fall out of sync.
+ *
+ * For shared strings used in many places (nav, summary card labels, etc.),
+ * prefer `useT()` + the dictionary so a single edit updates everywhere.
+ *
+ * @example
+ *   const tr = useTr();
+ *   <button>{tr("เพิ่มบัญชี", "Add account")}</button>
+ */
+export function useTr() {
+  const language = useFinanceStore((s) => s.language);
+  return (th: string, en: string): string => (language === "en" ? en : th);
+}
+
+/** Read the current language directly, for conditional rendering. */
+export function useLanguage(): Language {
+  return useFinanceStore((s) => s.language);
+}
+
+/**
+ * Returns the translated AccountType label map for the current language.
+ * Call it once per component then index with `labels[account.type]`.
+ */
+export function useAccountTypeLabels(): Record<AccountType, string> {
+  const language = useFinanceStore((s) => s.language);
+  return language === "en" ? ACCOUNT_TYPE_LABELS_EN : ACCOUNT_TYPE_LABELS;
+}
+
+/** Non-hook variant for use inside render helpers that already have language. */
+export function getAccountTypeLabel(
+  type: AccountType,
+  language: Language
+): string {
+  return (language === "en" ? ACCOUNT_TYPE_LABELS_EN : ACCOUNT_TYPE_LABELS)[
+    type
+  ];
 }

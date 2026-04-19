@@ -14,17 +14,21 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
 import {
   DEFAULT_GOAL_COLOR,
   DEFAULT_GOAL_ICON,
   GOAL_CATEGORY_LABELS,
+  GOAL_CATEGORY_LABELS_EN,
   SAVINGS_GOAL_PRESETS,
   formatGoalDate,
+  getGoalCategoryLabel,
   getGoalPreset,
 } from "@/lib/savings-goals";
 import type { SavingsGoalCategory, SavingsGoalsPortfolio } from "@/lib/types";
 import { formatBaht, formatPercent } from "@/lib/utils";
+import { useLanguage, useTr } from "@/lib/i18n";
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -51,6 +55,8 @@ function PortfolioStatCard({
 }
 
 export default function BucketsPage() {
+  const tr = useTr();
+  const language = useLanguage();
   const [portfolio, setPortfolio] = useState<SavingsGoalsPortfolio | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -82,7 +88,9 @@ export default function BucketsPage() {
       setError(null);
     } catch (loadError) {
       console.error(loadError);
-      setError("ไม่สามารถโหลด Savings Goals Portfolio ได้");
+      setError(
+        tr("ไม่สามารถโหลด Savings Goals Portfolio ได้", "Could not load Savings Goals Portfolio")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +136,9 @@ export default function BucketsPage() {
       };
 
       if (!response.ok) {
-        throw new Error(data.error ?? "สร้างเป้าหมายไม่สำเร็จ");
+        throw new Error(
+          data.error ?? tr("สร้างเป้าหมายไม่สำเร็จ", "Could not create goal")
+        );
       }
 
       setForm({
@@ -150,7 +160,7 @@ export default function BucketsPage() {
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "ไม่สามารถสร้างเป้าหมายการออมได้"
+          : tr("ไม่สามารถสร้างเป้าหมายการออมได้", "Could not create savings goal")
       );
     } finally {
       setIsSubmitting(false);
@@ -159,21 +169,54 @@ export default function BucketsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
-            Savings Goals Portfolio
-          </h1>
-          <p className="mt-1 max-w-3xl text-sm text-[color:var(--app-text-muted)]">
-            จัดการหลายเป้าหมายพร้อมกันในที่เดียว ทั้งเงินแต่งงาน เกษียณ ดาวน์บ้าน
-            หรือเป้าหมายเฉพาะทาง พร้อมดู progress, กำไร, growth และ pace การออมของแต่ละก้อนได้แบบแยกกัน
-          </p>
-        </div>
-        <Button size="sm" onClick={() => setShowCreateForm((value) => !value)}>
-          <Plus size={16} />
-          {showCreateForm ? "ซ่อนฟอร์ม" : "เพิ่มเป้าหมาย"}
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow={tr("SAVINGS GOALS", "SAVINGS GOALS")}
+        title="Savings Goals Portfolio"
+        description={tr(
+          "บริหารหลายเป้าหมายในที่เดียวพร้อมดู progress, growth, pace, และสถานะ active/archive โดยไม่ต้องสลับหน้าไปมา",
+          "Manage multiple goals in one workspace with progress, growth, pace, and active/archive status without jumping between views."
+        )}
+        meta={[
+          {
+            icon: <Target size={14} />,
+            label: portfolio
+              ? tr(`${portfolio.goals.length} เป้าหมายที่ใช้งาน`, `${portfolio.goals.length} active goals`)
+              : tr("กำลังโหลดพอร์ตเป้าหมาย", "Loading goal portfolio"),
+            tone: portfolio ? "brand" : "neutral",
+          },
+          ...(portfolio
+            ? [
+                {
+                  icon: <PiggyBank size={14} />,
+                  label: tr(
+                    `ออมแล้ว ${formatBaht(portfolio.overview.totalSaved)}`,
+                    `Saved ${formatBaht(portfolio.overview.totalSaved)}`
+                  ),
+                  tone: "success" as const,
+                },
+                {
+                  icon: <Archive size={14} />,
+                  label: tr(
+                    `${portfolio.archivedGoals.length} เป้าหมายที่เก็บไว้`,
+                    `${portfolio.archivedGoals.length} archived goals`
+                  ),
+                  tone:
+                    portfolio.archivedGoals.length > 0
+                      ? ("neutral" as const)
+                      : ("default" as const),
+                },
+              ]
+            : []),
+        ]}
+        actions={
+          <Button size="sm" onClick={() => setShowCreateForm((value) => !value)}>
+            <Plus size={16} />
+            {showCreateForm
+              ? tr("ซ่อนฟอร์ม", "Hide form")
+              : tr("เพิ่มเป้าหมาย", "Add goal")}
+          </Button>
+        }
+      />
 
       {error ? (
         <Card className="border-[color:var(--expense-soft)] bg-[color:var(--expense-soft)] text-[color:var(--expense-text)]">
@@ -219,13 +262,13 @@ export default function BucketsPage() {
       {showCreateForm ? (
         <Card>
           <CardHeader>
-            <CardTitle>สร้างเป้าหมายการออมใหม่</CardTitle>
+            <CardTitle>{tr("สร้างเป้าหมายการออมใหม่", "Create a new savings goal")}</CardTitle>
           </CardHeader>
           <form className="space-y-4" onSubmit={handleCreateGoal}>
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text)]">
-                  ชื่อเป้าหมาย
+                  {tr("ชื่อเป้าหมาย", "Goal name")}
                 </span>
                 <input
                   required
@@ -237,13 +280,13 @@ export default function BucketsPage() {
                     }))
                   }
                   className="theme-border theme-surface w-full rounded-xl border px-4 py-2.5 text-[color:var(--app-text)] outline-none ring-0 transition-colors focus:border-[#f54e00]"
-                  placeholder="เช่น เงินแต่งงาน, เงินเกษียณ"
+                  placeholder={tr("เช่น เงินแต่งงาน, เงินเกษียณ", "e.g. Wedding fund, Retirement")}
                 />
               </label>
 
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text-muted)]">
-                  ประเภทเป้าหมาย
+                  {tr("ประเภทเป้าหมาย", "Goal category")}
                 </span>
                 <Select
                   value={form.category}
@@ -261,7 +304,9 @@ export default function BucketsPage() {
                       };
                     })
                   }
-                  options={Object.entries(GOAL_CATEGORY_LABELS).map(([value, label]) => ({
+                  options={Object.entries(
+                    language === "en" ? GOAL_CATEGORY_LABELS_EN : GOAL_CATEGORY_LABELS
+                  ).map(([value, label]) => ({
                     value,
                     label,
                   }))}
@@ -270,7 +315,7 @@ export default function BucketsPage() {
 
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text-muted)]">
-                  เป้าหมาย (บาท)
+                  {tr("เป้าหมาย (บาท)", "Target (THB)")}
                 </span>
                 <input
                   required
@@ -285,13 +330,13 @@ export default function BucketsPage() {
                     }))
                   }
                   className="theme-border theme-surface w-full rounded-xl border px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[#f54e00]"
-                  placeholder="เช่น 300000"
+                  placeholder={tr("เช่น 300000", "e.g. 300000")}
                 />
               </label>
 
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text)]">
-                  วันเป้าหมาย
+                  {tr("วันเป้าหมาย", "Target date")}
                 </span>
                 <input
                   type="date"

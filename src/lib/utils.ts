@@ -23,6 +23,21 @@ export function formatNumber(num: number): string {
   return new Intl.NumberFormat("th-TH").format(num);
 }
 
+/**
+ * Compact baht formatter for stat tiles where space is tight.
+ * 1,234,567  → "฿1.23M"
+ * 41,300     → "฿41.3k"
+ * 950        → "฿950"
+ * Negative values get a leading "-".
+ */
+export function formatBahtCompact(amount: number): string {
+  const abs = Math.abs(amount);
+  const sign = amount < 0 ? "-" : "";
+  if (abs >= 1_000_000) return `${sign}฿${(abs / 1_000_000).toFixed(2)}M`;
+  if (abs >= 1_000) return `${sign}฿${(abs / 1_000).toFixed(1)}k`;
+  return `${sign}฿${Math.round(abs)}`;
+}
+
 /** Format percentage */
 export function formatPercent(num: number): string {
   return `${num >= 0 ? "+" : ""}${num.toFixed(1)}%`;

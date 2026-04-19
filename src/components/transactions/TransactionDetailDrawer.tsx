@@ -21,6 +21,7 @@ import {
   getTransactionTypeLabel,
 } from "@/lib/transaction-presentation";
 import type { Transaction } from "@/lib/types";
+import { useLanguage, useTr } from "@/lib/i18n";
 
 interface TransactionDetailDrawerProps {
   transaction: Transaction | null;
@@ -37,12 +38,15 @@ interface TransactionDetailDrawerProps {
 export function TransactionDetailDrawer({
   transaction,
   scopeTransactions = [],
-  scopeLabel = "ในขอบเขตนี้",
+  scopeLabel,
   onClose,
   onEdit,
   onDelete,
   mutationBusy = false,
 }: TransactionDetailDrawerProps) {
+  const tr = useTr();
+  const language = useLanguage();
+  const resolvedScopeLabel = scopeLabel ?? tr("ในขอบเขตนี้", "in this scope");
   // Lock body scroll while drawer is open. Cheap UX win — without this the
   // background page scrolls behind a tall drawer on mobile.
   useEffect(() => {
@@ -104,16 +108,16 @@ export function TransactionDetailDrawer({
        *  the whole point of using a drawer instead of a modal. On small
        *  screens we add a faint dim so it still feels like an overlay. */}
       <button
-        aria-label="ปิดรายละเอียด"
+        aria-label={tr("ปิดรายละเอียด", "Close details")}
         onClick={onClose}
-        className="pointer-events-auto flex-1 bg-transparent sm:bg-black/0"
+        className="pointer-events-auto flex-1 bg-black/15 sm:bg-black/5"
       />
       {/* Drawer */}
-      <aside className="pointer-events-auto theme-surface theme-border flex h-full w-full max-w-sm flex-col overflow-y-auto border-l shadow-[-12px_0_40px_-20px_rgba(0,0,0,0.25)]">
-        <header className="theme-border sticky top-0 flex items-center justify-between border-b bg-[color:var(--app-surface)] px-5 py-4">
+      <aside className="pointer-events-auto theme-surface theme-border flex h-full w-full max-w-sm flex-col overflow-y-auto border-l shadow-[-20px_0_60px_-32px_rgba(0,0,0,0.5)] backdrop-blur-sm">
+        <header className="theme-border sticky top-0 flex items-center justify-between border-b bg-[color:color-mix(in_srgb,var(--app-surface)_90%,transparent)] px-5 py-4 backdrop-blur-xl">
           <div>
             <p className="text-xs uppercase tracking-wide text-[color:var(--app-text-subtle)]">
-              รายละเอียดรายการ
+              {tr("รายละเอียดรายการ", "Transaction details")}
             </p>
             <h2 className="mt-1 text-lg font-semibold text-[color:var(--app-text)]">
               {transaction.category}
@@ -121,8 +125,8 @@ export function TransactionDetailDrawer({
           </div>
           <button
             onClick={onClose}
-            className="rounded-xl p-2 text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
-            aria-label="ปิด"
+            className="rounded-xl p-2 text-[color:var(--app-text-muted)] transition-colors hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
+            aria-label={tr("ปิด", "Close")}
           >
             <X size={18} />
           </button>
@@ -139,7 +143,7 @@ export function TransactionDetailDrawer({
                   disabled={mutationBusy}
                 >
                   <PencilLine size={14} />
-                  แก้ไขรายการ
+                  {tr("แก้ไขรายการ", "Edit transaction")}
                 </Button>
               ) : null}
               {onDelete ? (
@@ -150,17 +154,17 @@ export function TransactionDetailDrawer({
                   disabled={mutationBusy}
                 >
                   <Trash2 size={14} />
-                  ลบรายการ
+                  {tr("ลบรายการ", "Delete transaction")}
                 </Button>
               ) : null}
             </section>
           ) : null}
 
           {/* Hero amount */}
-          <div className="theme-border rounded-2xl border bg-[color:var(--app-surface-soft)] p-4">
+          <div className="theme-border rounded-[24px] border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--app-surface-soft)_85%,transparent),color-mix(in_srgb,var(--app-surface)_35%,transparent))] p-4">
             <div className="flex items-center gap-2 text-xs text-[color:var(--app-text-muted)]">
               <TypeIcon size={14} className={typeColor} />
-              {getTransactionTypeLabel(transaction.type)}
+              {getTransactionTypeLabel(transaction.type, language)}
             </div>
             <p className={`mt-2 text-3xl font-bold ${typeColor}`}>
               {getTransactionAmountPrefix(transaction.type)}
@@ -174,28 +178,36 @@ export function TransactionDetailDrawer({
           </div>
 
           {/* Field grid */}
-          <FieldGrid transaction={transaction} />
+          <FieldGrid transaction={transaction} tr={tr} />
 
           {/* Provenance — how this row contributes */}
           {provenance && provenance.typeCount > 0 && (
             <section className="space-y-2">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
-                สัดส่วน{scopeLabel}
+                {tr(`สัดส่วน${resolvedScopeLabel}`, `Share ${resolvedScopeLabel}`)}
               </h3>
               <ProvenanceRow
-                label={`คิดเป็น ${getTransactionTypeLabel(transaction.type)}ของช่วง`}
+                label={tr(
+                  `คิดเป็น${getTransactionTypeLabel(transaction.type, "th")}ของช่วง`,
+                  `${getTransactionTypeLabel(transaction.type, "en")} share of the range`
+                )}
                 share={provenance.typeShare}
                 amount={transaction.amount}
                 outOf={provenance.typeTotal}
                 count={provenance.typeCount}
+                tr={tr}
               />
               {provenance.categoryCount > 1 && (
                 <ProvenanceRow
-                  label={`ในหมวด "${transaction.category}"`}
+                  label={tr(
+                    `ในหมวด "${transaction.category}"`,
+                    `In category "${transaction.category}"`
+                  )}
                   share={provenance.categoryShare}
                   amount={transaction.amount}
                   outOf={provenance.categoryTotal}
                   count={provenance.categoryCount}
+                  tr={tr}
                 />
               )}
             </section>
@@ -204,19 +216,25 @@ export function TransactionDetailDrawer({
           {/* Source */}
           <section className="space-y-2">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
-              ที่มา
+              {tr("ที่มา", "Source")}
             </h3>
             <p className="text-sm text-[color:var(--app-text-muted)]">
               {transaction.importRunId ? (
                 <>
-                  นำเข้าจาก import run #{transaction.importRunId} — id ภายใน:{" "}
+                  {tr(
+                    `นำเข้าจาก import run #${transaction.importRunId} — id ภายใน: `,
+                    `Imported from run #${transaction.importRunId} — internal id: `
+                  )}
                   <code className="rounded bg-[color:var(--app-surface-soft)] px-1.5 py-0.5 text-xs">
                     {transaction.id}
                   </code>
                 </>
               ) : (
                 <>
-                  บันทึกด้วยตนเองในฐานข้อมูล — id:{" "}
+                  {tr(
+                    "บันทึกด้วยตนเองในฐานข้อมูล — id: ",
+                    "Manually entered in database — id: "
+                  )}
                   <code className="rounded bg-[color:var(--app-surface-soft)] px-1.5 py-0.5 text-xs">
                     {transaction.id}
                   </code>
@@ -230,24 +248,30 @@ export function TransactionDetailDrawer({
   );
 }
 
-function FieldGrid({ transaction }: { transaction: Transaction }) {
+function FieldGrid({
+  transaction,
+  tr,
+}: {
+  transaction: Transaction;
+  tr: (th: string, en: string) => string;
+}) {
   const fields: Array<{ icon: React.ReactNode; label: string; value?: string }> = [
-    { icon: <Receipt size={14} />, label: "หมายเหตุ", value: transaction.note },
-    { icon: <Tag size={14} />, label: "หมวดย่อย", value: transaction.subcategory },
-    { icon: <Hash size={14} />, label: "แท็ก", value: transaction.tag },
+    { icon: <Receipt size={14} />, label: tr("หมายเหตุ", "Note"), value: transaction.note },
+    { icon: <Tag size={14} />, label: tr("หมวดย่อย", "Subcategory"), value: transaction.subcategory },
+    { icon: <Hash size={14} />, label: tr("แท็ก", "Tag"), value: transaction.tag },
     {
       icon: <Wallet size={14} />,
-      label: "ช่องทาง",
+      label: tr("ช่องทาง", "Channel"),
       value: transaction.paymentChannel,
     },
-    { icon: <Wallet size={14} />, label: "จากบัญชี", value: transaction.payFrom },
-    { icon: <Wallet size={14} />, label: "ผู้รับ", value: transaction.recipient },
+    { icon: <Wallet size={14} />, label: tr("จากบัญชี", "From account"), value: transaction.payFrom },
+    { icon: <Wallet size={14} />, label: tr("ผู้รับ", "Recipient"), value: transaction.recipient },
   ].filter((field) => field.value);
 
   if (fields.length === 0) {
     return (
       <p className="text-sm italic text-[color:var(--app-text-subtle)]">
-        ไม่มีข้อมูลเพิ่มเติมจาก import
+        {tr("ไม่มีข้อมูลเพิ่มเติมจาก import", "No additional data from import")}
       </p>
     );
   }
@@ -278,12 +302,14 @@ function ProvenanceRow({
   amount,
   outOf,
   count,
+  tr,
 }: {
   label: string;
   share: number;
   amount: number;
   outOf: number;
   count: number;
+  tr: (th: string, en: string) => string;
 }) {
   const percent = (share * 100).toFixed(share >= 0.1 ? 1 : 2);
   return (
@@ -299,7 +325,10 @@ function ProvenanceRow({
         />
       </div>
       <p className="text-xs text-[color:var(--app-text-subtle)]">
-        {formatBaht(amount)} จากทั้งหมด {formatBaht(outOf)} ({count} รายการ)
+        {tr(
+          `${formatBaht(amount)} จากทั้งหมด ${formatBaht(outOf)} (${count} รายการ)`,
+          `${formatBaht(amount)} of ${formatBaht(outOf)} (${count} items)`
+        )}
       </p>
     </div>
   );

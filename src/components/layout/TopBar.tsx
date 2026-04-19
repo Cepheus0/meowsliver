@@ -16,17 +16,17 @@ export function TopBar() {
   const setLanguage = useFinanceStore((s) => s.setLanguage);
 
   return (
-    <header className="sticky top-0 z-30 flex h-[52px] items-center justify-between shadow-[inset_0_-1px_0_color-mix(in_srgb,var(--app-shell-border)_30%,transparent)] bg-[color:var(--app-bg-elevated)] px-6">
-      <YearPicker />
+    <header className="sticky top-0 z-30 h-[60px] border-b border-[color:var(--app-shell-border)] bg-[color:color-mix(in_srgb,var(--app-bg-elevated)_84%,transparent)] backdrop-blur-xl">
+      <div className="flex h-full items-center justify-between gap-4 px-4 md:px-6">
+        <YearPicker />
 
-      <div className="flex items-center gap-2">
         {mounted && (
-          <>
-            {/* TH / EN language toggle */}
+          <div className="flex items-center gap-2">
+            {/* TH / EN pill toggle */}
             <div
               role="group"
               aria-label={t("tooltip.toggleLanguage")}
-              className="flex h-8 items-center rounded-md bg-[color:var(--app-surface-soft)] p-0.5 text-[11px] font-semibold"
+              className="flex h-10 items-center rounded-full border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] p-1 text-[11px] font-bold uppercase tracking-wider"
             >
               {(["th", "en"] as const).map((lng) => {
                 const active = language === lng;
@@ -36,10 +36,10 @@ export function TopBar() {
                     onClick={() => setLanguage(lng)}
                     aria-pressed={active}
                     className={cn(
-                      "flex h-7 w-8 items-center justify-center rounded-[5px] uppercase tracking-wide transition-colors",
+                      "flex h-full min-w-[40px] items-center justify-center rounded-full px-3 transition-all duration-200",
                       active
-                        ? "bg-[color:var(--app-surface)] text-[color:var(--app-brand-text)] shadow-[0_1px_2px_rgba(38,37,30,0.08)]"
-                        : "text-[color:var(--app-text-subtle)] hover:text-[color:var(--app-text-muted)]"
+                        ? "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)] shadow-[0_2px_8px_-2px_color-mix(in_srgb,var(--app-brand)_35%,transparent)]"
+                        : "text-[color:var(--app-text-subtle)] hover:text-[color:var(--app-text)]"
                     )}
                   >
                     {lng}
@@ -51,13 +51,13 @@ export function TopBar() {
             {/* Theme toggle */}
             <button
               onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-[color:var(--app-text-muted)] transition-colors hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)] transition-all duration-200 hover:bg-[color:var(--app-surface)] hover:text-[color:var(--app-text)]"
               title={t("tooltip.toggleTheme")}
               aria-label={t("tooltip.toggleTheme")}
             >
               {resolvedTheme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-          </>
+          </div>
         )}
       </div>
     </header>

@@ -80,6 +80,16 @@ export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   other: "อื่นๆ",
 };
 
+export const ACCOUNT_TYPE_LABELS_EN: Record<AccountType, string> = {
+  cash: "Cash",
+  bank_savings: "Savings",
+  bank_fixed: "Fixed Deposit",
+  credit_card: "Credit Card",
+  investment: "Investment",
+  crypto: "Crypto",
+  other: "Other",
+};
+
 export const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
   cash: "#10b981",
   bank_savings: "#3b82f6",

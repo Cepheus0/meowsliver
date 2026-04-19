@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface EmptyStateProps {
@@ -22,27 +23,28 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-lg border border-dashed border-[color:var(--app-dashed-border)] bg-[color:var(--app-surface-soft)] px-6 py-10 text-center",
+        "relative flex flex-col items-center justify-center overflow-hidden rounded-[28px] border border-dashed border-[color:var(--app-dashed-border)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--app-surface-soft)_82%,transparent),color-mix(in_srgb,var(--app-surface)_58%,transparent))] px-6 py-12 text-center",
         className
       )}
     >
       {icon ? (
-        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-md border border-[color:var(--app-border)] bg-[color:var(--app-surface)] text-[color:var(--app-text-muted)]">
+        <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] text-[color:var(--app-text-muted)] shadow-[0_18px_35px_-26px_rgba(26,20,16,0.45)]">
           {icon}
         </div>
       ) : null}
-      <h3 className="text-sm font-semibold text-[color:var(--app-text)]">
+      <h3 className="text-base font-semibold tracking-[-0.01em] text-[color:var(--app-text)]">
         {title}
       </h3>
-      <p className="mt-1.5 max-w-md text-sm leading-relaxed text-[color:var(--app-text-muted)]">
+      <p className="mt-2 max-w-md text-sm leading-7 text-[color:var(--app-text-muted)]">
         {description}
       </p>
       {actionHref && actionLabel ? (
         <Link
           href={actionHref}
-          className="mt-5 inline-flex items-center justify-center rounded-md bg-[#f54e00] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#d44400]"
+          className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-[color:var(--app-brand)] bg-[color:var(--app-brand)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_32px_-20px_var(--app-brand-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[color:var(--app-brand-hover)]"
         >
           {actionLabel}
+          <ArrowRight size={14} />
         </Link>
       ) : null}
     </div>

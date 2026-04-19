@@ -31,6 +31,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
 import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
 import { chartTheme } from "@/lib/chart-theme";
@@ -575,31 +576,102 @@ export default function SavingsGoalDetailPage() {
         </Card>
       )}
 
-      <Card className="overflow-hidden">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-start gap-4">
-            <div
-              className="flex h-16 w-16 items-center justify-center rounded-3xl text-4xl"
-              style={{ backgroundColor: `${detail.goal.color}18` }}
-            >
-              {detail.goal.icon}
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
-                {detail.goal.name}
-              </h1>
-              <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-                {detail.goal.strategyLabel || "ยังไม่ได้ระบุกลยุทธ์การออม"}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[color:var(--app-text-muted)]">
-                <span>Target date: {formatGoalDate(detail.goal.targetDate)}</span>
-                <span>{formatDaysRemaining(detail.metrics.daysRemaining)}</span>
-                <span>{detail.metrics.entryCount} movements</span>
-              </div>
-            </div>
-          </div>
+      <PageHeader
+        eyebrow={GOAL_CATEGORY_LABELS[detail.goal.category]}
+        title={detail.goal.name}
+        description={
+          detail.goal.notes ||
+          detail.goal.strategyLabel ||
+          "ติดตาม progress, growth, deadline และ movement history ของเป้าหมายนี้ในมุมมองเดียว"
+        }
+        meta={[
+          {
+            icon: <TrendingUp size={14} />,
+            label: `${Math.round(detail.metrics.progressPercent)}% complete`,
+            tone: "success",
+          },
+          {
+            icon: <PiggyBank size={14} />,
+            label: `ยอดปัจจุบัน ${formatBaht(detail.goal.currentAmount)}`,
+            tone: "brand",
+          },
+          {
+            icon: <Landmark size={14} />,
+            label: `${detail.metrics.entryCount} movements`,
+          },
+          {
+            icon: <Save size={14} />,
+            label: formatDaysRemaining(detail.metrics.daysRemaining),
+            tone: detail.metrics.daysRemaining != null && detail.metrics.daysRemaining < 0 ? "danger" : "neutral",
+          },
+          ...(detail.goal.isArchived
+            ? [
+                {
+                  icon: <Archive size={14} />,
+                  label: "เก็บขึ้นหิ้ง",
+                  tone: "neutral" as const,
+                },
+              ]
+            : []),
+        ]}
+        actions={
+          <>
+            {detail.goal.isArchived ? (
+              <>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleRestoreGoal}
+                  disabled={isArchivingGoal || isDeletingGoal}
+                >
+                  <RotateCcw size={16} />
+                  กู้คืนเป้าหมาย
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={handleDeleteGoal}
+                  disabled={isArchivingGoal || isDeletingGoal}
+                >
+                  <Trash2 size={16} />
+                  ลบถาวร
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsEditingGoal((value) => !value)}
+                  disabled={isArchivingGoal || isDeletingGoal}
+                >
+                  {isEditingGoal ? <X size={16} /> : <PencilLine size={16} />}
+                  {isEditingGoal ? "ปิดโหมดแก้ไข" : "แก้ไขเป้าหมาย"}
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={handleArchiveGoal}
+                  disabled={isArchivingGoal || isDeletingGoal}
+                >
+                  <Archive size={16} />
+                  เก็บขึ้นหิ้ง
+                </Button>
+              </>
+            )}
+          </>
+        }
+      />
 
-          <div className="rounded-3xl bg-[color:var(--income-soft)] px-5 py-4 text-right">
+      <Card className="overflow-hidden">
+        <CardHeader className="items-center border-b border-[color:var(--app-divider-soft)] pb-4">
+          <div>
+            <CardTitle>Goal progress</CardTitle>
+            <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
+              Target {formatBaht(detail.goal.targetAmount)} · {formatGoalDate(detail.goal.targetDate)}
+            </p>
+          </div>
+          <div className="rounded-[22px] bg-[color:var(--income-soft)] px-5 py-4 text-right">
             <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
               Goal progress
             </p>
@@ -607,7 +679,7 @@ export default function SavingsGoalDetailPage() {
               {Math.round(detail.metrics.progressPercent)}%
             </p>
           </div>
-        </div>
+        </CardHeader>
 
         <div className="mt-6 h-3 overflow-hidden rounded-full bg-[color:var(--app-surface-soft)]">
           <div

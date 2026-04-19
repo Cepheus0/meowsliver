@@ -23,6 +23,7 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ChartViewport } from "@/components/charts/ChartViewport";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterChips } from "@/components/transactions/FilterChips";
@@ -227,19 +228,30 @@ export default function MonthlyReportPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <BackLink />
-          <h1 className="mt-2 text-2xl font-bold text-[color:var(--app-text)]">
-            {monthLabelFull} {year}
-          </h1>
-          <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-            {hasData
-              ? `${totals.count} รายการ — รายรับสุทธิ ${formatBaht(totals.net)}`
-              : "ยังไม่มีรายการในเดือนนี้"}
-          </p>
-        </div>
-        <MonthSwitcher year={year} monthIndex={monthIndex} router={router} />
+      <div className="space-y-3">
+        <BackLink />
+        <PageHeader
+          eyebrow="MONTHLY REPORT"
+          title={`${monthLabelFull} ${year}`}
+          description={
+            hasData
+              ? "ดูโครงสร้างรายรับ รายจ่าย ช่วงเวลา และรายการที่ขับเคลื่อนผลของเดือนนี้แบบ drill-down"
+              : "เดือนนี้ยังไม่มีรายการ จึงยังไม่สามารถคำนวณ breakdown หรือ pattern ภายในเดือนได้"
+          }
+          meta={[
+            {
+              icon: <Search size={14} />,
+              label: hasData ? `${totals.count} รายการ` : "ยังไม่มีรายการ",
+              tone: hasData ? "brand" : "neutral",
+            },
+            {
+              icon: <ArrowUpRight size={14} />,
+              label: hasData ? `สุทธิ ${formatBaht(totals.net)}` : "รอข้อมูลธุรกรรม",
+              tone: hasData ? (totals.net >= 0 ? "success" : "danger") : "neutral",
+            },
+          ]}
+          actions={<MonthSwitcher year={year} monthIndex={monthIndex} router={router} />}
+        />
       </div>
 
       {!hasData ? (

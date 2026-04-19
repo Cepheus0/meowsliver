@@ -10,6 +10,21 @@ export const IMPORT_REVIEW_ACTION_LABELS: Record<ImportReviewAction, string> = {
   skip: "ข้ามรายการนี้",
 };
 
+export const IMPORT_REVIEW_ACTION_LABELS_EN: Record<ImportReviewAction, string> = {
+  import_as_new: "Import as new",
+  keep_existing: "Keep existing",
+  skip: "Skip this row",
+};
+
+export function getImportReviewActionLabel(
+  action: ImportReviewAction,
+  language: "th" | "en" = "th"
+): string {
+  return language === "en"
+    ? IMPORT_REVIEW_ACTION_LABELS_EN[action]
+    : IMPORT_REVIEW_ACTION_LABELS[action];
+}
+
 export function getPreviewStatusForReviewAction(
   action: ImportReviewAction
 ): ImportPreviewStatus {

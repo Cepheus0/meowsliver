@@ -28,6 +28,7 @@ import {
 import { useFinanceStore } from "@/store/finance-store";
 import { formatBaht, cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { chartTheme } from "@/lib/chart-theme";
@@ -134,12 +135,36 @@ export default function InvestmentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[color:var(--app-text)]">การลงทุน</h1>
-        <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-          ภาพรวมพอร์ตลงทุน รวมทุกประเภท — ลดหย่อนภาษี ผลตอบแทน และ top movers
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="INVESTMENTS"
+        title="การลงทุน"
+        description="มุมมองรวมพอร์ตสำหรับดู allocation, gain/loss, tax impact, และ top movers โดยยังคงแยกอ่านแต่ละ bucket การลงทุนได้ชัดเจน"
+        meta={[
+          {
+            icon: <Wallet size={14} />,
+            label:
+              totalHoldingsCount > 0
+                ? `${totalHoldingsCount} สินทรัพย์`
+                : "ยังไม่มีสินทรัพย์ลงทุน",
+            tone: totalHoldingsCount > 0 ? "brand" : "neutral",
+          },
+          {
+            icon: <TrendingUp size={14} />,
+            label:
+              totalHoldingsCount > 0
+                ? `มูลค่ารวม ${formatBaht(totalPortfolio)}`
+                : "รอนำเข้าหรือเชื่อมพอร์ต",
+            tone: totalHoldingsCount > 0 ? "success" : "neutral",
+          },
+          {
+            icon: <PiggyBank size={14} />,
+            label:
+              totalHoldingsCount > 0
+                ? `Tax saved estimate ${formatBaht(taxSavedEstimate.saved)}`
+                : "ยังไม่มี tax estimate",
+          },
+        ]}
+      />
 
       {totalHoldingsCount === 0 ? (
         <Card>

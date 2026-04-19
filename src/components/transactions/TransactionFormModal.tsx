@@ -14,6 +14,7 @@ import {
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getTransactionDefaultCategory } from "@/lib/transaction-presentation";
+import { useTr } from "@/lib/i18n";
 
 function getCategoriesForType(type: TransactionType) {
   if (type === "income") return [...INCOME_CATEGORIES];
@@ -46,6 +47,7 @@ export function TransactionFormModal({
   initial,
   busy = false,
 }: TransactionFormModalProps) {
+  const tr = useTr();
   const [type, setType] = useState<TransactionType>(initial?.type ?? "expense");
   const [amount, setAmount] = useState(
     initial?.amount != null ? String(initial.amount) : ""
@@ -79,27 +81,37 @@ export function TransactionFormModal({
 
   const accountOptions = useMemo(
     () => [
-      { value: "", label: activeAccounts.length > 0 ? "ใช้บัญชีหลักอัตโนมัติ" : "สร้าง/ใช้บัญชีหลักอัตโนมัติ" },
+      {
+        value: "",
+        label:
+          activeAccounts.length > 0
+            ? tr("ใช้บัญชีหลักอัตโนมัติ", "Auto-use primary account")
+            : tr("สร้าง/ใช้บัญชีหลักอัตโนมัติ", "Create / auto-use primary account"),
+      },
       ...activeAccounts.map((account) => ({
         value: String(account.id),
-        label: account.isDefault ? `${account.name} (บัญชีหลัก)` : account.name,
+        label: account.isDefault
+          ? `${account.name} (${tr("บัญชีหลัก", "primary")})`
+          : account.name,
       })),
     ],
-    [activeAccounts]
+    [activeAccounts, tr]
   );
 
   const handleSave = async () => {
     const parsedAmount = Number(amount);
     if (!date) {
-      setError("กรุณาระบุวันที่");
+      setError(tr("กรุณาระบุวันที่", "Please enter a date"));
       return;
     }
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setError("กรุณาระบุจำนวนเงินที่มากกว่า 0");
+      setError(
+        tr("กรุณาระบุจำนวนเงินที่มากกว่า 0", "Please enter an amount greater than 0")
+      );
       return;
     }
     if (!category.trim()) {
-      setError("กรุณาระบุหมวดหมู่");
+      setError(tr("กรุณาระบุหมวดหมู่", "Please select a category"));
       return;
     }
 
@@ -118,7 +130,7 @@ export function TransactionFormModal({
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "ไม่สามารถบันทึกรายการได้"
+          : tr("ไม่สามารถบันทึกรายการได้", "Could not save transaction")
       );
     }
   };
@@ -131,16 +143,18 @@ export function TransactionFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[color:var(--app-overlay)] p-0 sm:items-center sm:p-4">
-      <div className="theme-border theme-surface-strong w-full max-w-xl rounded-t-xl border p-6 shadow-[var(--app-card-shadow)] sm:rounded-md">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[color:var(--app-overlay)]/90 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="theme-border theme-surface-strong w-full max-w-xl rounded-t-[28px] border p-6 shadow-[0_32px_80px_-48px_rgba(0,0,0,0.55)] sm:rounded-[28px]">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-bold text-[color:var(--app-text)]">
-            {initial ? "แก้ไขรายการ" : "บันทึกรายการใหม่"}
+            {initial
+              ? tr("แก้ไขรายการ", "Edit transaction")
+              : tr("บันทึกรายการใหม่", "Add new transaction")}
           </h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-[color:var(--app-text-subtle)] hover:bg-[color:var(--app-surface-soft)]"
-            aria-label="ปิด"
+            className="rounded-xl p-2 text-[color:var(--app-text-subtle)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
+            aria-label={tr("ปิด", "Close")}
           >
             <X size={20} />
           </button>
@@ -153,11 +167,11 @@ export function TransactionFormModal({
         )}
 
         <div className="space-y-4">
-          <div className="flex rounded-md bg-[color:var(--app-surface-soft)] p-1">
+          <div className="flex rounded-2xl bg-[color:var(--app-surface-soft)] p-1">
             {([
-              { value: "expense", label: "รายจ่าย", activeClass: "bg-[color:var(--expense)] text-white shadow" },
-              { value: "income", label: "รายรับ", activeClass: "bg-[color:var(--income)] text-white shadow" },
-              { value: "transfer", label: "ย้ายเงิน", activeClass: "bg-[color:var(--app-brand)] text-white shadow" },
+              { value: "expense", label: tr("รายจ่าย", "Expense"), activeClass: "bg-[color:var(--expense)] text-white shadow" },
+              { value: "income", label: tr("รายรับ", "Income"), activeClass: "bg-[color:var(--income)] text-white shadow" },
+              { value: "transfer", label: tr("ย้ายเงิน", "Transfer"), activeClass: "bg-[color:var(--app-brand)] text-white shadow" },
             ] as const).map((option) => (
               <button
                 key={option.value}
@@ -175,7 +189,7 @@ export function TransactionFormModal({
                   });
                 }}
                 className={cn(
-                  "flex-1 rounded-lg py-2 text-sm font-medium transition-colors",
+                  "flex-1 rounded-xl py-2.5 text-sm font-medium transition-all duration-200",
                   type === option.value
                     ? option.activeClass
                     : "text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
@@ -189,7 +203,7 @@ export function TransactionFormModal({
           {!initial && (
             <div>
               <p className="mb-2 text-xs font-medium text-[color:var(--app-text-muted)]">
-                เทมเพลตด่วน
+                {tr("เทมเพลตด่วน", "Quick templates")}
               </p>
               <div className="flex flex-wrap gap-2">
                 {QUICK_TEMPLATES.map((template) => (
@@ -197,7 +211,7 @@ export function TransactionFormModal({
                     key={template.label}
                     type="button"
                     onClick={() => applyTemplate(template)}
-                    className="theme-border rounded-lg border px-3 py-1.5 text-xs font-medium text-[color:var(--app-text-muted)] transition-colors hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
+                    className="theme-border rounded-full border px-3 py-1.5 text-xs font-medium text-[color:var(--app-text-muted)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
                   >
                     {template.label}
                   </button>
@@ -209,7 +223,7 @@ export function TransactionFormModal({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-[color:var(--app-text-muted)]">
-                จำนวนเงิน (บาท)
+                {tr("จำนวนเงิน (บาท)", "Amount (THB)")}
               </label>
               <input
                 type="number"
@@ -218,13 +232,13 @@ export function TransactionFormModal({
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
                 placeholder="0"
-                className="theme-border w-full rounded-md border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-[#f54e00]"
+                className="theme-border w-full rounded-xl border bg-transparent px-4 py-3 text-sm text-[color:var(--app-text)] outline-none transition-all duration-200 focus:border-[#f54e00] focus:ring-2 focus:ring-orange-500/20"
               />
             </div>
 
             <div>
               <label className="mb-1 block text-xs font-medium text-[color:var(--app-text-muted)]">
-                บัญชี
+                {tr("บัญชี", "Account")}
               </label>
               <Select
                 value={accountId}
@@ -236,7 +250,7 @@ export function TransactionFormModal({
 
           <div>
             <label className="mb-1 block text-xs font-medium text-[color:var(--app-text-muted)]">
-              หมวดหมู่
+              {tr("หมวดหมู่", "Category")}
             </label>
             <Select
               value={category}
@@ -244,7 +258,7 @@ export function TransactionFormModal({
               options={[
                 ...(type === "transfer"
                   ? []
-                  : [{ value: "", label: "-- เลือกหมวดหมู่ --" }]),
+                  : [{ value: "", label: tr("-- เลือกหมวดหมู่ --", "-- Select category --") }]),
                 ...categories.map((value) => ({ value, label: value })),
               ]}
             />
@@ -253,7 +267,7 @@ export function TransactionFormModal({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-[color:var(--app-text-muted)]">
-                วันที่
+                {tr("วันที่", "Date")}
               </label>
               <input
                 type="date"
@@ -265,7 +279,7 @@ export function TransactionFormModal({
 
             <div>
               <label className="mb-1 block text-xs font-medium text-[color:var(--app-text-muted)]">
-                เวลา (ถ้ามี)
+                {tr("เวลา (ถ้ามี)", "Time (optional)")}
               </label>
               <input
                 type="time"
@@ -278,24 +292,28 @@ export function TransactionFormModal({
 
           <div>
             <label className="mb-1 block text-xs font-medium text-[color:var(--app-text-muted)]">
-              หมายเหตุ
+              {tr("หมายเหตุ", "Note")}
             </label>
             <input
               type="text"
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              placeholder="รายละเอียดเพิ่มเติม..."
+              placeholder={tr("รายละเอียดเพิ่มเติม...", "Additional details...")}
               className="theme-border w-full rounded-md border bg-transparent px-4 py-2.5 text-sm text-[color:var(--app-text)] outline-none focus:border-[#f54e00]"
             />
           </div>
         </div>
 
-        <div className="mt-5 flex justify-end gap-2">
+        <div className="mt-6 flex justify-end gap-2 border-t border-[color:var(--app-divider-soft)] pt-4">
           <Button variant="ghost" onClick={onClose} disabled={busy}>
-            ยกเลิก
+            {tr("ยกเลิก", "Cancel")}
           </Button>
           <Button onClick={handleSave} disabled={busy}>
-            {busy ? "กำลังบันทึก..." : initial ? "บันทึกการแก้ไข" : "บันทึกรายการ"}
+            {busy
+              ? tr("กำลังบันทึก...", "Saving...")
+              : initial
+                ? tr("บันทึกการแก้ไข", "Save changes")
+                : tr("บันทึกรายการ", "Save transaction")}
           </Button>
         </div>
       </div>

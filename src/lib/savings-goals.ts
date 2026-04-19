@@ -13,12 +13,47 @@ export const GOAL_CATEGORY_LABELS: Record<SavingsGoalCategory, string> = {
   custom: "กำหนดเอง",
 };
 
+export const GOAL_CATEGORY_LABELS_EN: Record<SavingsGoalCategory, string> = {
+  wedding: "Wedding",
+  retirement: "Retirement",
+  home_down_payment: "Home down payment",
+  education: "Education",
+  emergency_fund: "Emergency fund",
+  travel: "Travel",
+  custom: "Custom",
+};
+
+export function getGoalCategoryLabel(
+  category: SavingsGoalCategory,
+  language: "th" | "en" = "th"
+): string {
+  return language === "en"
+    ? GOAL_CATEGORY_LABELS_EN[category]
+    : GOAL_CATEGORY_LABELS[category];
+}
+
 export const ENTRY_TYPE_LABELS: Record<SavingsGoalEntryType, string> = {
   contribution: "เติมเงิน",
   growth: "กำไร/ดอกผล",
   withdrawal: "ถอนออก",
   adjustment: "ปรับยอด",
 };
+
+export const ENTRY_TYPE_LABELS_EN: Record<SavingsGoalEntryType, string> = {
+  contribution: "Contribution",
+  growth: "Growth / Interest",
+  withdrawal: "Withdrawal",
+  adjustment: "Adjustment",
+};
+
+export function getEntryTypeLabel(
+  type: SavingsGoalEntryType,
+  language: "th" | "en" = "th"
+): string {
+  return language === "en"
+    ? ENTRY_TYPE_LABELS_EN[type]
+    : ENTRY_TYPE_LABELS[type];
+}
 
 export const SAVINGS_GOAL_PRESETS: Array<{
   category: SavingsGoalCategory;
@@ -109,12 +144,13 @@ export function getEntrySignedAmount(
   return Math.abs(amount);
 }
 
-export function formatGoalDate(dateString?: string) {
+export function formatGoalDate(dateString?: string, language: "th" | "en" = "th") {
   if (!dateString) {
-    return "ยังไม่กำหนด";
+    return language === "en" ? "Not set" : "ยังไม่กำหนด";
   }
 
-  return new Intl.DateTimeFormat("th-TH", {
+  const locale = language === "en" ? "en-US" : "th-TH";
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
   }).format(new Date(`${dateString}T00:00:00`));
 }

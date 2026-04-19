@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   Archive,
   ArrowLeft,
-  ArrowUpRight,
   CheckCircle2,
   PencilLine,
   RotateCcw,
@@ -16,8 +15,9 @@ import {
   Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
   AccountFormModal,
   type AccountFormValues,
@@ -25,11 +25,11 @@ import {
 import { AccountIcon } from "@/components/accounts/AccountIcon";
 import { useFinanceStore } from "@/store/finance-store";
 import {
-  ACCOUNT_TYPE_LABELS,
   type Account,
   type AccountReconciliation,
 } from "@/lib/types";
 import { formatBaht } from "@/lib/utils";
+import { useTr, useAccountTypeLabels } from "@/lib/i18n";
 
 interface AccountDetailResponse {
   account: Account;
@@ -46,36 +46,51 @@ interface AccountDetailResponse {
   transactionCount: number;
 }
 
-const reconciliationStatusMeta: Record<
+function buildReconciliationStatusMeta(
+  tr: (th: string, en: string) => string
+): Record<
   AccountReconciliation["status"],
   {
     label: string;
     className: string;
     description: string;
   }
-> = {
-  aligned: {
-    label: "ยอดตรงกับรายการที่เชื่อมแล้ว",
-    className:
-      "bg-[color:var(--income-soft)] text-[color:var(--income-text)]",
-    description:
-      "ยอดคงเหลือที่บันทึกไว้ตรงกับยอดที่ derive จากธุรกรรมที่เชื่อมกับบัญชีนี้",
-  },
-  needs_attention: {
-    label: "ยอดต่างจากรายการที่เชื่อมแล้ว",
-    className:
-      "bg-[color:var(--neutral-soft)] text-[color:var(--neutral)]",
-    description:
-      "ยอดคงเหลือในบัญชีนี้ยังไม่ตรงกับธุรกรรมที่เชื่อมอยู่ อาจเกิดจาก opening balance หรือการปรับยอดด้วยมือ",
-  },
-  no_linked_transactions: {
-    label: "ยังไม่มีรายการที่เชื่อมไว้",
-    className:
-      "bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)]",
-    description:
-      "ตอนนี้ระบบยังอธิบายยอดด้วย transaction ledger ไม่ได้ เพราะยังไม่มีรายการที่ผูกกับบัญชีนี้",
-  },
-};
+> {
+  return {
+    aligned: {
+      label: tr(
+        "ยอดตรงกับรายการที่เชื่อมแล้ว",
+        "Balance matches linked transactions"
+      ),
+      className:
+        "bg-[color:var(--income-soft)] text-[color:var(--income-text)]",
+      description: tr(
+        "ยอดคงเหลือที่บันทึกไว้ตรงกับยอดที่ derive จากธุรกรรมที่เชื่อมกับบัญชีนี้",
+        "Stored balance matches the value derived from transactions linked to this account."
+      ),
+    },
+    needs_attention: {
+      label: tr(
+        "ยอดต่างจากรายการที่เชื่อมแล้ว",
+        "Balance differs from linked transactions"
+      ),
+      className: "bg-[color:var(--neutral-soft)] text-[color:var(--neutral)]",
+      description: tr(
+        "ยอดคงเหลือในบัญชีนี้ยังไม่ตรงกับธุรกรรมที่เชื่อมอยู่ อาจเกิดจาก opening balance หรือการปรับยอดด้วยมือ",
+        "Stored balance does not match the linked transactions. This may be due to an opening balance or manual adjustments."
+      ),
+    },
+    no_linked_transactions: {
+      label: tr("ยังไม่มีรายการที่เชื่อมไว้", "No linked transactions yet"),
+      className:
+        "bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)]",
+      description: tr(
+        "ตอนนี้ระบบยังอธิบายยอดด้วย transaction ledger ไม่ได้ เพราะยังไม่มีรายการที่ผูกกับบัญชีนี้",
+        "The system cannot explain the balance via the transaction ledger yet because no transactions are linked to this account."
+      ),
+    },
+  };
+}
 
 function formatAccountDate(date?: string) {
   if (!date) return "—";
@@ -85,9 +100,12 @@ function formatAccountDate(date?: string) {
   }).format(new Date(`${date}T00:00:00`));
 }
 
-function formatBalanceDifference(value: number) {
+function formatBalanceDifference(
+  value: number,
+  tr: (th: string, en: string) => string
+) {
   if (Math.abs(value) < 0.01) {
-    return "ไม่มีส่วนต่าง";
+    return tr("ไม่มีส่วนต่าง", "No difference");
   }
 
   return `${value > 0 ? "+" : "-"}${formatBaht(Math.abs(value))}`;
@@ -97,6 +115,9 @@ export default function AccountDetailPage() {
   const params = useParams<{ accountId: string }>();
   const router = useRouter();
   const accountId = Number(params?.accountId);
+  const tr = useTr();
+  const accountTypeLabels = useAccountTypeLabels();
+  const reconciliationStatusMeta = buildReconciliationStatusMeta(tr);
 
   const upsertAccount = useFinanceStore((s) => s.upsertAccount);
   const accounts = useFinanceStore((s) => s.accounts);
@@ -110,7 +131,7 @@ export default function AccountDetailPage() {
   const loadDetail = useMemo(
     () => async () => {
       if (!Number.isInteger(accountId) || accountId <= 0) {
-        setError("ไม่พบบัญชีนี้");
+        setError(tr("ไม่พบบัญชีนี้", "Account not found"));
         setIsLoading(false);
         return;
       }
@@ -128,12 +149,12 @@ export default function AccountDetailPage() {
         setError(null);
       } catch (loadError) {
         console.error(loadError);
-        setError("ไม่สามารถโหลดบัญชีได้");
+        setError(tr("ไม่สามารถโหลดบัญชีได้", "Could not load account"));
       } finally {
         setIsLoading(false);
       }
     },
-    [accountId, upsertAccount]
+    [accountId, upsertAccount, tr]
   );
 
   useEffect(() => {
@@ -164,7 +185,9 @@ export default function AccountDetailPage() {
         error?: string;
       };
       if (!response.ok || !data.account) {
-        throw new Error(data.error ?? "แก้ไขบัญชีไม่สำเร็จ");
+        throw new Error(
+          data.error ?? tr("แก้ไขบัญชีไม่สำเร็จ", "Failed to update account")
+        );
       }
       // Clear other defaults locally if promoted
       if (values.isDefault) {
@@ -179,7 +202,7 @@ export default function AccountDetailPage() {
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "ไม่สามารถแก้ไขบัญชีได้"
+          : tr("ไม่สามารถแก้ไขบัญชีได้", "Could not update account")
       );
     } finally {
       setBusy(false);
@@ -188,7 +211,15 @@ export default function AccountDetailPage() {
 
   const handleArchive = async () => {
     if (!detail) return;
-    if (!confirm(`เก็บบัญชี "${detail.account.name}" ขึ้นหิ้ง?`)) return;
+    if (
+      !confirm(
+        tr(
+          `เก็บบัญชี "${detail.account.name}" ขึ้นหิ้ง?`,
+          `Archive account "${detail.account.name}"?`
+        )
+      )
+    )
+      return;
     setBusy(true);
     try {
       const response = await fetch(`/api/accounts/${detail.account.id}`, {
@@ -203,7 +234,7 @@ export default function AccountDetailPage() {
       router.push("/accounts");
     } catch (e) {
       console.error(e);
-      setError("ไม่สามารถเก็บบัญชีได้");
+      setError(tr("ไม่สามารถเก็บบัญชีได้", "Could not archive account"));
     } finally {
       setBusy(false);
     }
@@ -223,13 +254,19 @@ export default function AccountDetailPage() {
         error?: string;
       };
       if (!response.ok || !data.account) {
-        throw new Error(data.error ?? "ไม่สามารถนำกลับมาใช้งานได้");
+        throw new Error(
+          data.error ?? tr("ไม่สามารถนำกลับมาใช้งานได้", "Could not restore account")
+        );
       }
       upsertAccount(data.account);
       await loadDetail();
     } catch (e) {
       console.error(e);
-      setError(e instanceof Error ? e.message : "ไม่สามารถนำกลับมาใช้งานได้");
+      setError(
+        e instanceof Error
+          ? e.message
+          : tr("ไม่สามารถนำกลับมาใช้งานได้", "Could not restore account")
+      );
     } finally {
       setBusy(false);
     }
@@ -238,18 +275,30 @@ export default function AccountDetailPage() {
   const handleReconcile = async () => {
     if (!detail) return;
     if (!detail.reconciliation.canReconcile) {
-      setError("บัญชีนี้ยังไม่มีรายการที่เชื่อมไว้ให้ reconcile");
+      setError(
+        tr(
+          "บัญชีนี้ยังไม่มีรายการที่เชื่อมไว้ให้ reconcile",
+          "This account has no linked transactions to reconcile"
+        )
+      );
       return;
     }
 
     const shouldProceed =
       detail.reconciliation.status === "aligned" ||
       confirm(
-        `ระบบจะปรับยอดคงเหลือจาก ${formatBaht(
-          detail.reconciliation.storedBalance
-        )} เป็น ${formatBaht(
-          detail.reconciliation.transactionDerivedBalance
-        )} ตามรายการที่เชื่อมแล้ว ต้องการดำเนินการต่อหรือไม่?`
+        tr(
+          `ระบบจะปรับยอดคงเหลือจาก ${formatBaht(
+            detail.reconciliation.storedBalance
+          )} เป็น ${formatBaht(
+            detail.reconciliation.transactionDerivedBalance
+          )} ตามรายการที่เชื่อมแล้ว ต้องการดำเนินการต่อหรือไม่?`,
+          `The balance will be adjusted from ${formatBaht(
+            detail.reconciliation.storedBalance
+          )} to ${formatBaht(
+            detail.reconciliation.transactionDerivedBalance
+          )} based on linked transactions. Continue?`
+        )
       );
 
     if (!shouldProceed) {
@@ -267,7 +316,9 @@ export default function AccountDetailPage() {
         error?: string;
       };
       if (!response.ok || !data.detail) {
-        throw new Error(data.error ?? "ไม่สามารถ reconcile บัญชีได้");
+        throw new Error(
+          data.error ?? tr("ไม่สามารถ reconcile บัญชีได้", "Could not reconcile account")
+        );
       }
       setDetail(data.detail);
       upsertAccount(data.detail.account);
@@ -276,7 +327,7 @@ export default function AccountDetailPage() {
       setError(
         reconcileError instanceof Error
           ? reconcileError.message
-          : "ไม่สามารถ reconcile บัญชีได้"
+          : tr("ไม่สามารถ reconcile บัญชีได้", "Could not reconcile account")
       );
     } finally {
       setBusy(false);
@@ -291,7 +342,7 @@ export default function AccountDetailPage() {
           className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
         >
           <ArrowLeft size={16} />
-          กลับไปหน้าบัญชี
+          {tr("กลับไปหน้าบัญชี", "Back to accounts")}
         </Link>
       </div>
 
@@ -310,14 +361,94 @@ export default function AccountDetailPage() {
         <Card>
           <EmptyState
             icon={<Wallet size={20} />}
-            title="ไม่พบบัญชี"
-            description="บัญชีอาจถูกลบหรือ URL ไม่ถูกต้อง"
+            title={tr("ไม่พบบัญชี", "Account not found")}
+            description={tr(
+              "บัญชีอาจถูกลบหรือ URL ไม่ถูกต้อง",
+              "The account may have been deleted or the URL is incorrect."
+            )}
             actionHref="/accounts"
-            actionLabel="กลับไปหน้าบัญชี"
+            actionLabel={tr("กลับไปหน้าบัญชี", "Back to accounts")}
           />
         </Card>
       ) : (
         <>
+          <PageHeader
+            eyebrow={accountTypeLabels[detail.account.type]}
+            title={detail.account.name}
+            description={
+              detail.account.notes ??
+              tr(
+                "ตรวจยอดคงเหลือ วงเงิน และรายการที่เชื่อมกับบัญชีนี้ในมุมมองเดียว เพื่อดูว่าบัญชีนี้อธิบายตัวเองได้ดีแค่ไหน",
+                "Inspect balance, credit room, and linked transactions in one place to understand how well this account explains itself."
+              )
+            }
+            meta={[
+              {
+                icon: <Wallet size={14} />,
+                label: formatBaht(detail.account.currentBalance),
+                tone: detail.account.currentBalance >= 0 ? "success" : "danger",
+              },
+              {
+                icon: <Hash size={14} />,
+                label: tr(
+                  `${detail.transactionCount.toLocaleString("th-TH")} รายการที่เชื่อม`,
+                  `${detail.transactionCount.toLocaleString("en-US")} linked transactions`
+                ),
+              },
+              ...(detail.account.isDefault
+                ? [
+                    {
+                      icon: <Star size={14} />,
+                      label: tr("บัญชีหลัก", "Default account"),
+                      tone: "brand" as const,
+                    },
+                  ]
+                : []),
+              ...(detail.account.isArchived
+                ? [
+                    {
+                      icon: <Archive size={14} />,
+                      label: tr("เก็บขึ้นหิ้ง", "Archived"),
+                      tone: "neutral" as const,
+                    },
+                  ]
+                : []),
+            ]}
+            actions={
+              <>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setEditing(true)}
+                >
+                  <PencilLine size={14} />
+                  {tr("แก้ไข", "Edit")}
+                </Button>
+                {detail.account.isArchived ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleUnarchive}
+                    disabled={busy}
+                  >
+                    <RotateCcw size={14} />
+                    {tr("กู้คืน", "Restore")}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={handleArchive}
+                    disabled={busy}
+                  >
+                    <Trash2 size={14} />
+                    {tr("เก็บขึ้นหิ้ง", "Archive")}
+                  </Button>
+                )}
+              </>
+            }
+          />
+
           <Card>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
@@ -352,8 +483,11 @@ export default function AccountDetailPage() {
               >
                 <RotateCcw size={14} />
                 {detail.reconciliation.status === "aligned"
-                  ? "รีเช็กยอดจากรายการ"
-                  : "ปรับยอดตามรายการที่เชื่อมแล้ว"}
+                  ? tr("รีเช็กยอดจากรายการ", "Recheck balance from transactions")
+                  : tr(
+                      "ปรับยอดตามรายการที่เชื่อมแล้ว",
+                      "Adjust balance from linked transactions"
+                    )}
               </Button>
             </div>
 
@@ -385,7 +519,7 @@ export default function AccountDetailPage() {
                       : "text-[color:var(--neutral)]"
                   }`}
                 >
-                  {formatBalanceDifference(detail.reconciliation.balanceDifference)}
+                  {formatBalanceDifference(detail.reconciliation.balanceDifference, tr)}
                 </p>
               </div>
             </div>
@@ -427,98 +561,41 @@ export default function AccountDetailPage() {
 
             {detail.reconciliation.linkedTransferCount > 0 && (
               <p className="mt-4 text-sm text-[color:var(--app-text-muted)]">
-                หมายเหตุ: ตอนนี้ transfer rows ยังไม่นับรวมในยอด transaction-derived
-                เพื่อหลีกเลี่ยงการนับซ้ำข้ามบัญชี
+                {tr(
+                  "หมายเหตุ: ตอนนี้ transfer rows ยังไม่นับรวมในยอด transaction-derived เพื่อหลีกเลี่ยงการนับซ้ำข้ามบัญชี",
+                  "Note: transfer rows are not yet included in the transaction-derived balance to avoid double-counting across accounts."
+                )}
               </p>
             )}
           </Card>
 
           <Card className="overflow-hidden">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-              <div className="flex items-start gap-4">
+            <CardHeader className="border-b border-[color:var(--app-divider-soft)] pb-4">
+              <div className="flex items-center gap-4">
                 <div
-                  className="flex h-16 w-16 items-center justify-center rounded-3xl"
+                  className="flex h-14 w-14 items-center justify-center rounded-[22px]"
                   style={{ backgroundColor: `${detail.account.color}22` }}
                 >
                   <AccountIcon
                     icon={detail.account.icon}
                     type={detail.account.type}
-                    size={28}
+                    size={24}
                     className="text-[color:var(--app-text)]"
                   />
                 </div>
                 <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
-                      {detail.account.name}
-                    </h1>
-                    {detail.account.isDefault && (
-                      <span
-                        className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold"
-                        style={{
-                          color: detail.account.color,
-                          backgroundColor: `${detail.account.color}18`,
-                        }}
-                      >
-                        <Star size={12} />
-                        บัญชีหลัก
-                      </span>
-                    )}
-                    {detail.account.isArchived && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--app-surface-soft)] px-2 py-0.5 text-xs font-semibold text-[color:var(--app-text-muted)]">
-                        <Archive size={12} />
-                        เก็บขึ้นหิ้ง
-                      </span>
-                    )}
-                  </div>
+                  <CardTitle>{tr("ภาพรวมบัญชี", "Account snapshot")}</CardTitle>
                   <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-                    {ACCOUNT_TYPE_LABELS[detail.account.type]}
+                    {accountTypeLabels[detail.account.type]}
                   </p>
-                  {detail.account.notes && (
-                    <p className="mt-2 max-w-xl text-sm text-[color:var(--app-text-muted)]">
-                      {detail.account.notes}
-                    </p>
-                  )}
                 </div>
               </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setEditing(true)}
-                >
-                  <PencilLine size={14} />
-                  แก้ไข
-                </Button>
-                {detail.account.isArchived ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleUnarchive}
-                    disabled={busy}
-                  >
-                    <RotateCcw size={14} />
-                    กู้คืน
-                  </Button>
-                ) : (
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={handleArchive}
-                    disabled={busy}
-                  >
-                    <Trash2 size={14} />
-                    เก็บขึ้นหิ้ง
-                  </Button>
-                )}
-              </div>
-            </div>
+            </CardHeader>
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
-                  ยอดคงเหลือ
+                  {tr("ยอดคงเหลือ", "Current balance")}
                 </p>
                 <p
                   className={`mt-1 font-[family-name:var(--font-geist-mono)] text-3xl font-bold ${
@@ -535,7 +612,7 @@ export default function AccountDetailPage() {
                   <>
                     <div>
                       <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
-                        วงเงิน
+                        {tr("วงเงิน", "Credit limit")}
                       </p>
                       <p className="mt-1 text-xl font-semibold text-[color:var(--app-text)]">
                         {formatBaht(detail.account.creditLimit)}
@@ -543,7 +620,7 @@ export default function AccountDetailPage() {
                     </div>
                     <div>
                       <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
-                        เหลือใช้
+                        {tr("เหลือใช้", "Available")}
                       </p>
                       <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-xl font-semibold text-[color:var(--income-text)]">
                         {formatBaht(
@@ -556,7 +633,7 @@ export default function AccountDetailPage() {
                 )}
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
-                  จำนวนรายการ
+                  {tr("จำนวนรายการ", "Transaction count")}
                 </p>
                 <p className="mt-1 text-xl font-semibold text-[color:var(--app-text)]">
                   {detail.transactionCount.toLocaleString("th-TH")}
@@ -567,7 +644,7 @@ export default function AccountDetailPage() {
             {detail.account.aliases.length > 0 && (
               <div className="mt-5 border-t border-[color:var(--app-border)] pt-4">
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
-                  Aliases สำหรับจับคู่ payFrom
+                  {tr("Aliases สำหรับจับคู่ payFrom", "Aliases for payFrom matching")}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {detail.account.aliases.map((alias) => (
@@ -586,13 +663,13 @@ export default function AccountDetailPage() {
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-[color:var(--app-text)]">
-                รายการล่าสุด
+                {tr("รายการล่าสุด", "Recent transactions")}
               </h3>
               <Link
                 href={`/transactions?account=${detail.account.id}`}
                 className="inline-flex items-center gap-1 text-xs font-medium text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
               >
-                ดูทั้งหมด
+                {tr("ดูทั้งหมด", "View all")}
                 <ArrowUpRight size={12} />
               </Link>
             </div>
@@ -600,18 +677,21 @@ export default function AccountDetailPage() {
             {detail.recentTransactions.length === 0 ? (
               <EmptyState
                 icon={<Wallet size={20} />}
-                title="ยังไม่มีรายการในบัญชีนี้"
-                description="เมื่อ import หรือเพิ่มรายการด้วย payFrom ที่จับคู่กับบัญชีนี้ได้ รายการจะขึ้นที่นี่"
+                title={tr("ยังไม่มีรายการในบัญชีนี้", "No transactions on this account yet")}
+                description={tr(
+                  "เมื่อ import หรือเพิ่มรายการด้วย payFrom ที่จับคู่กับบัญชีนี้ได้ รายการจะขึ้นที่นี่",
+                  "When you import or add transactions with a payFrom that matches this account, they'll show up here."
+                )}
               />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[520px] text-sm">
                   <thead>
                     <tr className="text-left text-xs uppercase tracking-wide text-[color:var(--app-text-subtle)]">
-                      <th className="pb-2 pr-3 font-medium">วันที่</th>
-                      <th className="pb-2 pr-3 font-medium">หมวด</th>
-                      <th className="pb-2 pr-3 font-medium">หมายเหตุ</th>
-                      <th className="pb-2 text-right font-medium">จำนวน</th>
+                      <th className="pb-2 pr-3 font-medium">{tr("วันที่", "Date")}</th>
+                      <th className="pb-2 pr-3 font-medium">{tr("หมวด", "Category")}</th>
+                      <th className="pb-2 pr-3 font-medium">{tr("หมายเหตุ", "Note")}</th>
+                      <th className="pb-2 text-right font-medium">{tr("จำนวน", "Amount")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[color:var(--app-border)]">

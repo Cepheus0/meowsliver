@@ -15,6 +15,7 @@ interface SelectProps {
   options: SelectOption[];
   placeholder?: string;
   className?: string;
+  triggerClassName?: string;
   disabled?: boolean;
 }
 
@@ -24,6 +25,7 @@ export function Select({
   options,
   placeholder = "เลือก...",
   className,
+  triggerClassName,
   disabled = false,
 }: SelectProps) {
   const [open, setOpen] = useState(false);
@@ -59,10 +61,11 @@ export function Select({
         disabled={disabled}
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "flex w-full items-center justify-between gap-2 rounded-md border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors",
-          "hover:bg-[color:var(--app-surface-soft)] focus:outline-none focus:ring-2 focus:ring-orange-500/40",
-          open && "ring-2 ring-violet-500/40",
-          disabled && "cursor-not-allowed opacity-40"
+          "flex w-full items-center justify-between gap-2 rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-3.5 py-2.5 text-sm font-medium text-[color:var(--app-text)] shadow-[0_14px_30px_-24px_rgba(26,20,16,0.4)] transition-all duration-200",
+          "hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)] hover:bg-[color:var(--app-surface-soft)] focus:outline-none focus:ring-2 focus:ring-orange-500/40",
+          open && "border-[color:var(--app-brand-border)] ring-2 ring-orange-500/20",
+          disabled && "cursor-not-allowed opacity-40",
+          triggerClassName
         )}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -82,8 +85,8 @@ export function Select({
         <div
           role="listbox"
           className={cn(
-            "absolute left-0 top-full z-50 mt-1 min-w-full overflow-hidden rounded-lg border border-[color:var(--app-border-strong)]",
-            "bg-[color:var(--app-surface-strong)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]",
+            "absolute left-0 top-full z-50 mt-2 min-w-full overflow-hidden rounded-2xl border border-[color:var(--app-border-strong)]",
+            "bg-[color:var(--app-surface-strong)] shadow-[0_24px_48px_-30px_rgba(0,0,0,0.3)]",
             "animate-in fade-in-0 zoom-in-95 duration-100"
           )}
         >

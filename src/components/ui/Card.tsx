@@ -9,7 +9,7 @@ export function Card({ children, className }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-5 shadow-[var(--app-card-shadow)]",
+        "rounded-[24px] border border-[color:var(--app-border)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--app-surface)_96%,transparent),color-mix(in_srgb,var(--app-surface-soft)_28%,transparent))] p-5 shadow-[0_22px_60px_-48px_rgba(24,18,12,0.5)] backdrop-blur-sm",
         className
       )}
     >
@@ -20,7 +20,7 @@ export function Card({ children, className }: CardProps) {
 
 export function CardHeader({ children, className }: CardProps) {
   return (
-    <div className={cn("mb-3 flex items-center justify-between", className)}>
+    <div className={cn("mb-4 flex items-start justify-between gap-4", className)}>
       {children}
     </div>
   );
@@ -36,7 +36,7 @@ export function CardTitle({
   return (
     <h3
       className={cn(
-        "text-sm font-semibold text-[color:var(--app-text-muted)]",
+        "text-base font-semibold tracking-[-0.01em] text-[color:var(--app-text)]",
         className
       )}
     >

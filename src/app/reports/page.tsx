@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   BarChart,
@@ -17,6 +18,7 @@ import {
 import { useFinanceStore } from "@/store/finance-store";
 import { formatBaht, THAI_MONTHS } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ChartViewport } from "@/components/charts/ChartViewport";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
@@ -24,7 +26,7 @@ import {
   getMonthlyNetWorthTrendFromTransactions,
 } from "@/lib/finance-analytics";
 import { chartTheme, chartColors } from "@/lib/chart-theme";
-import { FileSpreadsheet } from "lucide-react";
+import { CalendarDays, FileSpreadsheet, LineChart as LineChartIcon, Receipt } from "lucide-react";
 
 function formatCurrencyAxis(value: number) {
   const absoluteValue = Math.abs(value);
@@ -87,14 +89,40 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
-          รายงาน
-        </h1>
-        <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-          วิเคราะห์ภาพรวมการเงินย้อนหลัง
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="REPORTS"
+        title="รายงาน"
+        description="วิเคราะห์แนวโน้มรายรับ รายจ่าย net worth และ savings rate จากธุรกรรมจริงย้อนหลังในมุมมองที่พร้อมใช้ตัดสินใจ"
+        meta={[
+          {
+            icon: <CalendarDays size={14} />,
+            label: `ปีที่เลือก ${selectedYear}`,
+            tone: "brand",
+          },
+          {
+            icon: <Receipt size={14} />,
+            label: hasAnyTransactions
+              ? `${importedTransactions.length.toLocaleString()} ธุรกรรมในระบบ`
+              : "ยังไม่มีธุรกรรมสำหรับสร้างรายงาน",
+            tone: hasAnyTransactions ? "default" : "neutral",
+          },
+          {
+            icon: <LineChartIcon size={14} />,
+            label: hasSelectedYearData
+              ? `มีข้อมูลปี ${selectedYear}`
+              : `ยังไม่มีข้อมูลปี ${selectedYear}`,
+            tone: hasSelectedYearData ? "success" : "neutral",
+          },
+        ]}
+        actions={
+          <Link
+            href={hasAnyTransactions ? "/transactions" : "/import"}
+            className="inline-flex items-center justify-center rounded-xl border border-[color:var(--app-brand)] bg-[color:var(--app-brand)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_32px_-20px_var(--app-brand-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[color:var(--app-brand-hover)]"
+          >
+            {hasAnyTransactions ? "เปิดรายการต้นทาง" : "เริ่มนำเข้าข้อมูล"}
+          </Link>
+        }
+      />
 
       {!hasAnyTransactions ? (
         <Card>

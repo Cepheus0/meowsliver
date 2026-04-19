@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useFinanceStore } from "@/store/finance-store";
 import { useFinanceStoreHydrated } from "@/store/use-finance-store-hydrated";
@@ -10,7 +11,9 @@ import {
   getTransactionTypeLabel,
 } from "@/lib/transaction-presentation";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
+  CalendarDays,
   Search,
   Filter,
   ArrowUpRight,
@@ -34,6 +37,7 @@ import {
   type MonthlyFilterState,
 } from "@/lib/monthly-detail-analytics";
 import type { Transaction, TransactionType } from "@/lib/types";
+import { useTr } from "@/lib/i18n";
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
@@ -47,6 +51,7 @@ export default function TransactionsPage() {
     accounts,
   } = useFinanceStore();
   const storeHydrated = useFinanceStoreHydrated();
+  const tr = useTr();
   const transactions = getTransactions();
   const visibleTransactions = useMemo(
     () => (storeHydrated ? transactions : []),
@@ -163,7 +168,9 @@ export default function TransactionsPage() {
 
       const data = (await response.json()) as { error?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? "ไม่สามารถอัปเดตรายการได้");
+        throw new Error(
+          data.error ?? tr("ไม่สามารถอัปเดตรายการได้", "Could not update transaction")
+        );
       }
 
       await refreshAfterMutation(Number(values.date.slice(0, 4)));
@@ -171,7 +178,9 @@ export default function TransactionsPage() {
       setEditingTx(null);
     } catch (error) {
       setMutationError(
-        error instanceof Error ? error.message : "ไม่สามารถอัปเดตรายการได้"
+        error instanceof Error
+          ? error.message
+          : tr("ไม่สามารถอัปเดตรายการได้", "Could not update transaction")
       );
     } finally {
       setMutationBusy(false);
@@ -179,7 +188,15 @@ export default function TransactionsPage() {
   };
 
   const handleDelete = async (transaction: Transaction) => {
-    if (!confirm(`ลบรายการ "${transaction.category}" ใช่หรือไม่?`)) return;
+    if (
+      !confirm(
+        tr(
+          `ลบรายการ "${transaction.category}" ใช่หรือไม่?`,
+          `Delete transaction "${transaction.category}"?`
+        )
+      )
+    )
+      return;
 
     setMutationBusy(true);
     setMutationError(null);
@@ -191,14 +208,18 @@ export default function TransactionsPage() {
 
       const data = (await response.json()) as { error?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? "ไม่สามารถลบรายการได้");
+        throw new Error(
+          data.error ?? tr("ไม่สามารถลบรายการได้", "Could not delete transaction")
+        );
       }
 
       await refreshAfterMutation(Number(transaction.date.slice(0, 4)));
       setSelectedTx(null);
     } catch (error) {
       setMutationError(
-        error instanceof Error ? error.message : "ไม่สามารถลบรายการได้"
+        error instanceof Error
+          ? error.message
+          : tr("ไม่สามารถลบรายการได้", "Could not delete transaction")
       );
     } finally {
       setMutationBusy(false);
@@ -207,14 +228,59 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[color:var(--app-text)]">
-          รายการทั้งหมด
-        </h1>
-        <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-          ปี {selectedYear} — {storeHydrated ? visibleTransactions.length : "กำลังโหลด..."}
-        </p>
-      </div>
+      <PageHeader
+        eyebrow={tr("TRANSACTIONS · รายการ", "TRANSACTIONS")}
+        title={tr("รายการทั้งหมด", "All transactions")}
+        description={tr(
+          "ค้นหา กรอง และเปิดดูแต่ละรายการอย่างรวดเร็วในปีที่เลือก โดยคงโฟลว์แก้ไขและตรวจสอบแหล่งที่มาไว้ในหน้าเดียว",
+          "Search, filter, and inspect each transaction quickly within the selected year while keeping edit and provenance workflows in one place."
+        )}
+        meta={[
+          {
+            icon: <CalendarDays size={14} />,
+            label: `${tr("ปี", "Year")} ${selectedYear}`,
+            tone: "brand",
+          },
+          {
+            icon: <Search size={14} />,
+            label: storeHydrated
+              ? tr(
+                  `${visibleTransactions.length.toLocaleString()} รายการในปีนี้`,
+                  `${visibleTransactions.length.toLocaleString()} rows this year`
+                )
+              : tr("กำลังโหลดธุรกรรม", "Loading transactions"),
+            tone: storeHydrated ? "default" : "neutral",
+          },
+          ...(activeFilterCount > 0
+            ? [
+                {
+                  icon: <Sliders size={14} />,
+                  label: tr(
+                    `${activeFilterCount} ตัวกรองทำงานอยู่`,
+                    `${activeFilterCount} filters active`
+                  ),
+                  tone: "neutral" as const,
+                },
+              ]
+            : []),
+        ]}
+        actions={
+          <>
+            <Link
+              href="/reports"
+              className="inline-flex items-center justify-center rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-sm font-medium text-[color:var(--app-text)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)]"
+            >
+              {tr("ดูรายงาน", "Open reports")}
+            </Link>
+            <Link
+              href="/import"
+              className="inline-flex items-center justify-center rounded-xl border border-[color:var(--app-brand)] bg-[color:var(--app-brand)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_32px_-20px_var(--app-brand-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[color:var(--app-brand-hover)]"
+            >
+              {tr("นำเข้าข้อมูลเพิ่ม", "Import more data")}
+            </Link>
+          </>
+        }
+      />
 
       {mutationError ? (
         <Card className="border-[color:var(--expense-soft)] bg-[color:var(--expense-soft)] text-[color:var(--expense-text)]">
@@ -226,18 +292,27 @@ export default function TransactionsPage() {
         <Card>
           <EmptyState
             icon={<Search size={20} />}
-            title="กำลังเตรียมข้อมูลธุรกรรม"
-            description="กำลังโหลดรายการที่บันทึกไว้และตรวจสอบข้อมูลล่าสุดของปีที่เลือก"
+            title={tr("กำลังเตรียมข้อมูลธุรกรรม", "Preparing transaction data")}
+            description={tr(
+              "กำลังโหลดรายการที่บันทึกไว้และตรวจสอบข้อมูลล่าสุดของปีที่เลือก",
+              "Loading saved transactions and checking the latest data for the selected year."
+            )}
           />
         </Card>
       ) : visibleTransactions.length === 0 ? (
         <Card>
           <EmptyState
             icon={<Search size={20} />}
-            title={`ยังไม่มีรายการในปี ${selectedYear}`}
-            description="นำเข้าธุรกรรมจริงหรือบันทึกรายการใหม่ก่อน แล้วตารางรายการทั้งหมดจะปรากฏที่หน้านี้"
+            title={tr(
+              `ยังไม่มีรายการในปี ${selectedYear}`,
+              `No transactions in ${selectedYear} yet`
+            )}
+            description={tr(
+              "นำเข้าธุรกรรมจริงหรือบันทึกรายการใหม่ก่อน แล้วตารางรายการทั้งหมดจะปรากฏที่หน้านี้",
+              "Import real transactions or add a new entry first, then the full transaction table will appear here."
+            )}
             actionHref="/import"
-            actionLabel="ไปหน้านำเข้า"
+            actionLabel={tr("ไปหน้านำเข้า", "Go to import")}
           />
         </Card>
       ) : (
@@ -257,7 +332,10 @@ export default function TransactionsPage() {
                     setFilters((prev) => ({ ...prev, search: e.target.value }));
                     setCurrentPage(1);
                   }}
-                  placeholder="ค้นหา หมวด / ผู้รับ / หมายเหตุ..."
+                  placeholder={tr(
+                    "ค้นหา หมวด / ผู้รับ / หมายเหตุ...",
+                    "Search category / recipient / note..."
+                  )}
                   className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] py-2.5 pl-9 pr-4 text-sm text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
                 />
               </div>
@@ -278,7 +356,9 @@ export default function TransactionsPage() {
                           : "text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
                       }`}
                     >
-                      {type === "all" ? "ทั้งหมด" : getTransactionTypeLabel(type)}
+                      {type === "all"
+                        ? tr("ทั้งหมด", "All")
+                        : getTransactionTypeLabel(type)}
                     </button>
                   );
                 })}
@@ -293,7 +373,7 @@ export default function TransactionsPage() {
                 aria-expanded={showAdvancedFilters}
               >
                 <Sliders size={12} />
-                ตัวกรอง
+                {tr("ตัวกรอง", "Filters")}
                 {activeFilterCount > 0 && (
                   <span className="rounded-full bg-[color:var(--app-brand-text)] px-1.5 py-0.5 text-[10px] font-bold text-white">
                     {activeFilterCount}
@@ -308,7 +388,7 @@ export default function TransactionsPage() {
                   }}
                   className="text-xs font-medium text-[color:var(--app-text-muted)] underline underline-offset-2 hover:text-[color:var(--app-text)]"
                 >
-                  ล้างทั้งหมด
+                  {tr("ล้างทั้งหมด", "Clear all")}
                 </button>
               )}
             </div>
@@ -317,31 +397,31 @@ export default function TransactionsPage() {
             {showAdvancedFilters && (
               <div className="mt-4 space-y-4 border-t border-[color:var(--app-divider-soft)] pt-4">
                 <FilterChips
-                  label="หมวด"
+                  label={tr("หมวด", "Category")}
                   slices={breakdowns.category}
                   selected={filters.categories}
                   onToggle={(v) => toggleInSet("categories", v)}
                 />
                 <FilterChips
-                  label="แท็ก"
+                  label={tr("แท็ก", "Tag")}
                   slices={breakdowns.tag}
                   selected={filters.tags}
                   onToggle={(v) => toggleInSet("tags", v)}
                 />
                 <FilterChips
-                  label="ช่องทางจ่าย"
+                  label={tr("ช่องทางจ่าย", "Payment channel")}
                   slices={breakdowns.paymentChannel}
                   selected={filters.paymentChannels}
                   onToggle={(v) => toggleInSet("paymentChannels", v)}
                 />
                 <FilterChips
-                  label="จากบัญชี"
+                  label={tr("จากบัญชี", "From account")}
                   slices={breakdowns.payFrom}
                   selected={filters.payFroms}
                   onToggle={(v) => toggleInSet("payFroms", v)}
                 />
                 <FilterChips
-                  label="ผู้รับ"
+                  label={tr("ผู้รับ", "Recipient")}
                   slices={breakdowns.recipient}
                   selected={filters.recipients}
                   onToggle={(v) => toggleInSet("recipients", v)}
@@ -354,8 +434,14 @@ export default function TransactionsPage() {
             <CardHeader>
               <CardTitle>
                 {filtered.length === visibleTransactions.length
-                  ? `รายการทั้งหมด (${visibleTransactions.length})`
-                  : `แสดง ${pageStart}-${pageEnd} จาก ${filtered.length} รายการ`}
+                  ? tr(
+                      `รายการทั้งหมด (${visibleTransactions.length})`,
+                      `All transactions (${visibleTransactions.length})`
+                    )
+                  : tr(
+                      `แสดง ${pageStart}-${pageEnd} จาก ${filtered.length} รายการ`,
+                      `Showing ${pageStart}-${pageEnd} of ${filtered.length}`
+                    )}
               </CardTitle>
             </CardHeader>
 
@@ -364,19 +450,19 @@ export default function TransactionsPage() {
                 <thead>
                   <tr className="border-b border-[color:var(--app-divider)]">
                     <th className="py-3 pr-4 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
-                      วันที่
+                      {tr("วันที่", "Date")}
                     </th>
                     <th className="py-3 pr-4 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
-                      ประเภท
+                      {tr("ประเภท", "Type")}
                     </th>
                     <th className="py-3 pr-4 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
-                      หมวดหมู่
+                      {tr("หมวดหมู่", "Category")}
                     </th>
                     <th className="py-3 pr-4 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
-                      หมายเหตุ
+                      {tr("หมายเหตุ", "Note")}
                     </th>
                     <th className="py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-text-subtle)]">
-                      จำนวน
+                      {tr("จำนวน", "Amount")}
                     </th>
                   </tr>
                 </thead>
@@ -386,10 +472,10 @@ export default function TransactionsPage() {
                     const isTransfer = tx.type === "transfer";
 
                     const typePill = isIncome
-                      ? { label: "รายรับ", bg: "var(--income-soft)", text: "var(--income-text)", icon: <ArrowUpRight size={11} /> }
+                      ? { label: tr("รายรับ", "Income"), bg: "var(--income-soft)", text: "var(--income-text)", icon: <ArrowUpRight size={11} /> }
                       : isTransfer
-                        ? { label: "โอน", bg: "var(--neutral-soft)", text: "var(--neutral)", icon: <ArrowRightLeft size={11} /> }
-                        : { label: "รายจ่าย", bg: "var(--expense-soft)", text: "var(--expense-text)", icon: <ArrowDownRight size={11} /> };
+                        ? { label: tr("โอน", "Transfer"), bg: "var(--neutral-soft)", text: "var(--neutral)", icon: <ArrowRightLeft size={11} /> }
+                        : { label: tr("รายจ่าย", "Expense"), bg: "var(--expense-soft)", text: "var(--expense-text)", icon: <ArrowDownRight size={11} /> };
 
                     return (
                       <tr
@@ -448,7 +534,10 @@ export default function TransactionsPage() {
 
               {filtered.length === 0 && (
                 <p className="py-6 text-center text-sm text-[color:var(--app-text-muted)]">
-                  ไม่พบรายการที่ตรงกับตัวกรองที่เลือก
+                  {tr(
+                    "ไม่พบรายการที่ตรงกับตัวกรองที่เลือก",
+                    "No transactions match the selected filters"
+                  )}
                 </p>
               )}
             </div>
@@ -457,7 +546,7 @@ export default function TransactionsPage() {
               <div className="mt-5 flex flex-col gap-3 border-t border-[color:var(--app-divider-soft)] pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-[color:var(--app-text-muted)]">
-                    รายการต่อหน้า
+                    {tr("รายการต่อหน้า", "Per page")}
                   </span>
                   <div className="flex items-center gap-1 rounded-xl bg-[color:var(--app-surface-soft)] p-1">
                     {PAGE_SIZE_OPTIONS.map((size) => (
@@ -481,7 +570,10 @@ export default function TransactionsPage() {
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <p className="text-sm text-[color:var(--app-text-muted)]">
-                    หน้า {safeCurrentPage} จาก {totalPages}
+                    {tr(
+                      `หน้า ${safeCurrentPage} จาก ${totalPages}`,
+                      `Page ${safeCurrentPage} of ${totalPages}`
+                    )}
                   </p>
                   <div className="flex items-center gap-2">
                     <button
@@ -490,7 +582,7 @@ export default function TransactionsPage() {
                       className="theme-border theme-surface-soft inline-flex items-center gap-1 rounded-xl border px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-strong)] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <ChevronLeft size={16} />
-                      ก่อนหน้า
+                      {tr("ก่อนหน้า", "Previous")}
                     </button>
                     <button
                       onClick={() =>
@@ -499,7 +591,7 @@ export default function TransactionsPage() {
                       disabled={safeCurrentPage === totalPages}
                       className="theme-border theme-surface-soft inline-flex items-center gap-1 rounded-xl border px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-strong)] disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      ถัดไป
+                      {tr("ถัดไป", "Next")}
                       <ChevronRight size={16} />
                     </button>
                   </div>
@@ -513,7 +605,7 @@ export default function TransactionsPage() {
       <TransactionDetailDrawer
         transaction={selectedTx}
         scopeTransactions={filtered}
-        scopeLabel="ในมุมมองที่กำลังกรอง"
+        scopeLabel={tr("ในมุมมองที่กำลังกรอง", "in current filtered view")}
         onEdit={(transaction) => setEditingTx(transaction)}
         onDelete={handleDelete}
         mutationBusy={mutationBusy}
