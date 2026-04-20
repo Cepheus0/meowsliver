@@ -68,6 +68,7 @@ const PIE_COLORS = [
 export default function MonthlyReportPage() {
   const router = useRouter();
   const tr = useTr();
+  const language = useLanguage();
   const params = useParams<{ year: string; month: string }>();
   const year = Number.parseInt(params.year ?? "", 10);
   const monthIndex = Number.parseInt(params.month ?? "", 10) - 1;
@@ -588,7 +589,7 @@ export default function MonthlyReportPage() {
                           <td className="whitespace-nowrap py-2.5 pr-3">
                             <div className="flex flex-col">
                               <span className="font-medium text-[color:var(--app-text)]">
-                                {formatShortDate(tx.date)}
+                                {formatShortDate(tx.date, language)}
                               </span>
                               <span className="text-[10px] text-[color:var(--app-text-subtle)]">
                                 {tx.time ?? "-"}

@@ -487,7 +487,7 @@ export default function TransactionsPage() {
                       >
                         <td className="whitespace-nowrap py-3 pr-4">
                           <p className="text-sm font-medium text-[color:var(--app-text)]">
-                            {formatShortDate(tx.date)}
+                            {formatShortDate(tx.date, language)}
                           </p>
                           <p className="text-[11px] text-[color:var(--app-text-subtle)]">
                             {tx.time ?? "—"}
