@@ -58,58 +58,79 @@ export function getEntryTypeLabel(
 export const SAVINGS_GOAL_PRESETS: Array<{
   category: SavingsGoalCategory;
   name: string;
+  nameEn: string;
   icon: string;
   color: string;
   description: string;
+  descriptionEn: string;
   strategyLabel: string;
+  strategyLabelEn: string;
 }> = [
   {
     category: "wedding",
     name: "เงินแต่งงาน",
+    nameEn: "Wedding fund",
     icon: "💍",
     color: "#ec4899",
     description: "วางงบงานแต่งและติดตามเงินสะสมรายเดือนให้ชัดเจน",
+    descriptionEn: "Plan the wedding budget and track monthly contributions clearly.",
     strategyLabel: "กองทุนผสม + เงินฝาก",
+    strategyLabelEn: "Balanced fund + deposit",
   },
   {
     category: "retirement",
     name: "เงินเกษียณ",
+    nameEn: "Retirement fund",
     icon: "🌅",
     color: "#f59e0b",
     description: "สะสมยาวและแยกผลตอบแทนออกจากเงินต้นให้เห็นชัด",
+    descriptionEn: "Save for the long term and see returns separated from principal.",
     strategyLabel: "RMF / กองทุนระยะยาว",
+    strategyLabelEn: "RMF / long-term fund",
   },
   {
     category: "home_down_payment",
     name: "เงินดาวน์บ้าน",
+    nameEn: "Home down payment",
     icon: "🏡",
     color: "#3b82f6",
     description: "ติดตามวงเงินดาวน์บ้านและ pace ที่ต้องออมต่อเดือน",
+    descriptionEn: "Track the down-payment target and the monthly pace you need to hit.",
     strategyLabel: "บัญชีฝากประจำ / MMF",
+    strategyLabelEn: "Time deposit / MMF",
   },
   {
     category: "education",
     name: "กองทุนการศึกษา",
+    nameEn: "Education fund",
     icon: "🎓",
     color: "#8b5cf6",
     description: "เก็บเงินสำหรับค่าเรียนหรือ upskill ระยะกลาง",
+    descriptionEn: "Save for tuition or mid-term upskilling.",
     strategyLabel: "กองทุนตราสารหนี้",
+    strategyLabelEn: "Fixed-income fund",
   },
   {
     category: "emergency_fund",
     name: "เงินสำรองฉุกเฉิน",
+    nameEn: "Emergency fund",
     icon: "🛟",
     color: "#22c55e",
     description: "กันเงินเผื่อฉุกเฉินและเห็น readiness ได้ตลอดเวลา",
+    descriptionEn: "Set aside a safety net and keep readiness visible at all times.",
     strategyLabel: "บัญชีออมทรัพย์สภาพคล่องสูง",
+    strategyLabelEn: "High-liquidity savings account",
   },
   {
     category: "travel",
     name: "ทริปในฝัน",
+    nameEn: "Dream trip",
     icon: "✈️",
     color: "#06b6d4",
     description: "แยกเงินท่องเที่ยวออกจากค่าใช้จ่ายปกติ",
+    descriptionEn: "Keep travel money separate from everyday spending.",
     strategyLabel: "บัญชีแยกออมรายเดือน",
+    strategyLabelEn: "Dedicated monthly savings account",
   },
 ];
 

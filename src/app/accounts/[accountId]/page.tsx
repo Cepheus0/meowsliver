@@ -31,7 +31,7 @@ import {
   type AccountReconciliation,
 } from "@/lib/types";
 import { formatBaht } from "@/lib/utils";
-import { useTr, useAccountTypeLabels } from "@/lib/i18n";
+import { useTr, useLanguage, useAccountTypeLabels } from "@/lib/i18n";
 
 interface AccountDetailResponse {
   account: Account;
@@ -94,10 +94,11 @@ function buildReconciliationStatusMeta(
   };
 }
 
-function formatAccountDate(date?: string) {
+function formatAccountDate(date?: string, language: "th" | "en" = "th") {
   if (!date) return "—";
 
-  return new Intl.DateTimeFormat("th-TH", {
+  const locale = language === "en" ? "en-US" : "th-TH";
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
   }).format(new Date(`${date}T00:00:00`));
 }
@@ -118,6 +119,7 @@ export default function AccountDetailPage() {
   const router = useRouter();
   const accountId = Number(params?.accountId);
   const tr = useTr();
+  const language = useLanguage();
   const accountTypeLabels = useAccountTypeLabels();
   const reconciliationStatusMeta = buildReconciliationStatusMeta(tr);
 
@@ -556,7 +558,7 @@ export default function AccountDetailPage() {
                   Last linked txn
                 </p>
                 <p className="mt-1 text-base font-semibold text-[color:var(--app-text)]">
-                  {formatAccountDate(detail.reconciliation.lastLinkedTransactionDate)}
+                  {formatAccountDate(detail.reconciliation.lastLinkedTransactionDate, language)}
                 </p>
               </div>
             </div>

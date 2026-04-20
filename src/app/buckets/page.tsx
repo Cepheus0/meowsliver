@@ -303,19 +303,19 @@ export default function BucketsPage() {
                   {preset.icon}
                 </div>
                 <p className="mt-4 text-base font-semibold text-[color:var(--app-text)]">
-                  {preset.name}
+                  {tr(preset.name, preset.nameEn)}
                 </p>
                 <p className="mt-1 text-sm leading-relaxed text-[color:var(--app-text-muted)]">
-                  {preset.description}
+                  {tr(preset.description, preset.descriptionEn)}
                 </p>
               </div>
               <Sparkles size={18} className="shrink-0 text-[color:var(--app-text-subtle)]" />
             </div>
             <p className="mt-4 text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-subtle)]">
-              Suggested vehicle
+              {tr("ช่องทางออมที่แนะนำ", "Suggested vehicle")}
             </p>
             <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-              {preset.strategyLabel}
+              {tr(preset.strategyLabel, preset.strategyLabelEn)}
             </p>
           </button>
         ))}
@@ -415,7 +415,7 @@ export default function BucketsPage() {
 
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text)]">
-                  ช่องทางออม / กลยุทธ์
+                  {tr("ช่องทางออม / กลยุทธ์", "Savings vehicle / strategy")}
                 </span>
                 <input
                   value={form.strategyLabel}
@@ -426,13 +426,13 @@ export default function BucketsPage() {
                     }))
                   }
                   className="theme-border theme-surface w-full rounded-xl border px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[#f54e00]"
-                  placeholder="เช่น RMF, Money Market Fund, บัญชีฝากประจำ"
+                  placeholder={tr("เช่น RMF, Money Market Fund, บัญชีฝากประจำ", "e.g. RMF, Money Market Fund, fixed deposit")}
                 />
               </label>
 
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text)]">
-                  ยอดตั้งต้น (ถ้ามี)
+                  {tr("ยอดตั้งต้น (ถ้ามี)", "Starting balance (optional)")}
                 </span>
                 <input
                   type="number"
@@ -446,13 +446,13 @@ export default function BucketsPage() {
                     }))
                   }
                   className="theme-border theme-surface w-full rounded-xl border px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[#f54e00]"
-                  placeholder="เช่น 50000"
+                  placeholder={tr("เช่น 50000", "e.g. 50000")}
                 />
               </label>
 
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text)]">
-                  วันที่ยอดตั้งต้น
+                  {tr("วันที่ยอดตั้งต้น", "Starting balance date")}
                 </span>
                 <input
                   type="date"
@@ -469,7 +469,7 @@ export default function BucketsPage() {
 
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text)]">
-                  ไอคอน
+                  {tr("ไอคอน", "Icon")}
                 </span>
                 <input
                   value={form.icon}
@@ -480,14 +480,14 @@ export default function BucketsPage() {
                     }))
                   }
                   className="theme-border theme-surface w-full rounded-xl border px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[#f54e00]"
-                  placeholder="เช่น 💍"
+                  placeholder={tr("เช่น 💍", "e.g. 💍")}
                 />
               </label>
             </div>
 
             <label className="space-y-2 text-sm">
               <span className="font-medium text-[color:var(--app-text)]">
-                บันทึกเพิ่มเติม
+                {tr("บันทึกเพิ่มเติม", "Additional notes")}
               </span>
               <textarea
                 value={form.notes}
@@ -499,20 +499,23 @@ export default function BucketsPage() {
                 }
                 rows={4}
                 className="theme-border theme-surface w-full rounded-xl border px-4 py-3 text-[color:var(--app-text)] outline-none transition-colors focus:border-[#f54e00]"
-                placeholder="เช่น เป้าหมายนี้อยากเก็บให้ครบก่อน Q4 ปีหน้า และคุม volatility ต่ำ"
+                placeholder={tr(
+                  "เช่น เป้าหมายนี้อยากเก็บให้ครบก่อน Q4 ปีหน้า และคุม volatility ต่ำ",
+                  "e.g. Fund this fully before Q4 next year and keep volatility low"
+                )}
               />
             </label>
 
             <div className="flex flex-wrap gap-3">
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "กำลังบันทึก..." : "สร้างเป้าหมาย"}
+                {isSubmitting ? tr("กำลังบันทึก...", "Saving...") : tr("สร้างเป้าหมาย", "Create goal")}
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setShowCreateForm(false)}
               >
-                ยกเลิก
+                {tr("ยกเลิก", "Cancel")}
               </Button>
             </div>
           </form>
@@ -532,28 +535,40 @@ export default function BucketsPage() {
         <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <PortfolioStatCard
-              label="จำนวนเป้าหมาย"
+              label={tr("จำนวนเป้าหมาย", "Goal count")}
               value={`${portfolio.overview.goalCount}`}
               helper={
                 portfolio.overview.archivedGoalCount > 0
-                  ? `${portfolio.overview.completedGoals} เป้าหมายถึงแล้ว • archived ${portfolio.overview.archivedGoalCount}`
-                  : `${portfolio.overview.completedGoals} เป้าหมายถึงแล้ว`
+                  ? tr(
+                      `${portfolio.overview.completedGoals} เป้าหมายถึงแล้ว • archived ${portfolio.overview.archivedGoalCount}`,
+                      `${portfolio.overview.completedGoals} reached • ${portfolio.overview.archivedGoalCount} archived`
+                    )
+                  : tr(
+                      `${portfolio.overview.completedGoals} เป้าหมายถึงแล้ว`,
+                      `${portfolio.overview.completedGoals} goals reached`
+                    )
               }
             />
             <PortfolioStatCard
-              label="สะสมแล้ว"
+              label={tr("สะสมแล้ว", "Saved")}
               value={formatBaht(portfolio.overview.totalSaved)}
-              helper={`ต้องเก็บเพิ่มอีก ${formatBaht(portfolio.overview.remainingAmount)}`}
+              helper={tr(
+                `ต้องเก็บเพิ่มอีก ${formatBaht(portfolio.overview.remainingAmount)}`,
+                `${formatBaht(portfolio.overview.remainingAmount)} left to save`
+              )}
             />
             <PortfolioStatCard
-              label="กำไรรวม"
+              label={tr("กำไรรวม", "Total growth")}
               value={formatBaht(portfolio.overview.totalGrowth)}
-              helper="รวมดอกผลและกำไรจากทุกเป้าหมาย"
+              helper={tr("รวมดอกผลและกำไรจากทุกเป้าหมาย", "Combined interest and gains across all goals")}
             />
             <PortfolioStatCard
-              label="Progress รวม"
+              label={tr("Progress รวม", "Overall progress")}
               value={`${Math.round(portfolio.overview.overallProgressPercent)}%`}
-              helper={`เทียบกับเป้ารวม ${formatBaht(portfolio.overview.totalTarget)}`}
+              helper={tr(
+                `เทียบกับเป้ารวม ${formatBaht(portfolio.overview.totalTarget)}`,
+                `vs. total target ${formatBaht(portfolio.overview.totalTarget)}`
+              )}
             />
           </div>
 
@@ -563,13 +578,19 @@ export default function BucketsPage() {
                 icon={<PiggyBank size={20} />}
                 title={
                   portfolio.archivedGoals.length > 0
-                    ? "ยังไม่มีเป้าหมายที่ active อยู่ตอนนี้"
-                    : "ยังไม่มี Savings Goals"
+                    ? tr("ยังไม่มีเป้าหมายที่ active อยู่ตอนนี้", "No active goals right now")
+                    : tr("ยังไม่มี Savings Goals", "No savings goals yet")
                 }
                 description={
                   portfolio.archivedGoals.length > 0
-                    ? `ตอนนี้มี ${portfolio.archivedGoals.length} เป้าหมายที่เก็บขึ้นหิ้งอยู่ด้านล่าง คุณสามารถเปิดดูเพื่อตัดสินใจกู้คืนหรือลบถาวรได้`
-                    : "กด preset ด้านบนหรือสร้างเป้าหมายแบบกำหนดเอง แล้วระบบจะเริ่มติดตาม progress และ growth ให้ทันที"
+                    ? tr(
+                        `ตอนนี้มี ${portfolio.archivedGoals.length} เป้าหมายที่เก็บขึ้นหิ้งอยู่ด้านล่าง คุณสามารถเปิดดูเพื่อตัดสินใจกู้คืนหรือลบถาวรได้`,
+                        `You have ${portfolio.archivedGoals.length} archived goal(s) below. Open them to restore or delete permanently.`
+                      )
+                    : tr(
+                        "กด preset ด้านบนหรือสร้างเป้าหมายแบบกำหนดเอง แล้วระบบจะเริ่มติดตาม progress และ growth ให้ทันที",
+                        "Pick a preset above or build a custom goal, and the system will start tracking progress and growth immediately."
+                      )
                 }
               />
             </Card>
@@ -629,7 +650,7 @@ export default function BucketsPage() {
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
                               <h2 className="text-lg font-semibold text-[color:var(--app-text)]">
-                                {goal.name}
+                                {SAVINGS_GOAL_PRESETS.find(p => p.name === goal.name) ? tr(SAVINGS_GOAL_PRESETS.find(p => p.name === goal.name)!.name, SAVINGS_GOAL_PRESETS.find(p => p.name === goal.name)!.nameEn) : goal.name}
                               </h2>
                               <span
                                 className="rounded-xl px-2.5 py-1 text-xs font-semibold"
@@ -642,11 +663,11 @@ export default function BucketsPage() {
                               </span>
                             </div>
                             <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-                              {goal.strategyLabel || "ยังไม่ได้ระบุช่องทางออม"}
+                              {SAVINGS_GOAL_PRESETS.find(p => p.strategyLabel === goal.strategyLabel) ? tr(SAVINGS_GOAL_PRESETS.find(p => p.strategyLabel === goal.strategyLabel)!.strategyLabel, SAVINGS_GOAL_PRESETS.find(p => p.strategyLabel === goal.strategyLabel)!.strategyLabelEn) : (goal.strategyLabel || tr("ยังไม่ได้ระบุช่องทางออม", "No strategy specified"))}
                             </p>
                             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[color:var(--app-text-muted)]">
-                              <span>Target date: {formatGoalDate(goal.targetDate)}</span>
-                              <span>{goal.entryCount} movements</span>
+                              <span>{tr("วันเป้าหมาย", "Target date")}: {formatGoalDate(goal.targetDate, language)}</span>
+                              <span>{goal.entryCount} {tr("รายการเคลื่อนไหว", "movements")}</span>
                             </div>
                           </div>
                         </div>
@@ -655,7 +676,7 @@ export default function BucketsPage() {
                             {Math.round(goal.progressPercent)}%
                           </p>
                           <p className="text-xs text-[color:var(--app-text-muted)]">
-                            ของเป้าหมาย
+                            {tr("ของเป้าหมาย", "of target")}
                           </p>
                         </div>
                       </div>
@@ -672,25 +693,25 @@ export default function BucketsPage() {
 
                       <div className="mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
                         <div>
-                          <p className="text-xs text-[color:var(--app-text-muted)]">ยอดปัจจุบัน</p>
+                          <p className="text-xs text-[color:var(--app-text-muted)]">{tr("ยอดปัจจุบัน", "Current amount")}</p>
                           <p className="mt-1 text-sm font-semibold text-[color:var(--app-text)]">
                             {formatBaht(goal.currentAmount)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-[color:var(--app-text-muted)]">เป้าหมาย</p>
+                          <p className="text-xs text-[color:var(--app-text-muted)]">{tr("เป้าหมาย", "Target")}</p>
                           <p className="mt-1 text-sm font-semibold text-[color:var(--app-text)]">
                             {formatBaht(goal.targetAmount)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-[color:var(--app-text-muted)]">กำไรสะสม</p>
+                          <p className="text-xs text-[color:var(--app-text-muted)]">{tr("กำไรสะสม", "Total growth")}</p>
                           <p className="mt-1 text-sm font-semibold text-[color:var(--income-text)]">
                             {formatBaht(goal.totalGrowth)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-[color:var(--app-text-muted)]">% กำไร</p>
+                          <p className="text-xs text-[color:var(--app-text-muted)]">{tr("% กำไร", "Growth %")}</p>
                           <p className="mt-1 text-sm font-semibold text-[color:var(--app-brand-text)]">
                             {formatPercent(goal.growthPercent)}
                           </p>
@@ -701,15 +722,15 @@ export default function BucketsPage() {
                         <div className="flex flex-wrap gap-4 text-sm text-[color:var(--app-text-muted)]">
                           <span className="inline-flex items-center gap-2">
                             <Target size={16} />
-                            เหลืออีก {formatBaht(goal.remainingAmount)}
+                            {tr("เหลืออีก", "Remaining")} {formatBaht(goal.remainingAmount)}
                           </span>
                           <span className="inline-flex items-center gap-2">
                             <TrendingUp size={16} />
-                            พอร์ตเติบโต {formatPercent(goal.growthPercent)}
+                            {tr("พอร์ตเติบโต", "Portfolio growth")} {formatPercent(goal.growthPercent)}
                           </span>
                         </div>
                         <span className="inline-flex items-center gap-2 rounded-xl bg-[#f54e00] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#d44400]">
-                          เปิดเป้านี้
+                          {tr("เปิดเป้านี้", "Open goal")}
                           <ArrowRight size={16} />
                         </span>
                       </div>
@@ -726,7 +747,7 @@ export default function BucketsPage() {
             <div>
               <div className="mb-3 flex items-center gap-2 text-sm font-medium text-[color:var(--app-text-muted)]">
                 <Archive size={16} />
-                เป้าหมายที่เก็บขึ้นหิ้ง ({portfolio.archivedGoals.length})
+                {tr("เป้าหมายที่เก็บขึ้นหิ้ง", "Archived goals")} ({portfolio.archivedGoals.length})
               </div>
 
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -758,20 +779,20 @@ export default function BucketsPage() {
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
                               <h2 className="text-base font-semibold text-[color:var(--app-text)]">
-                                {goal.name}
+                                {SAVINGS_GOAL_PRESETS.find(p => p.name === goal.name) ? tr(SAVINGS_GOAL_PRESETS.find(p => p.name === goal.name)!.name, SAVINGS_GOAL_PRESETS.find(p => p.name === goal.name)!.nameEn) : goal.name}
                               </h2>
                               <span className="rounded-xl bg-[color:var(--app-surface-soft)] px-2.5 py-1 text-xs font-semibold text-[color:var(--app-text-muted)]">
-                                เก็บขึ้นหิ้ง
+                                {tr("เก็บขึ้นหิ้ง", "Archived")}
                               </span>
                             </div>
                             <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-                              {goal.strategyLabel || "ยังไม่ได้ระบุช่องทางออม"}
+                              {SAVINGS_GOAL_PRESETS.find(p => p.strategyLabel === goal.strategyLabel) ? tr(SAVINGS_GOAL_PRESETS.find(p => p.strategyLabel === goal.strategyLabel)!.strategyLabel, SAVINGS_GOAL_PRESETS.find(p => p.strategyLabel === goal.strategyLabel)!.strategyLabelEn) : (goal.strategyLabel || tr("ยังไม่ได้ระบุช่องทางออม", "No strategy specified"))}
                             </p>
                           </div>
                         </div>
 
                         <span className="inline-flex items-center gap-2 text-sm font-medium text-[color:var(--app-text-muted)]">
-                          เปิดดู
+                          {tr("เปิดดู", "View")}
                           <ArrowRight size={16} />
                         </span>
                       </div>

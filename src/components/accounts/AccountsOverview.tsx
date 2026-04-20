@@ -17,9 +17,9 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { AccountIcon } from "@/components/accounts/AccountIcon";
 import { useFinanceStore } from "@/store/finance-store";
 import { useFinanceStoreHydrated } from "@/store/use-finance-store-hydrated";
-import { ACCOUNT_TYPE_LABELS, type Account } from "@/lib/types";
+import { type Account } from "@/lib/types";
 import { formatBaht } from "@/lib/utils";
-import { useT } from "@/lib/i18n";
+import { useAccountTypeLabels, useT } from "@/lib/i18n";
 
 /**
  * Given the raw active accounts and a persisted order array (ids), return
@@ -278,6 +278,7 @@ function AccountTile({
   onDragEnd,
 }: AccountTileProps) {
   const t = useT();
+  const typeLabels = useAccountTypeLabels();
   const isNegative = account.currentBalance < 0;
   const accentColor = account.color ?? "#f54e00";
 
@@ -328,7 +329,7 @@ function AccountTile({
               {account.name}
             </p>
             <p className="text-[11px] text-[color:var(--app-text-subtle)]">
-              {ACCOUNT_TYPE_LABELS[account.type]}
+              {typeLabels[account.type]}
             </p>
           </div>
         </div>

@@ -39,10 +39,15 @@ import {
   DEFAULT_GOAL_COLOR,
   DEFAULT_GOAL_ICON,
   ENTRY_TYPE_LABELS,
+  ENTRY_TYPE_LABELS_EN,
   GOAL_CATEGORY_LABELS,
+  GOAL_CATEGORY_LABELS_EN,
   formatGoalDate,
+  getEntryTypeLabel,
+  getGoalCategoryLabel,
   getGoalPreset,
 } from "@/lib/savings-goals";
+import { useLanguage, useTr } from "@/lib/i18n";
 import type {
   SavingsGoalCategory,
   SavingsGoalDetail,
@@ -83,20 +88,29 @@ function DetailStatCard({
   );
 }
 
-function formatDaysRemaining(daysRemaining: number | null) {
+function formatDaysRemaining(
+  daysRemaining: number | null,
+  language: "th" | "en" = "th"
+) {
+  const isEn = language === "en";
   if (daysRemaining === null) {
-    return "ยังไม่กำหนด deadline";
+    return isEn ? "No deadline set" : "ยังไม่กำหนด deadline";
   }
 
   if (daysRemaining > 0) {
-    return `เหลืออีก ${daysRemaining} วัน`;
+    return isEn
+      ? `${daysRemaining} days remaining`
+      : `เหลืออีก ${daysRemaining} วัน`;
   }
 
   if (daysRemaining === 0) {
-    return "ถึงกำหนดวันนี้";
+    return isEn ? "Due today" : "ถึงกำหนดวันนี้";
   }
 
-  return `เกินเป้ามาแล้ว ${Math.abs(daysRemaining)} วัน`;
+  const overdue = Math.abs(daysRemaining);
+  return isEn
+    ? `${overdue} days overdue`
+    : `เกินเป้ามาแล้ว ${overdue} วัน`;
 }
 
 function formatSignedAmount(type: SavingsGoalEntryType, amount: number) {
@@ -123,6 +137,8 @@ function createDefaultEntryForm() {
 export default function SavingsGoalDetailPage() {
   const params = useParams<{ goalId: string }>();
   const router = useRouter();
+  const tr = useTr();
+  const language = useLanguage();
   const goalId = Number(params.goalId);
   const [detail, setDetail] = useState<SavingsGoalDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -179,7 +195,13 @@ export default function SavingsGoalDetailPage() {
           };
 
           if (!response.ok || !data.detail) {
-            throw new Error(data.error ?? "ไม่สามารถโหลดรายละเอียดเป้าหมายได้");
+            throw new Error(
+              data.error ??
+                tr(
+                  "ไม่สามารถโหลดรายละเอียดเป้าหมายได้",
+                  "Could not load goal details"
+                )
+            );
           }
 
           applyDetail(data.detail);
@@ -189,17 +211,20 @@ export default function SavingsGoalDetailPage() {
           setError(
             loadError instanceof Error
               ? loadError.message
-              : "ไม่สามารถโหลดรายละเอียดเป้าหมายได้"
+              : tr(
+                  "ไม่สามารถโหลดรายละเอียดเป้าหมายได้",
+                  "Could not load goal details"
+                )
           );
         } finally {
           setIsLoading(false);
         }
       })();
     } else {
-      setError("รหัสเป้าหมายไม่ถูกต้อง");
+      setError(tr("รหัสเป้าหมายไม่ถูกต้อง", "Invalid goal id"));
       setIsLoading(false);
     }
-  }, [goalId]);
+  }, [goalId, tr]);
 
   const handleSaveEntry = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -232,8 +257,8 @@ export default function SavingsGoalDetailPage() {
         throw new Error(
           data.error ??
             (editingEntryId
-              ? "ไม่สามารถแก้ไขรายการได้"
-              : "ไม่สามารถบันทึกรายการได้")
+              ? tr("ไม่สามารถแก้ไขรายการได้", "Could not edit this movement")
+              : tr("ไม่สามารถบันทึกรายการได้", "Could not save this movement"))
         );
       }
 
@@ -245,8 +270,14 @@ export default function SavingsGoalDetailPage() {
         submitError instanceof Error
           ? submitError.message
           : editingEntryId
-            ? "ไม่สามารถแก้ไขรายการให้เป้าหมายนี้ได้"
-            : "ไม่สามารถบันทึกรายการให้เป้าหมายนี้ได้"
+            ? tr(
+                "ไม่สามารถแก้ไขรายการให้เป้าหมายนี้ได้",
+                "Could not edit a movement for this goal"
+              )
+            : tr(
+                "ไม่สามารถบันทึกรายการให้เป้าหมายนี้ได้",
+                "Could not save a movement for this goal"
+              )
       );
     } finally {
       setIsSubmitting(false);
@@ -267,7 +298,11 @@ export default function SavingsGoalDetailPage() {
   const handleDeleteEntry = async (
     entry: SavingsGoalDetail["entries"][number]
   ) => {
-    if (!confirm(`ลบ movement วันที่ ${formatGoalDate(entry.date)} ใช่หรือไม่?`)) {
+    const confirmMessage =
+      language === "en"
+        ? `Delete the movement dated ${formatGoalDate(entry.date, "en")}?`
+        : `ลบ movement วันที่ ${formatGoalDate(entry.date, "th")} ใช่หรือไม่?`;
+    if (!confirm(confirmMessage)) {
       return;
     }
 
@@ -288,7 +323,9 @@ export default function SavingsGoalDetailPage() {
       };
 
       if (!response.ok || !data.detail) {
-        throw new Error(data.error ?? "ไม่สามารถลบรายการได้");
+        throw new Error(
+          data.error ?? tr("ไม่สามารถลบรายการได้", "Could not delete the movement")
+        );
       }
 
       applyDetail(data.detail);
@@ -300,7 +337,10 @@ export default function SavingsGoalDetailPage() {
       setError(
         deleteError instanceof Error
           ? deleteError.message
-          : "ไม่สามารถลบรายการของเป้าหมายนี้ได้"
+          : tr(
+              "ไม่สามารถลบรายการของเป้าหมายนี้ได้",
+              "Could not delete a movement of this goal"
+            )
       );
     } finally {
       setIsSubmitting(false);
@@ -330,7 +370,9 @@ export default function SavingsGoalDetailPage() {
       };
 
       if (!response.ok || !data.detail) {
-        throw new Error(data.error ?? "ไม่สามารถอัปเดตเป้าหมายได้");
+        throw new Error(
+          data.error ?? tr("ไม่สามารถอัปเดตเป้าหมายได้", "Could not update the goal")
+        );
       }
 
       applyDetail(data.detail);
@@ -340,7 +382,7 @@ export default function SavingsGoalDetailPage() {
       setError(
         saveError instanceof Error
           ? saveError.message
-          : "ไม่สามารถอัปเดตเป้าหมายได้"
+          : tr("ไม่สามารถอัปเดตเป้าหมายได้", "Could not update the goal")
       );
     } finally {
       setIsSavingGoal(false);
@@ -349,7 +391,11 @@ export default function SavingsGoalDetailPage() {
 
   const handleArchiveGoal = async () => {
     if (!detail) return;
-    if (!confirm(`เก็บเป้าหมาย "${detail.goal.name}" ขึ้นหิ้ง?`)) return;
+    const archiveConfirm =
+      language === "en"
+        ? `Archive goal "${detail.goal.name}"?`
+        : `เก็บเป้าหมาย "${detail.goal.name}" ขึ้นหิ้ง?`;
+    if (!confirm(archiveConfirm)) return;
 
     setIsArchivingGoal(true);
     setError(null);
@@ -368,7 +414,9 @@ export default function SavingsGoalDetailPage() {
       };
 
       if (!response.ok || !data.detail) {
-        throw new Error(data.error ?? "ไม่สามารถเก็บเป้าหมายขึ้นหิ้งได้");
+        throw new Error(
+          data.error ?? tr("ไม่สามารถเก็บเป้าหมายขึ้นหิ้งได้", "Could not archive the goal")
+        );
       }
 
       applyDetail(data.detail);
@@ -379,7 +427,7 @@ export default function SavingsGoalDetailPage() {
       setError(
         archiveError instanceof Error
           ? archiveError.message
-          : "ไม่สามารถเก็บเป้าหมายขึ้นหิ้งได้"
+          : tr("ไม่สามารถเก็บเป้าหมายขึ้นหิ้งได้", "Could not archive the goal")
       );
     } finally {
       setIsArchivingGoal(false);
@@ -406,7 +454,9 @@ export default function SavingsGoalDetailPage() {
       };
 
       if (!response.ok || !data.detail) {
-        throw new Error(data.error ?? "ไม่สามารถกู้คืนเป้าหมายได้");
+        throw new Error(
+          data.error ?? tr("ไม่สามารถกู้คืนเป้าหมายได้", "Could not restore the goal")
+        );
       }
 
       applyDetail(data.detail);
@@ -415,7 +465,7 @@ export default function SavingsGoalDetailPage() {
       setError(
         restoreError instanceof Error
           ? restoreError.message
-          : "ไม่สามารถกู้คืนเป้าหมายได้"
+          : tr("ไม่สามารถกู้คืนเป้าหมายได้", "Could not restore the goal")
       );
     } finally {
       setIsArchivingGoal(false);
@@ -424,11 +474,11 @@ export default function SavingsGoalDetailPage() {
 
   const handleDeleteGoal = async () => {
     if (!detail) return;
-    if (
-      !confirm(
-        `ลบเป้าหมาย "${detail.goal.name}" ถาวร? ระบบจะลบ movement ทั้งหมดของเป้านี้ด้วย`
-      )
-    ) {
+    const deleteConfirm =
+      language === "en"
+        ? `Permanently delete goal "${detail.goal.name}"? All movements of this goal will also be removed.`
+        : `ลบเป้าหมาย "${detail.goal.name}" ถาวร? ระบบจะลบ movement ทั้งหมดของเป้านี้ด้วย`;
+    if (!confirm(deleteConfirm)) {
       return;
     }
 
@@ -444,7 +494,9 @@ export default function SavingsGoalDetailPage() {
       };
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error ?? "ไม่สามารถลบเป้าหมายนี้ได้");
+        throw new Error(
+          data.error ?? tr("ไม่สามารถลบเป้าหมายนี้ได้", "Could not delete this goal")
+        );
       }
 
       router.push("/buckets");
@@ -453,7 +505,7 @@ export default function SavingsGoalDetailPage() {
       setError(
         deleteError instanceof Error
           ? deleteError.message
-          : "ไม่สามารถลบเป้าหมายนี้ได้"
+          : tr("ไม่สามารถลบเป้าหมายนี้ได้", "Could not delete this goal")
       );
     } finally {
       setIsDeletingGoal(false);
@@ -481,10 +533,16 @@ export default function SavingsGoalDetailPage() {
       <Card>
         <EmptyState
           icon={<PiggyBank size={20} />}
-          title="ไม่พบเป้าหมายนี้"
-          description={error ?? "เป้าหมายนี้อาจถูกลบไปแล้วหรือมีรหัสไม่ถูกต้อง"}
+          title={tr("ไม่พบเป้าหมายนี้", "Goal not found")}
+          description={
+            error ??
+            tr(
+              "เป้าหมายนี้อาจถูกลบไปแล้วหรือมีรหัสไม่ถูกต้อง",
+              "This goal may have been deleted or the id is invalid"
+            )
+          }
           actionHref="/buckets"
-          actionLabel="กลับไปหน้า Savings"
+          actionLabel={tr("กลับไปหน้า Savings", "Back to Savings")}
         />
       </Card>
     );
@@ -501,15 +559,15 @@ export default function SavingsGoalDetailPage() {
             className="theme-border inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
           >
             <ArrowLeft size={16} />
-            กลับไปหน้า Savings
+            {tr("กลับไปหน้า Savings", "Back to Savings")}
           </Link>
           <span className="rounded-xl bg-[color:var(--app-surface-soft)] px-3 py-2 text-xs font-medium text-[color:var(--app-text-muted)]">
-            {GOAL_CATEGORY_LABELS[detail.goal.category]}
+            {getGoalCategoryLabel(detail.goal.category, language)}
           </span>
           {detail.goal.isArchived && (
             <span className="inline-flex items-center gap-2 rounded-xl bg-[color:var(--app-surface-soft)] px-3 py-2 text-xs font-medium text-[color:var(--app-text-muted)]">
               <Archive size={14} />
-              เก็บขึ้นหิ้ง
+              {tr("เก็บขึ้นหิ้ง", "Archived")}
             </span>
           )}
         </div>
@@ -524,7 +582,7 @@ export default function SavingsGoalDetailPage() {
                 disabled={isArchivingGoal || isDeletingGoal}
               >
                 <RotateCcw size={16} />
-                กู้คืนเป้าหมาย
+                {tr("กู้คืนเป้าหมาย", "Restore goal")}
               </Button>
               <Button
                 variant="danger"
@@ -533,7 +591,7 @@ export default function SavingsGoalDetailPage() {
                 disabled={isArchivingGoal || isDeletingGoal}
               >
                 <Trash2 size={16} />
-                ลบถาวร
+                {tr("ลบถาวร", "Delete permanently")}
               </Button>
             </>
           ) : (
@@ -545,7 +603,9 @@ export default function SavingsGoalDetailPage() {
                 disabled={isArchivingGoal || isDeletingGoal}
               >
                 {isEditingGoal ? <X size={16} /> : <PencilLine size={16} />}
-                {isEditingGoal ? "ปิดโหมดแก้ไข" : "แก้ไขเป้าหมาย"}
+                {isEditingGoal
+                  ? tr("ปิดโหมดแก้ไข", "Close edit mode")
+                  : tr("แก้ไขเป้าหมาย", "Edit goal")}
               </Button>
               <Button
                 variant="danger"
@@ -554,7 +614,7 @@ export default function SavingsGoalDetailPage() {
                 disabled={isArchivingGoal || isDeletingGoal}
               >
                 <Archive size={16} />
-                เก็บขึ้นหิ้ง
+                {tr("เก็บขึ้นหิ้ง", "Archive")}
               </Button>
             </>
           )}
@@ -570,19 +630,24 @@ export default function SavingsGoalDetailPage() {
       {detail.goal.isArchived && (
         <Card className="border-[color:var(--neutral-soft)] bg-[color:var(--neutral-soft)] text-[color:var(--neutral)]">
           <p className="text-sm font-medium">
-            เป้าหมายนี้ถูกเก็บขึ้นหิ้งแล้ว จึงหยุดรับ movement ใหม่และแก้ไขประวัติเดิมชั่วคราว
-            คุณสามารถกู้คืนเพื่อกลับมาใช้งานต่อ หรือเลือกลบถาวรได้
+            {tr(
+              "เป้าหมายนี้ถูกเก็บขึ้นหิ้งแล้ว จึงหยุดรับ movement ใหม่และแก้ไขประวัติเดิมชั่วคราว คุณสามารถกู้คืนเพื่อกลับมาใช้งานต่อ หรือเลือกลบถาวรได้",
+              "This goal is archived, so new movements and edits are paused. You can restore it to keep using it, or delete it permanently."
+            )}
           </p>
         </Card>
       )}
 
       <PageHeader
-        eyebrow={GOAL_CATEGORY_LABELS[detail.goal.category]}
+        eyebrow={getGoalCategoryLabel(detail.goal.category, language)}
         title={detail.goal.name}
         description={
           detail.goal.notes ||
           detail.goal.strategyLabel ||
-          "ติดตาม progress, growth, deadline และ movement history ของเป้าหมายนี้ในมุมมองเดียว"
+          tr(
+            "ติดตาม progress, growth, deadline และ movement history ของเป้าหมายนี้ในมุมมองเดียว",
+            "Track progress, growth, deadline, and movement history for this goal in one view."
+          )
         }
         meta={[
           {
@@ -592,23 +657,23 @@ export default function SavingsGoalDetailPage() {
           },
           {
             icon: <PiggyBank size={14} />,
-            label: `ยอดปัจจุบัน ${formatBaht(detail.metrics.currentAmount)}`,
+            label: `${tr("ยอดปัจจุบัน", "Current")} ${formatBaht(detail.metrics.currentAmount)}`,
             tone: "brand",
           },
           {
             icon: <Landmark size={14} />,
-            label: `${detail.metrics.entryCount} movements`,
+            label: `${detail.metrics.entryCount} ${tr("รายการ", "movements")}`,
           },
           {
             icon: <Save size={14} />,
-            label: formatDaysRemaining(detail.metrics.daysRemaining),
+            label: formatDaysRemaining(detail.metrics.daysRemaining, language),
             tone: detail.metrics.daysRemaining != null && detail.metrics.daysRemaining < 0 ? "danger" : "neutral",
           },
           ...(detail.goal.isArchived
             ? [
                 {
                   icon: <Archive size={14} />,
-                  label: "เก็บขึ้นหิ้ง",
+                  label: tr("เก็บขึ้นหิ้ง", "Archived"),
                   tone: "neutral" as const,
                 },
               ]
@@ -625,7 +690,7 @@ export default function SavingsGoalDetailPage() {
                   disabled={isArchivingGoal || isDeletingGoal}
                 >
                   <RotateCcw size={16} />
-                  กู้คืนเป้าหมาย
+                  {tr("กู้คืนเป้าหมาย", "Restore goal")}
                 </Button>
                 <Button
                   variant="danger"
@@ -634,7 +699,7 @@ export default function SavingsGoalDetailPage() {
                   disabled={isArchivingGoal || isDeletingGoal}
                 >
                   <Trash2 size={16} />
-                  ลบถาวร
+                  {tr("ลบถาวร", "Delete permanently")}
                 </Button>
               </>
             ) : (
@@ -646,7 +711,9 @@ export default function SavingsGoalDetailPage() {
                   disabled={isArchivingGoal || isDeletingGoal}
                 >
                   {isEditingGoal ? <X size={16} /> : <PencilLine size={16} />}
-                  {isEditingGoal ? "ปิดโหมดแก้ไข" : "แก้ไขเป้าหมาย"}
+                  {isEditingGoal
+                    ? tr("ปิดโหมดแก้ไข", "Close edit mode")
+                    : tr("แก้ไขเป้าหมาย", "Edit goal")}
                 </Button>
                 <Button
                   variant="danger"
@@ -655,7 +722,7 @@ export default function SavingsGoalDetailPage() {
                   disabled={isArchivingGoal || isDeletingGoal}
                 >
                   <Archive size={16} />
-                  เก็บขึ้นหิ้ง
+                  {tr("เก็บขึ้นหิ้ง", "Archive")}
                 </Button>
               </>
             )}
@@ -666,14 +733,14 @@ export default function SavingsGoalDetailPage() {
       <Card className="overflow-hidden">
         <CardHeader className="items-center border-b border-[color:var(--app-divider-soft)] pb-4">
           <div>
-            <CardTitle>Goal progress</CardTitle>
+            <CardTitle>{tr("ความคืบหน้าเป้าหมาย", "Goal progress")}</CardTitle>
             <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-              Target {formatBaht(detail.goal.targetAmount)} · {formatGoalDate(detail.goal.targetDate)}
+              {tr("เป้า", "Target")} {formatBaht(detail.goal.targetAmount)} · {formatGoalDate(detail.goal.targetDate, language)}
             </p>
           </div>
           <div className="rounded-[22px] bg-[color:var(--income-soft)] px-5 py-4 text-right">
             <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
-              Goal progress
+              {tr("ความคืบหน้า", "Goal progress")}
             </p>
             <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-4xl font-bold text-[color:var(--income-text)]">
               {Math.round(detail.metrics.progressPercent)}%
@@ -695,13 +762,13 @@ export default function SavingsGoalDetailPage() {
       {isEditingGoal && !detail.goal.isArchived ? (
         <Card>
           <CardHeader>
-            <CardTitle>แก้ไขเป้าหมายนี้</CardTitle>
+            <CardTitle>{tr("แก้ไขเป้าหมายนี้", "Edit this goal")}</CardTitle>
           </CardHeader>
           <form className="space-y-4" onSubmit={handleUpdateGoal}>
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text-muted)]">
-                  ชื่อเป้าหมาย
+                  {tr("ชื่อเป้าหมาย", "Goal name")}
                 </span>
                 <input
                   required
@@ -718,7 +785,7 @@ export default function SavingsGoalDetailPage() {
 
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text-muted)]">
-                  ประเภทเป้าหมาย
+                  {tr("ประเภทเป้าหมาย", "Goal type")}
                 </span>
                 <Select
                   value={goalForm.category}
@@ -736,7 +803,9 @@ export default function SavingsGoalDetailPage() {
                       };
                     })
                   }
-                  options={Object.entries(GOAL_CATEGORY_LABELS).map(([value, label]) => ({
+                  options={Object.entries(
+                    language === "en" ? GOAL_CATEGORY_LABELS_EN : GOAL_CATEGORY_LABELS
+                  ).map(([value, label]) => ({
                     value,
                     label,
                   }))}
@@ -745,7 +814,7 @@ export default function SavingsGoalDetailPage() {
 
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text-muted)]">
-                  เป้าหมาย (บาท)
+                  {tr("เป้าหมาย (บาท)", "Target (THB)")}
                 </span>
                 <input
                   required
@@ -765,7 +834,7 @@ export default function SavingsGoalDetailPage() {
 
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text-muted)]">
-                  วันเป้าหมาย
+                  {tr("วันเป้าหมาย", "Target date")}
                 </span>
                 <input
                   type="date"
@@ -782,7 +851,7 @@ export default function SavingsGoalDetailPage() {
 
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text-muted)]">
-                  ช่องทางออม / กลยุทธ์
+                  {tr("ช่องทางออม / กลยุทธ์", "Vehicle / strategy")}
                 </span>
                 <input
                   value={goalForm.strategyLabel}
@@ -798,7 +867,7 @@ export default function SavingsGoalDetailPage() {
 
               <label className="space-y-2 text-sm">
                 <span className="font-medium text-[color:var(--app-text-muted)]">
-                  ไอคอน
+                  {tr("ไอคอน", "Icon")}
                 </span>
                 <input
                   value={goalForm.icon}
@@ -815,7 +884,7 @@ export default function SavingsGoalDetailPage() {
 
             <label className="space-y-2 text-sm">
               <span className="font-medium text-[color:var(--app-text-muted)]">
-                บันทึกเพิ่มเติม
+                {tr("บันทึกเพิ่มเติม", "Additional notes")}
               </span>
               <textarea
                 rows={4}
@@ -833,14 +902,16 @@ export default function SavingsGoalDetailPage() {
             <div className="flex flex-wrap gap-3">
               <Button type="submit" disabled={isSavingGoal}>
                 <Save size={16} />
-                {isSavingGoal ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}
+                {isSavingGoal
+                  ? tr("กำลังบันทึก...", "Saving...")
+                  : tr("บันทึกการแก้ไข", "Save changes")}
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setIsEditingGoal(false)}
               >
-                ยกเลิก
+                {tr("ยกเลิก", "Cancel")}
               </Button>
             </div>
           </form>
@@ -849,27 +920,33 @@ export default function SavingsGoalDetailPage() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <DetailStatCard
-          label="ยอดปัจจุบัน"
+          label={tr("ยอดปัจจุบัน", "Current amount")}
           value={formatBaht(detail.metrics.currentAmount)}
-          helper={`จากเป้า ${formatBaht(detail.goal.targetAmount)}`}
+          helper={`${tr("จากเป้า", "of target")} ${formatBaht(detail.goal.targetAmount)}`}
         />
         <DetailStatCard
-          label="เงินต้นสุทธิ"
+          label={tr("เงินต้นสุทธิ", "Net principal")}
           value={formatBaht(detail.metrics.netContributions)}
-          helper="หลังหักรายการถอนและรวม adjustment"
+          helper={tr(
+            "หลังหักรายการถอนและรวม adjustment",
+            "After withdrawals and adjustments"
+          )}
         />
         <DetailStatCard
-          label="กำไรสะสม"
+          label={tr("กำไรสะสม", "Total growth")}
           value={formatBaht(detail.metrics.totalGrowth)}
-          helper={`ผลตอบแทน ${formatPercent(detail.metrics.growthPercent)}`}
+          helper={`${tr("ผลตอบแทน", "Return")} ${formatPercent(detail.metrics.growthPercent)}`}
         />
         <DetailStatCard
-          label="ต้องเติมเพิ่ม"
+          label={tr("ต้องเติมเพิ่ม", "Remaining to add")}
           value={formatBaht(detail.metrics.remainingAmount)}
           helper={
             detail.metrics.monthlyPaceNeeded
-              ? `ควรเฉลี่ย ${formatBaht(detail.metrics.monthlyPaceNeeded)}/เดือน`
-              : "ระบบจะคำนวณ pace เมื่อมี deadline"
+              ? `${tr("ควรเฉลี่ย", "Avg.")} ${formatBaht(detail.metrics.monthlyPaceNeeded)}/${tr("เดือน", "mo")}`
+              : tr(
+                  "ระบบจะคำนวณ pace เมื่อมี deadline",
+                  "Pace will be calculated once a deadline is set"
+                )
           }
         />
       </div>
@@ -877,13 +954,16 @@ export default function SavingsGoalDetailPage() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.7fr_1fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Trajectory ของเป้าหมาย</CardTitle>
+            <CardTitle>{tr("Trajectory ของเป้าหมาย", "Goal trajectory")}</CardTitle>
           </CardHeader>
           {detail.chartData.length === 0 ? (
             <EmptyState
               icon={<TrendingUp size={20} />}
-              title="ยังไม่มี movement ของเป้าหมายนี้"
-              description="เริ่มบันทึกยอดเติมเงินหรือกำไรครั้งแรก แล้วกราฟ balance เทียบกับเงินต้นสุทธิจะเริ่มวาดให้ทันที"
+              title={tr("ยังไม่มี movement ของเป้าหมายนี้", "No movements yet for this goal")}
+              description={tr(
+                "เริ่มบันทึกยอดเติมเงินหรือกำไรครั้งแรก แล้วกราฟ balance เทียบกับเงินต้นสุทธิจะเริ่มวาดให้ทันที",
+                "Log your first contribution or growth and the chart will start drawing balance vs. net principal."
+              )}
             />
           ) : (
             <ClientOnlyChart className="h-80">
@@ -906,7 +986,7 @@ export default function SavingsGoalDetailPage() {
                     formatter={(value) => formatBaht(Number(value))}
                     labelFormatter={(_, payload) =>
                       payload?.[0]?.payload?.date
-                        ? formatGoalDate(payload[0].payload.date)
+                        ? formatGoalDate(payload[0].payload.date, language)
                         : ""
                     }
                     contentStyle={chartTheme.tooltipStyle}
@@ -915,7 +995,7 @@ export default function SavingsGoalDetailPage() {
                   <Line
                     type="monotone"
                     dataKey="balance"
-                    name="มูลค่าปัจจุบัน"
+                    name={tr("มูลค่าปัจจุบัน", "Current value")}
                     stroke={detail.goal.color}
                     strokeWidth={3}
                     dot={{ r: 3 }}
@@ -924,7 +1004,7 @@ export default function SavingsGoalDetailPage() {
                   <Line
                     type="monotone"
                     dataKey="netContributions"
-                    name="เงินต้นสุทธิ"
+                    name={tr("เงินต้นสุทธิ", "Net principal")}
                     stroke="#3b82f6"
                     strokeDasharray="6 4"
                     strokeWidth={2}
@@ -940,23 +1020,26 @@ export default function SavingsGoalDetailPage() {
           <CardHeader>
             <CardTitle>
               {detail.goal.isArchived
-                ? "เป้าหมายนี้อยู่ในสถานะ archived"
+                ? tr("เป้าหมายนี้อยู่ในสถานะ archived", "This goal is archived")
                 : editingEntryId
-                  ? "แก้ไข movement"
-                  : "บันทึก movement ใหม่"}
+                  ? tr("แก้ไข movement", "Edit movement")
+                  : tr("บันทึก movement ใหม่", "Log a new movement")}
             </CardTitle>
           </CardHeader>
           {detail.goal.isArchived ? (
             <EmptyState
               icon={<Archive size={20} />}
-              title="ยังแก้ movement ไม่ได้ในตอนนี้"
-              description="กู้คืนเป้าหมายนี้ก่อน หากต้องการเพิ่ม แก้ไข หรือลบ movement"
+              title={tr("ยังแก้ movement ไม่ได้ในตอนนี้", "Movements cannot be edited right now")}
+              description={tr(
+                "กู้คืนเป้าหมายนี้ก่อน หากต้องการเพิ่ม แก้ไข หรือลบ movement",
+                "Restore this goal first to add, edit, or delete a movement."
+              )}
             />
           ) : (
           <form className="space-y-4" onSubmit={handleSaveEntry}>
             <label className="space-y-2 text-sm">
               <span className="font-medium text-[color:var(--app-text-muted)]">
-                วันที่
+                {tr("วันที่", "Date")}
               </span>
               <input
                 required
@@ -974,7 +1057,7 @@ export default function SavingsGoalDetailPage() {
 
             <label className="space-y-2 text-sm">
               <span className="font-medium text-[color:var(--app-text-muted)]">
-                ประเภทรายการ
+                {tr("ประเภทรายการ", "Movement type")}
               </span>
               <Select
                 value={form.type}
@@ -984,7 +1067,9 @@ export default function SavingsGoalDetailPage() {
                     type: v as SavingsGoalEntryType,
                   }))
                 }
-                options={Object.entries(ENTRY_TYPE_LABELS).map(([value, label]) => ({
+                options={Object.entries(
+                  language === "en" ? ENTRY_TYPE_LABELS_EN : ENTRY_TYPE_LABELS
+                ).map(([value, label]) => ({
                   value,
                   label,
                 }))}
@@ -993,7 +1078,7 @@ export default function SavingsGoalDetailPage() {
 
             <label className="space-y-2 text-sm">
               <span className="font-medium text-[color:var(--app-text-muted)]">
-                จำนวนเงิน (บาท)
+                {tr("จำนวนเงิน (บาท)", "Amount (THB)")}
               </span>
               <input
                 required
@@ -1009,15 +1094,15 @@ export default function SavingsGoalDetailPage() {
                 className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
                 placeholder={
                   form.type === "adjustment"
-                    ? "ใช้ค่าบวกหรือลบได้"
-                    : "ใส่จำนวนเต็มหรือทศนิยม"
+                    ? tr("ใช้ค่าบวกหรือลบได้", "Positive or negative values")
+                    : tr("ใส่จำนวนเต็มหรือทศนิยม", "Enter whole or decimal amount")
                 }
               />
             </label>
 
             <label className="space-y-2 text-sm">
               <span className="font-medium text-[color:var(--app-text-muted)]">
-                หมายเหตุ
+                {tr("หมายเหตุ", "Note")}
               </span>
               <textarea
                 rows={4}
@@ -1029,7 +1114,10 @@ export default function SavingsGoalDetailPage() {
                   }))
                 }
                 className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-3 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
-                placeholder="เช่น เติมเงินเดือนนี้, ดอกเบี้ยประจำงวด, ปรับยอดหลัง reconcile"
+                placeholder={tr(
+                  "เช่น เติมเงินเดือนนี้, ดอกเบี้ยประจำงวด, ปรับยอดหลัง reconcile",
+                  "E.g. this month's contribution, interest accrual, adjustment after reconcile"
+                )}
               />
             </label>
 
@@ -1037,10 +1125,10 @@ export default function SavingsGoalDetailPage() {
               <Button type="submit" disabled={isSubmitting} className="flex-1">
                 {editingEntryId ? <Save size={16} /> : <Plus size={16} />}
                 {isSubmitting
-                  ? "กำลังบันทึก..."
+                  ? tr("กำลังบันทึก...", "Saving...")
                   : editingEntryId
-                    ? "บันทึกการแก้ไข"
-                    : "เพิ่ม movement"}
+                    ? tr("บันทึกการแก้ไข", "Save changes")
+                    : tr("เพิ่ม movement", "Add movement")}
               </Button>
               {editingEntryId ? (
                 <Button
@@ -1049,7 +1137,7 @@ export default function SavingsGoalDetailPage() {
                   onClick={resetEntryForm}
                   disabled={isSubmitting}
                 >
-                  ยกเลิก
+                  {tr("ยกเลิก", "Cancel")}
                 </Button>
               ) : null}
             </div>
@@ -1060,14 +1148,17 @@ export default function SavingsGoalDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>ประวัติการเคลื่อนไหว</CardTitle>
+          <CardTitle>{tr("ประวัติการเคลื่อนไหว", "Movement history")}</CardTitle>
         </CardHeader>
 
         {detail.entries.length === 0 ? (
           <EmptyState
             icon={<Wallet size={20} />}
-            title="ยังไม่มีประวัติรายการ"
-            description="บันทึกรายการแรกของเป้าหมายนี้ แล้วตารางประวัติจะเริ่มแสดงให้ทันที"
+            title={tr("ยังไม่มีประวัติรายการ", "No movement history yet")}
+            description={tr(
+              "บันทึกรายการแรกของเป้าหมายนี้ แล้วตารางประวัติจะเริ่มแสดงให้ทันที",
+              "Log the first movement of this goal and the history table will start populating."
+            )}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -1075,19 +1166,19 @@ export default function SavingsGoalDetailPage() {
               <thead>
                 <tr className="theme-border border-b">
                   <th className="px-2 py-3 font-medium text-[color:var(--app-text-muted)]">
-                    วันที่
+                    {tr("วันที่", "Date")}
                   </th>
                   <th className="px-2 py-3 font-medium text-[color:var(--app-text-muted)]">
-                    ประเภท
+                    {tr("ประเภท", "Type")}
                   </th>
                   <th className="px-2 py-3 font-medium text-[color:var(--app-text-muted)]">
-                    หมายเหตุ
+                    {tr("หมายเหตุ", "Note")}
                   </th>
                   <th className="px-2 py-3 text-right font-medium text-[color:var(--app-text-muted)]">
-                    จำนวนเงิน
+                    {tr("จำนวนเงิน", "Amount")}
                   </th>
                   <th className="px-2 py-3 text-right font-medium text-[color:var(--app-text-muted)]">
-                    จัดการ
+                    {tr("จัดการ", "Actions")}
                   </th>
                 </tr>
               </thead>
@@ -1095,13 +1186,13 @@ export default function SavingsGoalDetailPage() {
                 {detail.entries.map((entry) => (
                   <tr key={entry.id}>
                     <td className="px-2 py-3 text-[color:var(--app-text-muted)]">
-                      {formatGoalDate(entry.date)}
+                      {formatGoalDate(entry.date, language)}
                     </td>
                     <td className="px-2 py-3">
                       <span
                         className={`inline-flex rounded-xl px-2.5 py-1 text-xs font-medium ${entryTypeStyles[entry.type]}`}
                       >
-                        {ENTRY_TYPE_LABELS[entry.type]}
+                        {getEntryTypeLabel(entry.type, language)}
                       </span>
                     </td>
                     <td className="px-2 py-3 text-[color:var(--app-text-muted)]">
@@ -1124,7 +1215,7 @@ export default function SavingsGoalDetailPage() {
                           disabled={detail.goal.isArchived || isSubmitting}
                         >
                           <PencilLine size={14} />
-                          แก้ไข
+                          {tr("แก้ไข", "Edit")}
                         </Button>
                         <Button
                           type="button"
@@ -1134,7 +1225,7 @@ export default function SavingsGoalDetailPage() {
                           disabled={detail.goal.isArchived || isSubmitting}
                         >
                           <Trash2 size={14} />
-                          ลบ
+                          {tr("ลบ", "Delete")}
                         </Button>
                       </div>
                     </td>

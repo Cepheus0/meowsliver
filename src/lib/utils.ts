@@ -59,20 +59,31 @@ export const THAI_MONTHS = [
   "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
 ] as const;
 
+export const EN_MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+] as const;
+
 export const THAI_MONTHS_FULL = [
   "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
   "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
 ] as const;
 
+export const EN_MONTHS_FULL = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+] as const;
+
 /**
- * Format a YYYY-MM-DD date string to a short Thai "D MMM" label.
+ * Format a YYYY-MM-DD date string to a short "D MMM" label.
  * Returns empty string on malformed input.
  */
-export function formatShortDate(dateStr: string): string {
+export function formatShortDate(dateStr: string, language: "th" | "en" = "th"): string {
   if (!dateStr) return "";
   const parts = dateStr.split("-");
   const month = parseInt(parts[1] ?? "0", 10);
   const day = parseInt(parts[2] ?? "0", 10);
   if (!month || !day) return dateStr;
-  return `${day} ${THAI_MONTHS[month - 1] ?? ""}`;
+  const monthsArr = language === "en" ? EN_MONTHS : THAI_MONTHS;
+  return `${day} ${monthsArr[month - 1] ?? ""}`;
 }

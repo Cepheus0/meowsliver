@@ -39,7 +39,7 @@ import {
   type MonthlyFilterState,
 } from "@/lib/monthly-detail-analytics";
 import type { Transaction, TransactionType } from "@/lib/types";
-import { useTr } from "@/lib/i18n";
+import { useTr, useLanguage } from "@/lib/i18n";
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
@@ -54,6 +54,7 @@ export default function TransactionsPage() {
   } = useFinanceStore();
   const storeHydrated = useFinanceStoreHydrated();
   const tr = useTr();
+  const language = useLanguage();
   const transactions = getTransactions();
   const visibleTransactions = useMemo(
     () => (storeHydrated ? transactions : []),
@@ -358,7 +359,7 @@ export default function TransactionsPage() {
                     >
                       {type === "all"
                         ? tr("ทั้งหมด", "All")
-                        : getTransactionTypeLabel(type)}
+                        : getTransactionTypeLabel(type, language)}
                     </button>
                   );
                 })}

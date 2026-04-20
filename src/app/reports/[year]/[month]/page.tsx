@@ -11,6 +11,7 @@ import {
   Search,
   Sliders,
 } from "lucide-react";
+import { useTr, useLanguage } from "@/lib/i18n";
 import {
   Bar,
   BarChart,
@@ -66,6 +67,7 @@ const PIE_COLORS = [
 
 export default function MonthlyReportPage() {
   const router = useRouter();
+  const tr = useTr();
   const params = useParams<{ year: string; month: string }>();
   const year = Number.parseInt(params.year ?? "", 10);
   const monthIndex = Number.parseInt(params.month ?? "", 10) - 1;
@@ -140,8 +142,8 @@ export default function MonthlyReportPage() {
         <BackLink />
         <Card>
           <EmptyState
-            title="พารามิเตอร์ไม่ถูกต้อง"
-            description="URL ต้องอยู่ในรูปแบบ /reports/2026/2 (ปี/เลขเดือน 1-12)"
+            title={tr("พารามิเตอร์ไม่ถูกต้อง", "Invalid parameters")}
+            description={tr("URL ต้องอยู่ในรูปแบบ /reports/2026/2 (ปี/เลขเดือน 1-12)", "URL must be in the format /reports/2026/2 (Year/Month 1-12)")}
           />
         </Card>
       </div>
@@ -235,18 +237,18 @@ export default function MonthlyReportPage() {
           title={`${monthLabelFull} ${year}`}
           description={
             hasData
-              ? "ดูโครงสร้างรายรับ รายจ่าย ช่วงเวลา และรายการที่ขับเคลื่อนผลของเดือนนี้แบบ drill-down"
-              : "เดือนนี้ยังไม่มีรายการ จึงยังไม่สามารถคำนวณ breakdown หรือ pattern ภายในเดือนได้"
+              ? tr("ดูโครงสร้างรายรับ รายจ่าย ช่วงเวลา และรายการที่ขับเคลื่อนผลของเดือนนี้แบบ drill-down", "View breakdown of income, expenses, timeline, and transactions driving this month's results via drill-down")
+              : tr("เดือนนี้ยังไม่มีรายการ จึงยังไม่สามารถคำนวณ breakdown หรือ pattern ภายในเดือนได้", "No transactions this month, so breakdown or patterns cannot be calculated yet")
           }
           meta={[
             {
               icon: <Search size={14} />,
-              label: hasData ? `${totals.count} รายการ` : "ยังไม่มีรายการ",
+              label: hasData ? tr(`${totals.count} รายการ`, `${totals.count} transactions`) : tr("ยังไม่มีรายการ", "No transactions"),
               tone: hasData ? "brand" : "neutral",
             },
             {
               icon: <ArrowUpRight size={14} />,
-              label: hasData ? `สุทธิ ${formatBaht(totals.net)}` : "รอข้อมูลธุรกรรม",
+              label: hasData ? tr(`สุทธิ ${formatBaht(totals.net)}`, `Net ${formatBaht(totals.net)}`) : tr("รอข้อมูลธุรกรรม", "Awaiting transaction data"),
               tone: hasData ? (totals.net >= 0 ? "success" : "danger") : "neutral",
             },
           ]}
@@ -257,10 +259,10 @@ export default function MonthlyReportPage() {
       {!hasData ? (
         <Card>
           <EmptyState
-            title={`ยังไม่มีข้อมูล ${monthLabelFull} ${year}`}
-            description="ลองเลือกเดือนอื่นจากปุ่มด้านบน หรือไปหน้านำเข้าเพื่อเพิ่มข้อมูลของเดือนนี้"
+            title={tr(`ยังไม่มีข้อมูล ${monthLabelFull} ${year}`, `No data for ${monthLabelFull} ${year}`)}
+            description={tr("ลองเลือกเดือนอื่นจากปุ่มด้านบน หรือไปหน้านำเข้าเพื่อเพิ่มข้อมูลของเดือนนี้", "Try selecting another month from the top button, or go to the import page to add data for this month")}
             actionHref="/import"
-            actionLabel="ไปหน้านำเข้า"
+            actionLabel={tr("ไปหน้านำเข้า", "Go to import")}
           />
         </Card>
       ) : (
@@ -270,13 +272,13 @@ export default function MonthlyReportPage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>รายรับ vs รายจ่าย</CardTitle>
+                <CardTitle>{tr("รายรับ vs รายจ่าย", "Income vs Expense")}</CardTitle>
                 <div className="flex items-center gap-1 rounded-xl bg-[color:var(--app-surface-soft)] p-1">
                   {(
                     [
-                      { value: "day", label: "รายวัน" },
-                      { value: "week", label: "รายอาทิตย์" },
-                      { value: "month", label: "รายเดือน" },
+                      { value: "day", label: tr("รายวัน", "Daily") },
+                      { value: "week", label: tr("รายอาทิตย์", "Weekly") },
+                      { value: "month", label: tr("รายเดือน", "Monthly") },
                     ] as const
                   ).map((opt) => (
                     <button
@@ -294,7 +296,7 @@ export default function MonthlyReportPage() {
                 </div>
               </CardHeader>
               <p className="-mt-1 mb-2 text-xs text-[color:var(--app-text-muted)]">
-                คลิกที่แท่งเพื่อกรองตารางด้านล่างให้เหลือเฉพาะช่วงนั้น (คลิกซ้ำเพื่อล้าง)
+                {tr("คลิกที่แท่งเพื่อกรองตารางด้านล่างให้เหลือเฉพาะช่วงนั้น (คลิกซ้ำเพื่อล้าง)", "Click a bar to filter the table below to that period (click again to clear)")}
               </p>
               <ChartViewport className="h-64">
                 {({ width, height }) => (
@@ -326,7 +328,7 @@ export default function MonthlyReportPage() {
                     />
                     <Bar
                       dataKey="income"
-                      name="รายรับ"
+                      name={tr("รายรับ", "Income")}
                       radius={[4, 4, 0, 0]}
                       cursor="pointer"
                     >
@@ -347,7 +349,7 @@ export default function MonthlyReportPage() {
                     </Bar>
                     <Bar
                       dataKey="expense"
-                      name="รายจ่าย"
+                      name={tr("รายจ่าย", "Expense")}
                       radius={[4, 4, 0, 0]}
                       cursor="pointer"
                     >
@@ -373,12 +375,12 @@ export default function MonthlyReportPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>สัดส่วนรายจ่ายตามหมวด</CardTitle>
+                <CardTitle>{tr("สัดส่วนรายจ่ายตามหมวด", "Expense Breakdown by Category")}</CardTitle>
               </CardHeader>
               {categoryPie.length === 0 ? (
                 <EmptyState
-                  title="ไม่มีรายจ่าย"
-                  description="เดือนนี้มีแต่รายรับหรือย้ายเงิน"
+                  title={tr("ไม่มีรายจ่าย", "No expenses")}
+                  description={tr("เดือนนี้มีแต่รายรับหรือย้ายเงิน", "Only income or transfers this month")}
                 />
               ) : (
                 <>
@@ -440,7 +442,7 @@ export default function MonthlyReportPage() {
               <CardTitle>
                 <span className="inline-flex items-center gap-2">
                   <Sliders size={14} />
-                  ตัวกรอง {activeFilterCount > 0 && `(${activeFilterCount})`}
+                  {tr("ตัวกรอง", "Filters")} {activeFilterCount > 0 && `(${activeFilterCount})`}
                 </span>
               </CardTitle>
               {activeFilterCount > 0 && (
@@ -448,7 +450,7 @@ export default function MonthlyReportPage() {
                   onClick={() => setFilters(EMPTY_FILTER_STATE)}
                   className="text-xs text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
                 >
-                  ล้างทั้งหมด
+                  {tr("ล้างทั้งหมด", "Clear all")}
                 </button>
               )}
             </CardHeader>
@@ -457,7 +459,7 @@ export default function MonthlyReportPage() {
               {filters.dateRangeLabel && (
                 <div className="flex items-center gap-2 rounded-xl border border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] px-3 py-2 text-xs">
                   <span className="text-[color:var(--app-brand-text)]">
-                    กรองจากกราฟ: <strong>{filters.dateRangeLabel}</strong>
+                    {tr("กรองจากกราฟ:", "Filtered from chart:")} <strong>{filters.dateRangeLabel}</strong>
                   </span>
                   <button
                     onClick={() =>
@@ -470,7 +472,7 @@ export default function MonthlyReportPage() {
                     }
                     className="ml-auto text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
                   >
-                    ล้างช่วงวันที่
+                    {tr("ล้างช่วงวันที่", "Clear date range")}
                   </button>
                 </div>
               )}
@@ -486,7 +488,7 @@ export default function MonthlyReportPage() {
                     onChange={(e) =>
                       setFilters((prev) => ({ ...prev, search: e.target.value }))
                     }
-                    placeholder="ค้นหา หมวด/ผู้รับ/หมายเหตุ..."
+                    placeholder={tr("ค้นหา หมวด/ผู้รับ/หมายเหตุ...", "Search category/recipient/note...")}
                     className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] py-2 pl-9 pr-3 text-sm text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
                   />
                 </div>
@@ -511,31 +513,31 @@ export default function MonthlyReportPage() {
               </div>
 
               <FilterChips
-                label="หมวด"
+                label={tr("หมวด", "Category")}
                 slices={breakdowns.category}
                 selected={filters.categories}
                 onToggle={(v) => toggleInSet("categories", v)}
               />
               <FilterChips
-                label="แท็ก"
+                label={tr("แท็ก", "Tag")}
                 slices={breakdowns.tag}
                 selected={filters.tags}
                 onToggle={(v) => toggleInSet("tags", v)}
               />
               <FilterChips
-                label="ช่องทางจ่าย"
+                label={tr("ช่องทางจ่าย", "Payment Channel")}
                 slices={breakdowns.paymentChannel}
                 selected={filters.paymentChannels}
                 onToggle={(v) => toggleInSet("paymentChannels", v)}
               />
               <FilterChips
-                label="จากบัญชี"
+                label={tr("จากบัญชี", "Account")}
                 slices={breakdowns.payFrom}
                 selected={filters.payFroms}
                 onToggle={(v) => toggleInSet("payFroms", v)}
               />
               <FilterChips
-                label="ผู้รับ"
+                label={tr("ผู้รับ", "Recipient")}
                 slices={breakdowns.recipient}
                 selected={filters.recipients}
                 onToggle={(v) => toggleInSet("recipients", v)}
@@ -547,36 +549,36 @@ export default function MonthlyReportPage() {
             <CardHeader>
               <CardTitle>
                 {filtered.length === totals.count
-                  ? `รายการทั้งหมด (${totals.count})`
-                  : `แสดง ${filtered.length} จาก ${totals.count} รายการ`}
+                  ? tr(`รายการทั้งหมด (${totals.count})`, `All transactions (${totals.count})`)
+                  : tr(`แสดง ${filtered.length} จาก ${totals.count} รายการ`, `Showing ${filtered.length} of ${totals.count} transactions`)}
               </CardTitle>
             </CardHeader>
 
             {filtered.length === 0 ? (
               <p className="py-8 text-center text-sm text-[color:var(--app-text-muted)]">
-                ไม่พบรายการที่ตรงกับตัวกรองที่เลือก
+                {tr("ไม่พบรายการที่ตรงกับตัวกรองที่เลือก", "No transactions match the selected filters")}
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-[color:var(--app-divider-soft)] text-[11px] font-semibold uppercase tracking-wider text-[color:var(--app-text-subtle)]">
-                      <th className="py-2.5 pr-3">วันที่</th>
-                      <th className="py-2.5 pr-3">ประเภท</th>
-                      <th className="py-2.5 pr-3">หมวด</th>
-                      <th className="py-2.5 pr-3">ผู้รับ / หมายเหตุ</th>
-                      <th className="py-2.5 pr-3 text-right">จำนวน</th>
+                      <th className="py-2.5 pr-3">{tr("วันที่", "Date")}</th>
+                      <th className="py-2.5 pr-3">{tr("ประเภท", "Type")}</th>
+                      <th className="py-2.5 pr-3">{tr("หมวด", "Category")}</th>
+                      <th className="py-2.5 pr-3">{tr("ผู้รับ / หมายเหตุ", "Recipient / Note")}</th>
+                      <th className="py-2.5 pr-3 text-right">{tr("จำนวน", "Amount")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[color:var(--app-divider-soft)]">
                     {filtered.map((tx) => {
-                      const typeStyle =
-                        tx.type === "income"
-                          ? { bg: "var(--income-soft)", fg: "var(--income-text)", Icon: ArrowUpRight, label: "รายรับ" }
-                          : tx.type === "transfer"
-                            ? { bg: "var(--neutral-soft)", fg: "var(--neutral)", Icon: ArrowRightLeft, label: "โอน" }
-                            : { bg: "var(--expense-soft)", fg: "var(--expense-text)", Icon: ArrowDownRight, label: "รายจ่าย" };
-                      const Icon = typeStyle.Icon;
+                        const typeStyle =
+                          tx.type === "income"
+                            ? { bg: "var(--income-soft)", fg: "var(--income-text)", Icon: ArrowUpRight, label: tr("รายรับ", "Income") }
+                            : tx.type === "transfer"
+                              ? { bg: "var(--neutral-soft)", fg: "var(--neutral)", Icon: ArrowRightLeft, label: tr("โอน", "Transfer") }
+                              : { bg: "var(--expense-soft)", fg: "var(--expense-text)", Icon: ArrowDownRight, label: tr("รายจ่าย", "Expense") };
+                        const Icon = typeStyle.Icon;
                       return (
                         <tr
                           key={tx.id}
@@ -638,7 +640,7 @@ export default function MonthlyReportPage() {
       <TransactionDetailDrawer
         transaction={selectedTx}
         scopeTransactions={detail.transactions}
-        scopeLabel={`เดือน ${monthLabelFull}`}
+        scopeLabel={tr(`เดือน ${monthLabelFull}`, `${monthLabelFull} month`)}
         onClose={() => setSelectedTx(null)}
       />
     </div>
@@ -646,13 +648,14 @@ export default function MonthlyReportPage() {
 }
 
 function BackLink() {
+  const tr = useTr();
   return (
     <Link
       href="/reports"
       className="inline-flex items-center gap-1.5 text-xs text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
     >
       <ArrowLeft size={14} />
-      กลับหน้ารายงาน
+      {tr("กลับหน้ารายงาน", "Back to reports")}
     </Link>
   );
 }
@@ -666,6 +669,8 @@ function MonthSwitcher({
   monthIndex: number;
   router: ReturnType<typeof useRouter>;
 }) {
+  const language = useLanguage();
+  const tr = useTr();
   const goto = (delta: number) => {
     let nextMonth = monthIndex + delta;
     let nextYear = year;
@@ -684,17 +689,17 @@ function MonthSwitcher({
       <button
         onClick={() => goto(-1)}
         className="rounded-lg px-3 py-1.5 text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
-        aria-label="เดือนก่อนหน้า"
+        aria-label={tr("เดือนก่อนหน้า", "Previous month")}
       >
         ←
       </button>
       <span className="px-3 text-sm font-medium text-[color:var(--app-text)]">
-        {THAI_MONTHS_FULL[monthIndex]} {year}
+        {language === "th" ? THAI_MONTHS_FULL[monthIndex] : ["January","February","March","April","May","June","July","August","September","October","November","December"][monthIndex]} {year}
       </span>
       <button
         onClick={() => goto(1)}
         className="rounded-lg px-3 py-1.5 text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
-        aria-label="เดือนถัดไป"
+        aria-label={tr("เดือนถัดไป", "Next month")}
       >
         →
       </button>
@@ -707,30 +712,31 @@ function SummaryCards({
 }: {
   totals: MonthlyTotals;
 }) {
+  const tr = useTr();
   const cells = [
     {
-      label: "รายรับ",
+      label: tr("รายรับ", "Income"),
       amount: totals.income,
       count: totals.incomeCount,
       color: "var(--income-text)",
       accent: "var(--income)",
     },
     {
-      label: "รายจ่าย",
+      label: tr("รายจ่าย", "Expense"),
       amount: totals.expense,
       count: totals.expenseCount,
       color: "var(--expense-text)",
       accent: "var(--expense)",
     },
     {
-      label: "ย้ายเงิน",
+      label: tr("ย้ายเงิน", "Transfer"),
       amount: totals.transfer,
       count: totals.transferCount,
       color: "var(--neutral)",
       accent: "var(--neutral)",
     },
     {
-      label: "สุทธิ",
+      label: tr("สุทธิ", "Net"),
       amount: totals.net,
       count: totals.count,
       color: totals.net >= 0 ? "var(--income-text)" : "var(--expense-text)",
@@ -759,7 +765,7 @@ function SummaryCards({
             {formatBaht(cell.amount)}
           </p>
           <p className="mt-1.5 pl-1.5 text-[11px] text-[color:var(--app-text-subtle)]">
-            {cell.count} รายการ
+            {cell.count} {tr("รายการ", "transactions")}
           </p>
         </div>
       ))}
@@ -802,6 +808,7 @@ function RangeDetailSection({
   tagBreakdown: DimensionSlice[];
   categoryTagMap: Map<string, DimensionSlice[]>;
 }) {
+  const tr = useTr();
   const categoryPie = dimensionsForPie(categoryBreakdown, categoryTagMap);
   const tagPie = dimensionsForPie(tagBreakdown);
   const noTaggedExpense = tagPie.length === 0;
@@ -810,10 +817,10 @@ function RangeDetailSection({
     <section className="space-y-4 rounded-2xl border border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold text-[color:var(--app-text)]">
-          สรุปของช่วง <span className="text-[color:var(--app-brand-text)]">{label}</span>
+          {tr("สรุปของช่วง", "Summary of period")} <span className="text-[color:var(--app-brand-text)]">{label}</span>
         </h2>
         <p className="text-xs text-[color:var(--app-text-muted)]">
-          ตัวเลขนี้คิดจากธุรกรรมทั้งหมดในช่วงที่เลือกเท่านั้น (ไม่ขึ้นกับ filter อื่น)
+          {tr("ตัวเลขนี้คิดจากธุรกรรมทั้งหมดในช่วงที่เลือกเท่านั้น (ไม่ขึ้นกับ filter อื่น)", "These numbers are calculated from all transactions in the selected period (independent of other filters)")}
         </p>
       </div>
 
@@ -821,18 +828,18 @@ function RangeDetailSection({
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <RangePieCard
-          title="สัดส่วนรายจ่ายตามหมวด"
+          title={tr("สัดส่วนรายจ่ายตามหมวด", "Expense Breakdown by Category")}
           slices={categoryPie}
-          emptyMessage="ช่วงนี้ไม่มีรายจ่าย"
+          emptyMessage={tr("ช่วงนี้ไม่มีรายจ่าย", "No expenses in this period")}
           useNestedTooltip
         />
         <RangePieCard
-          title="สัดส่วนรายจ่ายตาม tag"
+          title={tr("สัดส่วนรายจ่ายตาม tag", "Expense Breakdown by Tag")}
           slices={tagPie}
           emptyMessage={
             noTaggedExpense
-              ? "ช่วงนี้ไม่มีรายจ่ายที่ระบุ tag"
-              : "ช่วงนี้ไม่มีรายจ่าย"
+              ? tr("ช่วงนี้ไม่มีรายจ่ายที่ระบุ tag", "No tagged expenses in this period")
+              : tr("ช่วงนี้ไม่มีรายจ่าย", "No expenses in this period")
           }
         />
       </div>
@@ -860,6 +867,7 @@ function CategoryTagTooltip({
   active?: boolean;
   payload?: Array<{ payload?: CategoryTagPayload }>;
 }) {
+  const tr = useTr();
   if (!active || !payload || payload.length === 0) return null;
   const row = payload[0]?.payload;
   if (!row) return null;
@@ -890,7 +898,7 @@ function CategoryTagTooltip({
 
       {row.subSlices.length === 0 ? (
         <p className="mt-2 text-xs italic text-[color:var(--app-text-subtle)]">
-          ไม่มีข้อมูล tag
+          {tr("ไม่มีข้อมูล tag", "No tag data")}
         </p>
       ) : (
         <ul className="mt-2 space-y-1 border-t border-[color:var(--app-divider-soft)] pt-2 text-xs">
@@ -914,7 +922,7 @@ function CategoryTagTooltip({
           ))}
           {tail.length > 0 && (
             <li className="flex items-center justify-between gap-3 text-[color:var(--app-text-subtle)]">
-              <span>อื่นๆ ({tail.length})</span>
+              <span>{tr("อื่นๆ", "Other")} ({tail.length})</span>
               <span className="font-medium">{formatBaht(tailAmount)}</span>
             </li>
           )}

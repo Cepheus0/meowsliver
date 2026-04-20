@@ -7,8 +7,11 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatBaht } from "@/lib/utils";
 import type { SavingsGoalsPortfolio } from "@/lib/types";
+import { useTr } from "@/lib/i18n";
+import { SAVINGS_GOAL_PRESETS } from "@/lib/savings-goals";
 
 export function BucketsOverview() {
+  const tr = useTr();
   const [portfolio, setPortfolio] = useState<SavingsGoalsPortfolio | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +36,7 @@ export function BucketsOverview() {
       .catch((fetchError) => {
         console.error("Failed to hydrate savings goals overview", fetchError);
         if (!isCancelled) {
-          setError("ไม่สามารถโหลดข้อมูลกระปุกเป้าหมายได้");
+          setError("load_failed");
         }
       })
       .finally(() => {
@@ -73,10 +76,13 @@ export function BucketsOverview() {
         </CardHeader>
         <EmptyState
           icon={<Sparkles size={20} />}
-          title="โหลดข้อมูลกระปุกไม่สำเร็จ"
-          description={error}
+          title={tr("โหลดข้อมูลกระปุกไม่สำเร็จ", "Failed to load savings goals")}
+          description={tr(
+            "ไม่สามารถโหลดข้อมูลกระปุกเป้าหมายได้",
+            "Could not load savings goals data."
+          )}
           actionHref="/buckets"
-          actionLabel="เปิดหน้า Savings"
+          actionLabel={tr("เปิดหน้า Savings", "Open Savings")}
         />
       </Card>
     );
@@ -90,10 +96,13 @@ export function BucketsOverview() {
         </CardHeader>
         <EmptyState
           icon={<PiggyBank size={20} />}
-          title="ยังไม่มีเป้าหมายการออม"
-          description="เริ่มสร้างเป้าหมายหลายก้อน เช่น แต่งงาน เกษียณ หรือเงินดาวน์บ้าน แล้ว dashboard จะสรุป progress ให้ทันที"
+          title={tr("ยังไม่มีเป้าหมายการออม", "No savings goals yet")}
+          description={tr(
+            "เริ่มสร้างเป้าหมายหลายก้อน เช่น แต่งงาน เกษียณ หรือเงินดาวน์บ้าน แล้ว dashboard จะสรุป progress ให้ทันที",
+            "Create multiple goals like a wedding, retirement, or house down payment, and the dashboard will track your progress automatically."
+          )}
           actionHref="/buckets"
-          actionLabel="สร้างเป้าหมายแรก"
+          actionLabel={tr("สร้างเป้าหมายแรก", "Create your first goal")}
         />
       </Card>
     );
@@ -108,14 +117,14 @@ export function BucketsOverview() {
         <div>
           <CardTitle>Savings Goals Portfolio</CardTitle>
           <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-            สะสมแล้ว {formatBaht(portfolio.overview.totalSaved)} จากเป้ารวม{" "}
+            {tr("สะสมแล้ว", "Saved")} {formatBaht(portfolio.overview.totalSaved)} {tr("จากเป้ารวม", "from target")}{" "}
             {formatBaht(portfolio.overview.totalTarget)}
           </p>
         </div>
         <div className="ml-auto flex items-center gap-3">
           <div className="rounded-md border border-[color:var(--app-border)] px-3 py-2 text-right">
             <p className="text-xs font-medium text-[color:var(--app-text-muted)]">
-              ความคืบหน้ารวม
+              {tr("ความคืบหน้ารวม", "Overall progress")}
             </p>
             <p className="font-[family-name:var(--font-geist-mono)] text-xl font-bold text-[color:var(--income-text)]">
               {overallProgress}%
@@ -125,7 +134,7 @@ export function BucketsOverview() {
             href="/buckets"
             className="theme-border rounded-md border px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
           >
-            ดูทั้งหมด
+            {tr("ดูทั้งหมด", "View all")}
           </Link>
         </div>
       </CardHeader>
@@ -151,10 +160,10 @@ export function BucketsOverview() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-[color:var(--app-text)]">
-                        {goal.name}
+                        {SAVINGS_GOAL_PRESETS.find(p => p.name === goal.name) ? tr(SAVINGS_GOAL_PRESETS.find(p => p.name === goal.name)!.name, SAVINGS_GOAL_PRESETS.find(p => p.name === goal.name)!.nameEn) : goal.name}
                       </p>
                       <p className="mt-1 text-xs text-[color:var(--app-text-muted)]">
-                        {goal.strategyLabel || "ยังไม่ได้ระบุช่องทางออม"}
+                        {SAVINGS_GOAL_PRESETS.find(p => p.strategyLabel === goal.strategyLabel) ? tr(SAVINGS_GOAL_PRESETS.find(p => p.strategyLabel === goal.strategyLabel)!.strategyLabel, SAVINGS_GOAL_PRESETS.find(p => p.strategyLabel === goal.strategyLabel)!.strategyLabelEn) : (goal.strategyLabel || tr("ยังไม่ได้ระบุช่องทางออม", "No strategy specified"))}
                       </p>
                     </div>
                     <span
@@ -181,7 +190,7 @@ export function BucketsOverview() {
                   <div className="mt-3 flex items-end justify-between gap-3">
                     <div>
                       <p className="text-xs text-[color:var(--app-text-muted)]">
-                        ยอดปัจจุบัน
+                        {tr("ยอดปัจจุบัน", "Current amount")}
                       </p>
                       <p className="text-sm font-semibold text-[color:var(--app-text)]">
                         {formatBaht(goal.currentAmount)}
@@ -189,7 +198,7 @@ export function BucketsOverview() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-[color:var(--app-text-muted)]">
-                        กำไรสะสม
+                        {tr("กำไรสะสม", "Total growth")}
                       </p>
                       <p className="font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-[color:var(--income-text)]">
                         {formatBaht(goal.totalGrowth)}

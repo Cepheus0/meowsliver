@@ -19,10 +19,12 @@ import { ChartViewport } from "@/components/charts/ChartViewport";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { chartTheme, chartColors } from "@/lib/chart-theme";
 import { ChartColumnIncreasing, Table2 } from "lucide-react";
+import { useTr } from "@/lib/i18n";
 
 export function CashflowChart() {
   const { getMonthlyCashflow, selectedYear } = useFinanceStore();
   const router = useRouter();
+  const tr = useTr();
   const data = getMonthlyCashflow();
   const hasData = data.some((month) => month.income > 0 || month.expense > 0);
 
@@ -37,14 +39,14 @@ export function CashflowChart() {
     return (
       <Card className="col-span-full">
         <CardHeader>
-          <CardTitle>กระแสเงินสด ปี {selectedYear}</CardTitle>
+          <CardTitle>{tr(`กระแสเงินสด ปี ${selectedYear}`, `Cashflow · ${selectedYear}`)}</CardTitle>
         </CardHeader>
         <EmptyState
           icon={<ChartColumnIncreasing size={20} />}
-          title={`ยังไม่มีรายการในปี ${selectedYear}`}
-          description="นำเข้าธุรกรรมจริงก่อน แล้วกราฟรายรับ/รายจ่ายจะคำนวณให้อัตโนมัติ"
+          title={tr(`ยังไม่มีรายการในปี ${selectedYear}`, `No transactions in ${selectedYear}`)}
+          description={tr("นำเข้าธุรกรรมจริงก่อน แล้วกราฟรายรับ/รายจ่ายจะคำนวณให้อัตโนมัติ", "Import real transactions first, and the income/expense chart will calculate automatically.")}
           actionHref="/import"
-          actionLabel="ไปหน้านำเข้า"
+          actionLabel={tr("ไปหน้านำเข้า", "Go to import")}
         />
       </Card>
     );
@@ -53,9 +55,9 @@ export function CashflowChart() {
   return (
     <Card className="col-span-full">
       <CardHeader>
-        <CardTitle>กระแสเงินสด ปี {selectedYear}</CardTitle>
+        <CardTitle>{tr(`กระแสเงินสด ปี ${selectedYear}`, `Cashflow · ${selectedYear}`)}</CardTitle>
         <span className="text-xs text-[color:var(--app-text-subtle)]">
-          คลิกที่บาร์เพื่อดูรายละเอียดรายเดือน
+          {tr("คลิกที่บาร์เพื่อดูรายละเอียดรายเดือน", "Click a bar to see monthly details")}
         </span>
       </CardHeader>
 
@@ -97,7 +99,7 @@ export function CashflowChart() {
             <Legend wrapperStyle={{ ...chartTheme.legendStyle, paddingTop: "8px" }} />
             <Bar
               dataKey="income"
-              name="รายรับ"
+              name={tr("รายรับ", "Income")}
               fill={chartColors.income}
               radius={[4, 4, 0, 0]}
               maxBarSize={32}
@@ -106,7 +108,7 @@ export function CashflowChart() {
             />
             <Bar
               dataKey="expense"
-              name="รายจ่าย"
+              name={tr("รายจ่าย", "Expense")}
               fill={chartColors.expense}
               radius={[4, 4, 0, 0]}
               maxBarSize={32}
@@ -116,7 +118,7 @@ export function CashflowChart() {
             <Line
               type="monotone"
               dataKey="net"
-              name="สุทธิ"
+              name={tr("สุทธิ", "Net")}
               stroke={chartColors.net}
               strokeWidth={1.5}
               strokeDasharray="4 3"
@@ -132,6 +134,7 @@ export function CashflowChart() {
 
 export function YearlyComparisonTable() {
   const { getYearlySummaries } = useFinanceStore();
+  const tr = useTr();
   const summaries = getYearlySummaries();
   const recent = summaries.slice(-3).reverse();
 
@@ -139,14 +142,14 @@ export function YearlyComparisonTable() {
     return (
       <Card className="col-span-full">
         <CardHeader>
-          <CardTitle>เปรียบเทียบรายปี</CardTitle>
+          <CardTitle>{tr("เปรียบเทียบรายปี", "Yearly Comparison")}</CardTitle>
         </CardHeader>
         <EmptyState
           icon={<Table2 size={20} />}
-          title="ยังไม่มีข้อมูลย้อนหลังให้เปรียบเทียบ"
-          description="เมื่อมีรายการธุรกรรมจริง ระบบจะสรุปผลรายปีให้โดยอัตโนมัติ"
+          title={tr("ยังไม่มีข้อมูลย้อนหลังให้เปรียบเทียบ", "No historical data to compare")}
+          description={tr("เมื่อมีรายการธุรกรรมจริง ระบบจะสรุปผลรายปีให้โดยอัตโนมัติ", "When there are real transactions, the system will automatically summarize yearly results.")}
           actionHref="/import"
-          actionLabel="นำเข้าธุรกรรม"
+          actionLabel={tr("นำเข้าธุรกรรม", "Import transactions")}
         />
       </Card>
     );
@@ -155,7 +158,7 @@ export function YearlyComparisonTable() {
   return (
     <Card className="col-span-full">
       <CardHeader>
-        <CardTitle>เปรียบเทียบรายปีจากธุรกรรม</CardTitle>
+        <CardTitle>{tr("เปรียบเทียบรายปีจากธุรกรรม", "Yearly comparison from transactions")}</CardTitle>
       </CardHeader>
 
       <div className="overflow-x-auto">
@@ -163,7 +166,7 @@ export function YearlyComparisonTable() {
           <thead>
             <tr className="border-b border-[color:var(--app-divider)]">
               <th className="py-3 pr-4 font-medium text-[color:var(--app-text-muted)]">
-                รายการ
+                {tr("รายการ", "Item")}
               </th>
               {recent.map((s) => (
                 <th
@@ -178,7 +181,7 @@ export function YearlyComparisonTable() {
           <tbody className="divide-y divide-[color:var(--app-divider-soft)]">
             <tr>
               <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
-                รายรับรวม
+                {tr("รายรับรวม", "Total Income")}
               </td>
               {recent.map((s) => (
                 <td
@@ -191,7 +194,7 @@ export function YearlyComparisonTable() {
             </tr>
             <tr>
               <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
-                รายจ่ายรวม
+                {tr("รายจ่ายรวม", "Total Expense")}
               </td>
               {recent.map((s) => (
                 <td
@@ -204,7 +207,7 @@ export function YearlyComparisonTable() {
             </tr>
             <tr>
               <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
-                เงินคงเหลือ
+                {tr("เงินคงเหลือ", "Net Cashflow")}
               </td>
               {recent.map((s) => (
                 <td
@@ -234,7 +237,7 @@ export function YearlyComparisonTable() {
             </tr>
             <tr>
               <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
-                ยอดสุทธิสะสม
+                {tr("ยอดสุทธิสะสม", "Accumulated Net Worth")}
               </td>
               {recent.map((s) => (
                 <td
@@ -247,7 +250,7 @@ export function YearlyComparisonTable() {
             </tr>
             <tr>
               <td className="py-2.5 pr-4 text-[color:var(--app-text-muted)]">
-                การเปลี่ยนแปลงสะสม
+                {tr("การเปลี่ยนแปลงสะสม", "Accumulated Change")}
               </td>
               {recent.map((s) => (
                 <td

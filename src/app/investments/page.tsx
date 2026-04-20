@@ -33,15 +33,16 @@ import { ClientOnlyChart } from "@/components/charts/ClientOnlyChart";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { chartTheme } from "@/lib/chart-theme";
 import type { InvestmentHolding } from "@/lib/types";
+import { useLanguage, useTr } from "@/lib/i18n";
 
 // Each tab carries its own accent colour + icon so the UI can
 // communicate "this section is RMF" visually without another lookup.
 const TABS = [
-  { key: "crypto", label: "Crypto", color: "#e8a54a", Icon: Coins },
-  { key: "ssf", label: "SSF", color: "#5aa9d6", Icon: PiggyBank },
-  { key: "rmf", label: "RMF", color: "#2aab80", Icon: Landmark },
-  { key: "stocks", label: "หุ้น/ETF", color: "#7c5cd6", Icon: TrendingUp },
-  { key: "others", label: "อื่นๆ (ThaiESG)", color: "#8b8278", Icon: Sparkles },
+  { key: "crypto", label: "Crypto", labelEn: "Crypto", color: "#e8a54a", Icon: Coins },
+  { key: "ssf", label: "SSF", labelEn: "SSF", color: "#5aa9d6", Icon: PiggyBank },
+  { key: "rmf", label: "RMF", labelEn: "RMF", color: "#2aab80", Icon: Landmark },
+  { key: "stocks", label: "หุ้น/ETF", labelEn: "Stocks / ETF", color: "#7c5cd6", Icon: TrendingUp },
+  { key: "others", label: "อื่นๆ (ThaiESG)", labelEn: "Others (ThaiESG)", color: "#8b8278", Icon: Sparkles },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -54,15 +55,30 @@ const TAX_NOTES: Record<TabKey, string> = {
   others: "ทองคำ: กำไรจากการขายเสียภาษีเป็นเงินได้ P2P: ดอกเบี้ยเสียภาษี 15%",
 };
 
+const TAX_NOTES_EN: Record<TabKey, string> = {
+  crypto:
+    "Crypto gains are subject to 15% withholding tax if traded on an authorized exchange.",
+  ssf: "SSF can be deducted up to 30% of income (max ฿200,000), must be held for 10 years from purchase.",
+  rmf: "RMF can be deducted up to 30% of income (max ฿500,000), requires 5+ years of continuous investing and age 55+.",
+  stocks:
+    "Dividends are subject to 10% withholding tax; capital gains on SET-listed stocks are tax-exempt.",
+  others:
+    "Gold: sale gains are taxed as income. P2P lending: interest is subject to 15% tax.",
+};
+
 // Assumed marginal tax rate for the tax-saved estimate. 20% is a
 // reasonable mid-bracket number; we surface it in copy so the user
 // knows this is a rough projection.
 const ASSUMED_MARGINAL_RATE = 0.2;
 
 export default function InvestmentsPage() {
+  const tr = useTr();
+  const language = useLanguage();
   const [activeTab, setActiveTab] = useState<TabKey>("stocks");
   const { getInvestments } = useFinanceStore();
   const investments = getInvestments();
+  const getTabLabel = (tab: (typeof TABS)[number]) =>
+    language === "en" ? tab.labelEn : tab.label;
 
   // Aggregate across all tabs — the hero needs "portfolio-wide" numbers,
   // not just the currently-selected tab.
@@ -137,23 +153,26 @@ export default function InvestmentsPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="INVESTMENTS"
-        title="การลงทุน"
-        description="มุมมองรวมพอร์ตสำหรับดู allocation, gain/loss, tax impact, และ top movers โดยยังคงแยกอ่านแต่ละ bucket การลงทุนได้ชัดเจน"
+        title={tr("การลงทุน", "Investments")}
+        description={tr(
+          "มุมมองรวมพอร์ตสำหรับดู allocation, gain/loss, tax impact, และ top movers โดยยังคงแยกอ่านแต่ละ bucket การลงทุนได้ชัดเจน",
+          "A portfolio-wide view of allocation, gain/loss, tax impact, and top movers while keeping each investment bucket readable on its own."
+        )}
         meta={[
           {
             icon: <Wallet size={14} />,
             label:
               totalHoldingsCount > 0
-                ? `${totalHoldingsCount} สินทรัพย์`
-                : "ยังไม่มีสินทรัพย์ลงทุน",
+                ? `${totalHoldingsCount} ${tr("สินทรัพย์", "holdings")}`
+                : tr("ยังไม่มีสินทรัพย์ลงทุน", "No investment holdings yet"),
             tone: totalHoldingsCount > 0 ? "brand" : "neutral",
           },
           {
             icon: <TrendingUp size={14} />,
             label:
               totalHoldingsCount > 0
-                ? `มูลค่ารวม ${formatBaht(totalPortfolio)}`
-                : "รอนำเข้าหรือเชื่อมพอร์ต",
+                ? `${tr("มูลค่ารวม", "Total value")} ${formatBaht(totalPortfolio)}`
+                : tr("รอนำเข้าหรือเชื่อมพอร์ต", "Waiting for import or portfolio sync"),
             tone: totalHoldingsCount > 0 ? "success" : "neutral",
           },
           {
@@ -161,7 +180,7 @@ export default function InvestmentsPage() {
             label:
               totalHoldingsCount > 0
                 ? `Tax saved estimate ${formatBaht(taxSavedEstimate.saved)}`
-                : "ยังไม่มี tax estimate",
+                : tr("ยังไม่มี tax estimate", "No tax estimate yet"),
           },
         ]}
       />
@@ -170,10 +189,13 @@ export default function InvestmentsPage() {
         <Card>
           <EmptyState
             icon={<AlertCircle size={20} />}
-            title="ยังไม่มีข้อมูลพอร์ตการลงทุน"
-            description="เริ่มจากการนำเข้าธุรกรรมจริง ส่วนข้อมูลพอร์ตลงทุนสามารถเชื่อมเพิ่มภายหลังได้"
+            title={tr("ยังไม่มีข้อมูลพอร์ตการลงทุน", "No investment portfolio data yet")}
+            description={tr(
+              "เริ่มจากการนำเข้าธุรกรรมจริง ส่วนข้อมูลพอร์ตลงทุนสามารถเชื่อมเพิ่มภายหลังได้",
+              "Start by importing real transactions. Portfolio data can be connected later."
+            )}
             actionHref="/import"
-            actionLabel="ไปหน้านำเข้า"
+            actionLabel={tr("ไปหน้านำเข้า", "Go to import")}
           />
         </Card>
       ) : (
@@ -203,7 +225,7 @@ export default function InvestmentsPage() {
                     {portfolioPercent.toFixed(2)}%)
                   </span>
                   <span className="text-xs text-[color:var(--app-text-subtle)]">
-                    ต้นทุนรวม {formatBaht(totalInvested)} · {allHoldings.length} สินทรัพย์
+                    {tr("ต้นทุนรวม", "Total invested")} {formatBaht(totalInvested)} · {allHoldings.length} {tr("สินทรัพย์", "holdings")}
                   </span>
                 </div>
               </div>
@@ -246,7 +268,7 @@ export default function InvestmentsPage() {
                           className="inline-block h-2 w-2 rounded-full"
                           style={{ backgroundColor: slice.color }}
                         />
-                        <span className="text-[color:var(--app-text-muted)]">{slice.label}</span>
+                        <span className="text-[color:var(--app-text-muted)]">{getTabLabel(slice)}</span>
                         <span className="ml-auto font-[family-name:var(--font-geist-mono)] font-semibold text-[color:var(--app-text)]">
                           {pct.toFixed(0)}%
                         </span>
@@ -287,11 +309,11 @@ export default function InvestmentsPage() {
               delay={2}
             />
             <InsightCard
-              label="ประหยัดภาษี (ประมาณการ)"
+              label={tr("ประหยัดภาษี (ประมาณการ)", "Tax savings (estimate)")}
               accentColor="#f54e00"
               icon={<Wallet size={18} />}
               headline={formatBaht(taxSavedEstimate.saved)}
-              value={`${(ASSUMED_MARGINAL_RATE * 100).toFixed(0)}% ฐานภาษี`}
+              value={`${(ASSUMED_MARGINAL_RATE * 100).toFixed(0)}% ${tr("ฐานภาษี", "tax bracket")}`}
               valueTone="brand"
               footnote={`SSF ${formatBaht(taxSavedEstimate.ssf)} + RMF ${formatBaht(taxSavedEstimate.rmf)}`}
               delay={3}
@@ -333,7 +355,7 @@ export default function InvestmentsPage() {
                   >
                     <TabIcon size={13} />
                   </span>
-                  {tab.label}
+                  {getTabLabel(tab)}
                   {count > 0 && (
                     <span
                       className={cn(
@@ -362,7 +384,7 @@ export default function InvestmentsPage() {
                 <CardTitle>
                   <span className="inline-flex items-center gap-2">
                     <tabConfig.Icon size={16} style={{ color: tabConfig.color }} />
-                    {tabConfig.label} Portfolio
+                    {getTabLabel(tabConfig)} Portfolio
                   </span>
                 </CardTitle>
                 <span
@@ -398,17 +420,17 @@ export default function InvestmentsPage() {
 
               {holdings.length === 0 ? (
                 <p className="py-6 text-center text-sm text-[color:var(--app-text-muted)]">
-                  ยังไม่มีข้อมูลในหมวด {tabConfig.label}
+                  {tr(`ยังไม่มีข้อมูลในหมวด ${getTabLabel(tabConfig)}`, `No data in category ${getTabLabel(tabConfig)}`)}
                 </p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="border-b border-[color:var(--app-divider)] text-[11px] font-semibold uppercase tracking-wider text-[color:var(--app-text-subtle)]">
-                        <th className="py-2.5 pr-3">สินทรัพย์</th>
-                        <th className="py-2.5 pr-3 text-right">หน่วย</th>
-                        <th className="py-2.5 pr-3 text-right">มูลค่า</th>
-                        <th className="py-2.5 pr-3 text-right">กำไร/ขาดทุน</th>
+                        <th className="py-2.5 pr-3">{tr("สินทรัพย์", "Holding")}</th>
+                        <th className="py-2.5 pr-3 text-right">{tr("หน่วย", "Units")}</th>
+                        <th className="py-2.5 pr-3 text-right">{tr("มูลค่า", "Value")}</th>
+                        <th className="py-2.5 pr-3 text-right">{tr("กำไร/ขาดทุน", "Gain / Loss")}</th>
                         <th className="py-2.5 text-right">%</th>
                       </tr>
                     </thead>
@@ -425,11 +447,11 @@ export default function InvestmentsPage() {
             <div className="flex flex-col gap-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>ผลตอบแทน %</CardTitle>
+                  <CardTitle>{tr("ผลตอบแทน %", "Return %")}</CardTitle>
                 </CardHeader>
                 {barData.length === 0 ? (
                   <p className="py-8 text-center text-xs text-[color:var(--app-text-muted)]">
-                    ไม่มีข้อมูล
+                    {tr("ไม่มีข้อมูล", "No data")}
                   </p>
                 ) : (
                   <ClientOnlyChart className="h-48">
@@ -474,10 +496,10 @@ export default function InvestmentsPage() {
               <div className="rounded-2xl border border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold text-[color:var(--app-brand-text)]">
                   <AlertCircle size={15} />
-                  ข้อมูลภาษี — {tabConfig.label}
+                  {tr("ข้อมูลภาษี", "Tax info")} — {getTabLabel(tabConfig)}
                 </p>
                 <p className="mt-1.5 text-xs leading-relaxed text-[color:var(--app-text-muted)]">
-                  {TAX_NOTES[activeTab]}
+                  {language === "en" ? TAX_NOTES_EN[activeTab] : TAX_NOTES[activeTab]}
                 </p>
               </div>
             </div>

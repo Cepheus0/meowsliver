@@ -14,9 +14,35 @@ import { Landmark } from "lucide-react";
 import { ChartViewport } from "@/components/charts/ChartViewport";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { chartTheme, chartColors } from "@/lib/chart-theme";
+import { useTr } from "@/lib/i18n";
+
+const ASSET_CATEGORY_LABELS_EN: Record<string, string> = {
+  cash: "Cash",
+  bank_savings: "Savings",
+  bank_fixed: "Fixed Deposit",
+  stocks: "Thai / Foreign Stocks",
+  etf: "Mutual Funds / ETF",
+  crypto: "Cryptocurrency",
+  ssf: "SSF Fund",
+  rmf: "RMF Fund",
+  gold: "Gold",
+  other_investment: "Other Investments",
+  investment: "Investments",
+  other: "Other Assets",
+};
+
+const LIABILITY_CATEGORY_LABELS_EN: Record<string, string> = {
+  credit_card: "Credit Card",
+  personal_loan: "Personal Loan",
+  car_loan: "Auto Loan",
+  mortgage: "Mortgage",
+  other_debt: "Other Debts",
+  other: "Other Debts",
+};
 
 export function AssetPieChart() {
   const { getAssets, getLiabilities, getNetWorth, getTotalAssets, getTotalLiabilities } = useFinanceStore();
+  const tr = useTr();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   const assets = getAssets();
@@ -28,14 +54,14 @@ export function AssetPieChart() {
   // Combine assets and liabilities for the pie
   const pieData = [
     ...assets.map((a) => ({
-      label: a.label,
+      label: tr(a.label, ASSET_CATEGORY_LABELS_EN[a.category] ?? a.label),
       value: a.amount,
       color: a.color,
     })),
     ...liabilities
       .filter((l) => l.amount > 0)
       .map((l) => ({
-        label: l.label,
+        label: tr(l.label, LIABILITY_CATEGORY_LABELS_EN[l.category] ?? l.label),
         value: l.amount,
         color: l.color,
       })),
@@ -45,12 +71,15 @@ export function AssetPieChart() {
     return (
       <Card className="col-span-full lg:col-span-2">
         <CardHeader>
-          <CardTitle>สินทรัพย์และหนี้สิน</CardTitle>
+          <CardTitle>{tr("สินทรัพย์และหนี้สิน", "Assets & Liabilities")}</CardTitle>
         </CardHeader>
         <EmptyState
           icon={<Landmark size={20} />}
-          title="ยังไม่มีข้อมูลสินทรัพย์หรือหนี้สิน"
-          description="ส่วนนี้จะแสดงเมื่อมีการเชื่อมข้อมูลสินทรัพย์และหนี้สินจริงในภายหลัง"
+          title={tr("ยังไม่มีข้อมูลสินทรัพย์หรือหนี้สิน", "No asset or liability data yet")}
+          description={tr(
+            "ส่วนนี้จะแสดงเมื่อมีการเชื่อมข้อมูลสินทรัพย์และหนี้สินจริงในภายหลัง",
+            "This section will appear once real asset and liability data is connected."
+          )}
         />
       </Card>
     );
@@ -59,7 +88,7 @@ export function AssetPieChart() {
   return (
     <Card className="col-span-full lg:col-span-2">
       <CardHeader>
-        <CardTitle>Net Worth 100% - สินทรัพย์สุทธิ</CardTitle>
+        <CardTitle>Net Worth 100% - {tr("สินทรัพย์สุทธิ", "Net Assets")}</CardTitle>
       </CardHeader>
 
       {/* Net Worth big number */}
@@ -68,7 +97,7 @@ export function AssetPieChart() {
           {formatBaht(netWorth)}
         </p>
         <p className="mt-1 text-xs text-[color:var(--app-text-muted)]">
-          สินทรัพย์ {formatBaht(totalAssets)} — หนี้สิน{" "}
+          {tr("สินทรัพย์", "Assets")} {formatBaht(totalAssets)} — {tr("หนี้สิน", "Liabilities")}{" "}
           {formatBaht(totalLiabilities)}
         </p>
       </div>

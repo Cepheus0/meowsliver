@@ -16,7 +16,7 @@ import {
   Cell,
 } from "recharts";
 import { useFinanceStore } from "@/store/finance-store";
-import { formatBaht, THAI_MONTHS } from "@/lib/utils";
+import { formatBaht, THAI_MONTHS, EN_MONTHS } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ChartViewport } from "@/components/charts/ChartViewport";
@@ -27,6 +27,7 @@ import {
 } from "@/lib/finance-analytics";
 import { chartTheme, chartColors } from "@/lib/chart-theme";
 import { CalendarDays, FileSpreadsheet, LineChart as LineChartIcon, Receipt } from "lucide-react";
+import { useTr, useLanguage } from "@/lib/i18n";
 
 function formatCurrencyAxis(value: number) {
   const absoluteValue = Math.abs(value);
@@ -44,6 +45,8 @@ function formatCurrencyAxis(value: number) {
 
 export default function ReportsPage() {
   const router = useRouter();
+  const tr = useTr();
+  const language = useLanguage();
   const { getYearlySummaries, getMonthlyCashflow, getTransactions, selectedYear, importedTransactions } =
     useFinanceStore();
   const summaries = getYearlySummaries();
@@ -68,11 +71,17 @@ export default function ReportsPage() {
     ? monthlyNetWorthData
     : yearlyNetWorthData;
   const netWorthChartTitle = shouldUseMonthlyNetWorthView
-    ? `ยอดสุทธิสะสมรายเดือน ปี ${selectedYear}`
-    : "ยอดสุทธิสะสมย้อนหลัง";
+    ? tr(`ยอดสุทธิสะสมรายเดือน ปี ${selectedYear}`, `Monthly net worth · ${selectedYear}`)
+    : tr("ยอดสุทธิสะสมย้อนหลัง", "Net worth over time");
   const netWorthChartDescription = shouldUseMonthlyNetWorthView
-    ? "ตอนนี้มีข้อมูลเพียงปีเดียว จึงแสดงเส้นสะสมรายเดือนของปีที่เลือกเพื่อให้เห็น momentum ภายในปี"
-    : "เปรียบเทียบยอดสุทธิสะสมข้ามปีจากธุรกรรมที่มีอยู่ในระบบ";
+    ? tr(
+        "ตอนนี้มีข้อมูลเพียงปีเดียว จึงแสดงเส้นสะสมรายเดือนของปีที่เลือกเพื่อให้เห็น momentum ภายในปี",
+        "Only one year of data exists, so this shows the monthly net worth within the selected year to surface in-year momentum."
+      )
+    : tr(
+        "เปรียบเทียบยอดสุทธิสะสมข้ามปีจากธุรกรรมที่มีอยู่ในระบบ",
+        "Compare net worth across years using the transactions already in the system."
+      );
 
   const expenseBreakdown = getExpenseBreakdownFromTransactions(
     importedTransactions,
@@ -91,26 +100,32 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="REPORTS"
-        title="รายงาน"
-        description="วิเคราะห์แนวโน้มรายรับ รายจ่าย net worth และ savings rate จากธุรกรรมจริงย้อนหลังในมุมมองที่พร้อมใช้ตัดสินใจ"
+        title={tr("รายงาน", "Reports")}
+        description={tr(
+          "วิเคราะห์แนวโน้มรายรับ รายจ่าย net worth และ savings rate จากธุรกรรมจริงย้อนหลังในมุมมองที่พร้อมใช้ตัดสินใจ",
+          "Analyze income, expenses, net worth and savings rate trends from real transactions in a decision-ready view."
+        )}
         meta={[
           {
             icon: <CalendarDays size={14} />,
-            label: `ปีที่เลือก ${selectedYear}`,
+            label: tr(`ปีที่เลือก ${selectedYear}`, `Selected year ${selectedYear}`),
             tone: "brand",
           },
           {
             icon: <Receipt size={14} />,
             label: hasAnyTransactions
-              ? `${importedTransactions.length.toLocaleString()} ธุรกรรมในระบบ`
-              : "ยังไม่มีธุรกรรมสำหรับสร้างรายงาน",
+              ? tr(
+                  `${importedTransactions.length.toLocaleString()} ธุรกรรมในระบบ`,
+                  `${importedTransactions.length.toLocaleString()} transactions on file`
+                )
+              : tr("ยังไม่มีธุรกรรมสำหรับสร้างรายงาน", "No transactions to build reports from"),
             tone: hasAnyTransactions ? "default" : "neutral",
           },
           {
             icon: <LineChartIcon size={14} />,
             label: hasSelectedYearData
-              ? `มีข้อมูลปี ${selectedYear}`
-              : `ยังไม่มีข้อมูลปี ${selectedYear}`,
+              ? tr(`มีข้อมูลปี ${selectedYear}`, `Has data for ${selectedYear}`)
+              : tr(`ยังไม่มีข้อมูลปี ${selectedYear}`, `No data for ${selectedYear}`),
             tone: hasSelectedYearData ? "success" : "neutral",
           },
         ]}
@@ -119,7 +134,9 @@ export default function ReportsPage() {
             href={hasAnyTransactions ? "/transactions" : "/import"}
             className="inline-flex items-center justify-center rounded-xl border border-[color:var(--app-brand)] bg-[color:var(--app-brand)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_32px_-20px_var(--app-brand-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[color:var(--app-brand-hover)]"
           >
-            {hasAnyTransactions ? "เปิดรายการต้นทาง" : "เริ่มนำเข้าข้อมูล"}
+            {hasAnyTransactions
+              ? tr("เปิดรายการต้นทาง", "Open source transactions")
+              : tr("เริ่มนำเข้าข้อมูล", "Start importing data")}
           </Link>
         }
       />
@@ -128,10 +145,13 @@ export default function ReportsPage() {
         <Card>
           <EmptyState
             icon={<FileSpreadsheet size={20} />}
-            title="ยังไม่มีข้อมูลสำหรับสร้างรายงาน"
-            description="เมื่อคุณนำเข้าธุรกรรมจริง ระบบจะสร้างรายงานย้อนหลังให้อัตโนมัติ"
+            title={tr("ยังไม่มีข้อมูลสำหรับสร้างรายงาน", "No data to build reports from")}
+            description={tr(
+              "เมื่อคุณนำเข้าธุรกรรมจริง ระบบจะสร้างรายงานย้อนหลังให้อัตโนมัติ",
+              "Once you import real transactions, the system will build historical reports automatically."
+            )}
             actionHref="/import"
-            actionLabel="เริ่มนำเข้าข้อมูล"
+            actionLabel={tr("เริ่มนำเข้าข้อมูล", "Start importing data")}
           />
         </Card>
       ) : (
@@ -167,7 +187,7 @@ export default function ReportsPage() {
                 <Line
                   type="monotone"
                   dataKey="netWorth"
-                  name="ยอดสุทธิสะสม"
+                  name={tr("ยอดสุทธิสะสม", "Net worth")}
                   stroke={chartColors.net}
                   strokeWidth={3}
                   dot={{ fill: chartColors.net, r: shouldUseMonthlyNetWorthView ? 2.5 : 4 }}
@@ -180,14 +200,17 @@ export default function ReportsPage() {
         {/* Expense Breakdown */}
         <Card>
           <CardHeader>
-            <CardTitle>สัดส่วนรายจ่าย ปี {selectedYear}</CardTitle>
+            <CardTitle>{tr(`สัดส่วนรายจ่าย ปี ${selectedYear}`, `Expense breakdown · ${selectedYear}`)}</CardTitle>
           </CardHeader>
           {expenseBreakdown.length === 0 ? (
             <EmptyState
-              title={`ยังไม่มีรายจ่ายในปี ${selectedYear}`}
-              description="ลองเปลี่ยนปีที่ด้านบน หรือเริ่มจากการนำเข้ารายการธุรกรรมจริงในปีที่ต้องการ"
+              title={tr(`ยังไม่มีรายจ่ายในปี ${selectedYear}`, `No expenses in ${selectedYear}`)}
+              description={tr(
+                "ลองเปลี่ยนปีที่ด้านบน หรือเริ่มจากการนำเข้ารายการธุรกรรมจริงในปีที่ต้องการ",
+                "Try switching the year at the top, or import real transactions for the year you want."
+              )}
               actionHref="/import"
-              actionLabel="นำเข้าธุรกรรม"
+              actionLabel={tr("นำเข้าธุรกรรม", "Import transactions")}
             />
           ) : (
             <>
@@ -239,12 +262,12 @@ export default function ReportsPage() {
         {/* Monthly Expense vs Income */}
         <Card>
           <CardHeader>
-            <CardTitle>รายรับ vs รายจ่าย รายเดือน ปี {selectedYear}</CardTitle>
+            <CardTitle>{tr(`รายรับ vs รายจ่าย รายเดือน ปี ${selectedYear}`, `Monthly income vs expense · ${selectedYear}`)}</CardTitle>
           </CardHeader>
           {hasSelectedYearData ? (
             <>
               <p className="-mt-1 mb-2 text-xs text-[color:var(--app-text-muted)]">
-                คลิกที่แท่งเพื่อดูรายละเอียดของเดือนนั้น
+                {tr("คลิกที่แท่งเพื่อดูรายละเอียดของเดือนนั้น", "Click a bar to see that month's details")}
               </p>
               <ChartViewport className="h-64">
                 {({ width, height }) => (
@@ -263,7 +286,15 @@ export default function ReportsPage() {
                     }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.3} />
-                    <XAxis dataKey="month" tick={{ fontSize: 10, fill: chartTheme.axis }} />
+                    <XAxis 
+                      dataKey="month" 
+                      tick={{ fontSize: 10, fill: chartTheme.axis }} 
+                      tickFormatter={(v) => {
+                        const idx = THAI_MONTHS.indexOf(v);
+                        if (idx >= 0 && language === "en") return EN_MONTHS[idx];
+                        return v;
+                      }}
+                    />
                     <YAxis
                       tick={{ fontSize: 10, fill: chartTheme.axis }}
                       tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
@@ -275,14 +306,14 @@ export default function ReportsPage() {
                     />
                     <Bar
                       dataKey="income"
-                      name="รายรับ"
+                      name={tr("รายรับ", "Income")}
                       fill={chartColors.income}
                       radius={[4, 4, 0, 0]}
                       cursor="pointer"
                     />
                     <Bar
                       dataKey="expense"
-                      name="รายจ่าย"
+                      name={tr("รายจ่าย", "Expense")}
                       fill={chartColors.expense}
                       radius={[4, 4, 0, 0]}
                       cursor="pointer"
@@ -293,8 +324,11 @@ export default function ReportsPage() {
             </>
           ) : (
             <EmptyState
-              title={`ยังไม่มีข้อมูลปี ${selectedYear}`}
-              description="กราฟรายเดือนจะแสดงเมื่อมีรายการรายรับหรือรายจ่ายในปีที่เลือก"
+              title={tr(`ยังไม่มีข้อมูลปี ${selectedYear}`, `No data for ${selectedYear}`)}
+              description={tr(
+                "กราฟรายเดือนจะแสดงเมื่อมีรายการรายรับหรือรายจ่ายในปีที่เลือก",
+                "The monthly chart appears once income or expense transactions exist in the selected year."
+              )}
             />
           )}
         </Card>
@@ -302,7 +336,7 @@ export default function ReportsPage() {
         {/* Savings Rate Over Time */}
         <Card>
           <CardHeader>
-            <CardTitle>อัตราการออม % ย้อนหลัง</CardTitle>
+            <CardTitle>{tr("อัตราการออม % ย้อนหลัง", "Savings rate % over time")}</CardTitle>
           </CardHeader>
           <ChartViewport className="h-64">
             {({ width, height }) => (
