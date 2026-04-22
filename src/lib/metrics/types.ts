@@ -1,8 +1,11 @@
 export interface MetricCoverage {
   transactionCount?: number;
   selectedYearTransactionCount?: number;
+  accountCount?: number;
   activeAccountCount?: number;
+  goalCount?: number;
   activeGoalCount?: number;
+  importRunCount?: number;
   generatedFrom: string[];
   caveats: string[];
 }
@@ -15,4 +18,3 @@ export interface MetricPacket<TMetrics, TEvidence = unknown> {
   generatedAt: string;
   coverage: MetricCoverage;
 }
-

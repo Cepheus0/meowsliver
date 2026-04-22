@@ -114,6 +114,33 @@ async function main() {
     );
     console.log("PASS api /api/metrics/dashboard");
 
+    await expectOk(
+      "/api/metrics/anomalies/today?date=2030-03-02",
+      "application/json"
+    );
+    console.log("PASS api /api/metrics/anomalies/today");
+    await expectOk(
+      "/api/metrics/transactions/day?date=2030-03-02",
+      "application/json"
+    );
+    console.log("PASS api /api/metrics/transactions/day");
+    await expectOk(
+      "/api/metrics/transactions/compare?from=2030-03&to=2030-02",
+      "application/json"
+    );
+    console.log("PASS api /api/metrics/transactions/compare");
+    await expectOk("/api/metrics/accounts/health", "application/json");
+    console.log("PASS api /api/metrics/accounts/health");
+    await expectOk("/api/metrics/goals/overview", "application/json");
+    console.log("PASS api /api/metrics/goals/overview");
+    await expectOk("/api/metrics/imports/recent", "application/json");
+    console.log("PASS api /api/metrics/imports/recent");
+    await expectOk(
+      "/api/insights/dashboard?date=2030-03-02",
+      "application/json"
+    );
+    console.log("PASS api /api/insights/dashboard");
+
     const accountsResponse = await request("/api/accounts");
     const accountsJson = (await accountsResponse.json()) as {
       accounts: Array<{ id: number; currentBalance: number; isArchived: boolean }>;
