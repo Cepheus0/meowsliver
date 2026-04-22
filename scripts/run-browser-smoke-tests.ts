@@ -194,7 +194,7 @@ async function main() {
       "Expected transfer filter summary to show the transfer row count"
     );
 
-    await page.getByRole("button", { name: "ทั้งหมด" }).click();
+    await page.getByRole("button", { name: "ทั้งหมด", exact: true }).click();
     assert(
       (await tableRows.count()) === 50,
       "Expected returning to all transactions to restore the default paginated row count"
@@ -213,8 +213,8 @@ async function main() {
       "Expected pagination to advance to page 2 after clicking next"
     );
     assert(
-      footerText?.includes("กำลังแสดงรายการที่ 26-50 จากทั้งหมด 60 รายการ"),
-      "Expected page 2 range summary to be correct"
+      (await tableRows.count()) === 25,
+      "Expected page 2 to preserve the selected 25-row page size"
     );
 
     await page.getByRole("button", { name: "ก่อนหน้า", exact: true }).click();

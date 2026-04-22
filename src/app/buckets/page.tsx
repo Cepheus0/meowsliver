@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Archive,
   ArrowRight,
@@ -84,7 +84,7 @@ export default function BucketsPage() {
     notes: "",
   });
 
-  const loadPortfolio = async () => {
+  const loadPortfolio = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/savings-goals", { cache: "no-store" });
@@ -103,11 +103,11 @@ export default function BucketsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [tr]);
 
   useEffect(() => {
     void loadPortfolio();
-  }, []);
+  }, [loadPortfolio]);
 
   const orderedGoals = useMemo(() => {
     if (!portfolio) return [];

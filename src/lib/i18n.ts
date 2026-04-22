@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useFinanceStore } from "@/store/finance-store";
 import {
   ACCOUNT_TYPE_LABELS,
@@ -207,7 +208,7 @@ const dictionaries: Record<Language, Dict> = { th, en };
 export function useT() {
   const language = useFinanceStore((s) => s.language);
   const dict = dictionaries[language] ?? dictionaries.th;
-  return (key: string): string => dict[key] ?? key;
+  return useCallback((key: string): string => dict[key] ?? key, [dict]);
 }
 
 /** Non-hook accessor for cases where a component isn't available (server helpers, etc). */
@@ -233,7 +234,10 @@ export function translate(language: Language, key: string): string {
  */
 export function useTr() {
   const language = useFinanceStore((s) => s.language);
-  return (th: string, en: string): string => (language === "en" ? en : th);
+  return useCallback(
+    (th: string, en: string): string => (language === "en" ? en : th),
+    [language]
+  );
 }
 
 /** Read the current language directly, for conditional rendering. */
