@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { PiggyBank, Sparkles } from "lucide-react";
+import { ArrowRight, PiggyBank, Sparkles } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatBaht } from "@/lib/utils";
@@ -110,10 +110,11 @@ export function BucketsOverview() {
 
   const featuredGoals = portfolio.goals.slice(0, 3);
   const overallProgress = Math.round(portfolio.overview.overallProgressPercent);
+  const progressWidth = Math.min(Math.max(overallProgress, 0), 100);
 
   return (
     <Card className="col-span-full">
-      <CardHeader className="items-start gap-3 sm:flex-row sm:items-center">
+      <CardHeader className="flex-col items-start gap-3 sm:flex-row sm:items-center">
         <div>
           <CardTitle>Savings Goals Portfolio</CardTitle>
           <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
@@ -121,21 +122,41 @@ export function BucketsOverview() {
             {formatBaht(portfolio.overview.totalTarget)}
           </p>
         </div>
-        <div className="ml-auto flex items-center gap-3">
-          <div className="rounded-md border border-[color:var(--app-border)] px-3 py-2 text-right">
-            <p className="text-xs font-medium text-[color:var(--app-text-muted)]">
-              {tr("ความคืบหน้ารวม", "Overall progress")}
-            </p>
-            <p className="font-[family-name:var(--font-geist-mono)] text-xl font-bold text-[color:var(--income-text)]">
-              {overallProgress}%
-            </p>
+        <div className="w-full sm:ml-auto sm:w-[380px]">
+          <div className="rounded-2xl border border-[color:var(--app-brand-border)] bg-[linear-gradient(135deg,var(--app-brand-soft)_0%,transparent_72%)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--app-text-subtle)]">
+                  {tr("ความคืบหน้ารวม", "Overall progress")}
+                </p>
+                <p className="mt-1 text-xs text-[color:var(--app-text-muted)]">
+                  {tr("สะสมแล้ว", "Saved")} {formatBaht(portfolio.overview.totalSaved)} ·{" "}
+                  {tr("เหลืออีก", "Remaining")} {formatBaht(portfolio.overview.remainingAmount)}
+                </p>
+              </div>
+              <p className="font-[family-name:var(--font-geist-mono)] text-3xl font-bold leading-none text-[color:var(--income-text)]">
+                {overallProgress}%
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-3">
+              <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-[color:var(--app-surface-soft)]">
+                <div
+                  className="h-full rounded-full bg-[color:var(--income-text)] transition-[width] duration-700"
+                  style={{ width: `${progressWidth}%` }}
+                />
+                {progressWidth === 0 ? (
+                  <span className="absolute left-0 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-[color:var(--income-text)]/70" />
+                ) : null}
+              </div>
+              <Link
+                href="/buckets"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-3 py-1.5 text-xs font-semibold text-[color:var(--app-text)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)]"
+              >
+                {tr("ดูทั้งหมด", "View all")}
+                <ArrowRight size={13} />
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/buckets"
-            className="theme-border rounded-md border px-3 py-2 text-sm font-medium text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
-          >
-            {tr("ดูทั้งหมด", "View all")}
-          </Link>
         </div>
       </CardHeader>
 
