@@ -120,10 +120,10 @@ export default function DashboardPage() {
                 <EmptyState
                   className="border-0 bg-transparent px-0 py-0"
                   icon={<DatabaseZap size={20} />}
-                  title={tr("ตอนนี้แอปใช้ข้อมูลจริงทั้งหมดแล้ว", "All data is live")}
+                  title={tr("แดชบอร์ดใช้ข้อมูลจริงจากระบบแล้ว", "Dashboard data is live")}
                   description={tr(
-                    `มีข้อมูลที่นำเข้าแล้ว ${importedTransactions.length} รายการ และกำลังแสดงผลตามปี ${selectedYear} ข้อมูลสินทรัพย์ หนี้สิน และการลงทุน ถูกเชื่อมโยงกับบัญชีจริงเรียบร้อยแล้ว`,
-                    `${importedTransactions.length} transactions imported and rendering for FY ${selectedYear}. Assets, liabilities, and investments are all linked to real accounts.`
+                    `มีข้อมูลธุรกรรมที่นำเข้าแล้ว ${importedTransactions.length.toLocaleString()} รายการ และกำลังแสดงผลตามปี ${selectedYear} บัญชีและเป้าหมายออมใช้ข้อมูลที่บันทึกจริง ส่วนภาพสินทรัพย์/หนี้สินยังอิงยอดบัญชีปัจจุบันจนกว่าจะมีโมเดลพอร์ตลงทุนเต็มรูปแบบ`,
+                    `${importedTransactions.length.toLocaleString()} transactions are imported and rendering for FY ${selectedYear}. Accounts and savings goals use persisted records; asset and liability views are still account-balance based until the full investment holdings model exists.`
                   )}
                   actionHref="/transactions"
                   actionLabel={tr("ดูรายการทั้งหมด", "View all transactions")}

@@ -90,6 +90,29 @@ async function main() {
     console.log("PASS api /api/accounts");
     await expectOk("/api/savings-goals", "application/json");
     console.log("PASS api /api/savings-goals");
+    await expectOk("/api/metrics/dashboard", "application/json");
+    const dashboardMetricsResponse = await request("/api/metrics/dashboard?year=2030");
+    const dashboardMetricsJson = (await dashboardMetricsResponse.json()) as {
+      packet?: {
+        scope?: string;
+        period?: string;
+        metrics?: {
+          summary?: {
+            year?: number;
+          };
+        };
+      };
+    };
+    assert(
+      dashboardMetricsJson.packet?.scope === "dashboard",
+      "Expected dashboard metrics endpoint to return a dashboard packet"
+    );
+    assert(
+      dashboardMetricsJson.packet?.period === "2030" &&
+        dashboardMetricsJson.packet.metrics?.summary?.year === 2030,
+      "Expected dashboard metrics endpoint to honor the year query"
+    );
+    console.log("PASS api /api/metrics/dashboard");
 
     const accountsResponse = await request("/api/accounts");
     const accountsJson = (await accountsResponse.json()) as {
