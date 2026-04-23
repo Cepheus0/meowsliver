@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     const context = await getDashboardAiContext({ year, date });
     const completion = await createLmStudioChatCompletion({
       messages: buildDashboardChatMessages(context, messages),
-      maxTokens: 900,
+      maxTokens: 220,
       temperature: 0.2,
     });
 

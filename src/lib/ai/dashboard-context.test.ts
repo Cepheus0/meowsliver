@@ -3,6 +3,7 @@ import {
   buildDashboardAiContext,
   buildDashboardChatMessages,
   buildDashboardInsightUserPrompt,
+  serializeDashboardAiContext,
 } from "@/lib/ai/dashboard-context";
 import type { MetricPacket } from "@/lib/metrics/types";
 
@@ -65,5 +66,31 @@ describe("dashboard AI context", () => {
     });
 
     expect(buildDashboardInsightUserPrompt(context)).toContain("Next Actions");
+  });
+
+  it("keeps large evidence arrays inside a local model prompt budget", () => {
+    const largeEvidencePacket = packet("accounts.health");
+    largeEvidencePacket.evidence = {
+      accounts: Array.from({ length: 30 }, (_, index) => ({
+        accountId: index + 1,
+        name: `Account ${index + 1}`,
+        riskLevel: index === 20 ? "watch" : "green",
+        balanceDifference: index * 1000,
+      })),
+    };
+
+    const context = buildDashboardAiContext({
+      dashboardPacket: largeEvidencePacket,
+      deterministicInsightPacket: packet("dashboard.insights"),
+      anomalyPacket: packet("transactions.anomalies.today"),
+      accountHealthPacket: largeEvidencePacket,
+      goalHealthPacket: packet("goals.health"),
+      importQualityPacket: packet("imports.recent"),
+    });
+    const serialized = serializeDashboardAiContext(context);
+
+    expect(serialized.length).toBeLessThan(9000);
+    expect(serialized).toContain("omittedCount");
+    expect(serialized).toContain("Account 21");
   });
 });

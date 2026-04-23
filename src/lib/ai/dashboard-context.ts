@@ -15,7 +15,11 @@ interface BuildDashboardAiContextInput {
   generatedAt?: string;
 }
 
-const MAX_JSON_CHARS = 22000;
+const MAX_JSON_CHARS = 4200;
+const MAX_ARRAY_ITEMS = 4;
+const MAX_STRING_CHARS = 600;
+
+type JsonObject = Record<string, unknown>;
 
 function unique(values: string[]) {
   return Array.from(new Set(values));
@@ -31,6 +35,117 @@ function compactPacket<TMetrics, TEvidence>(
     evidence: packet.evidence,
     coverage: packet.coverage,
     generatedAt: packet.generatedAt,
+  };
+}
+
+function priorityScore(value: unknown) {
+  if (!value || typeof value !== "object") {
+    return 0;
+  }
+
+  const item = value as JsonObject;
+  const riskLevel =
+    typeof item.riskLevel === "string" ? item.riskLevel : undefined;
+  const severity =
+    typeof item.severity === "string" ? item.severity : undefined;
+  const level = riskLevel ?? severity;
+
+  switch (level) {
+    case "critical":
+    case "red":
+      return 5;
+    case "warning":
+    case "amber":
+      return 4;
+    case "watch":
+      return 3;
+    case "info":
+      return 2;
+    case "green":
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+function prioritizePromptArray(values: unknown[]) {
+  if (values.length <= MAX_ARRAY_ITEMS) {
+    return values;
+  }
+
+  const hasPrioritizedItems = values.some((value) => priorityScore(value) > 0);
+
+  if (!hasPrioritizedItems) {
+    return values;
+  }
+
+  return values
+    .map((value, index) => ({ value, index, score: priorityScore(value) }))
+    .sort((left, right) => right.score - left.score || left.index - right.index)
+    .map((item) => item.value);
+}
+
+function compactPromptValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    const prioritized = prioritizePromptArray(value);
+    const items = prioritized
+      .slice(0, MAX_ARRAY_ITEMS)
+      .map((item) => compactPromptValue(item));
+
+    if (value.length <= MAX_ARRAY_ITEMS) {
+      return items;
+    }
+
+    return {
+      items,
+      omittedCount: value.length - MAX_ARRAY_ITEMS,
+      originalCount: value.length,
+    };
+  }
+
+  if (typeof value === "string" && value.length > MAX_STRING_CHARS) {
+    return `${value.slice(0, MAX_STRING_CHARS)}...TRUNCATED_STRING`;
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as JsonObject).map(([key, nestedValue]) => [
+        key,
+        compactPromptValue(nestedValue),
+      ])
+    );
+  }
+
+  return value;
+}
+
+function compactContextForPrompt(context: DashboardAiContext) {
+  const packetEntries = Object.entries(context.packets);
+
+  return {
+    scope: context.scope,
+    generatedAt: context.generatedAt,
+    caveats: context.caveats,
+    packets: Object.fromEntries(
+      packetEntries.map(([key, packet]) => [
+        key,
+        {
+          scope: packet.scope,
+          period: packet.period,
+          metrics: compactPromptValue(packet.metrics),
+          coverage: {
+            ...packet.coverage,
+            generatedFrom: undefined,
+          },
+        },
+      ])
+    ),
+    evidence: Object.fromEntries(
+      packetEntries.map(([key, packet]) => [
+        key,
+        compactPromptValue(packet.evidence),
+      ])
+    ),
   };
 }
 
@@ -63,7 +178,7 @@ export function buildDashboardAiContext({
 }
 
 export function serializeDashboardAiContext(context: DashboardAiContext) {
-  const serialized = JSON.stringify(context, null, 2);
+  const serialized = JSON.stringify(compactContextForPrompt(context));
 
   if (serialized.length <= MAX_JSON_CHARS) {
     return serialized;

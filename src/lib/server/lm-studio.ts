@@ -38,8 +38,8 @@ function normalizeBaseUrl(value?: string) {
 }
 
 function getTimeoutMs() {
-  const value = Number(process.env.LM_STUDIO_TIMEOUT_MS ?? 8000);
-  return Number.isFinite(value) && value > 0 ? value : 8000;
+  const value = Number(process.env.LM_STUDIO_TIMEOUT_MS ?? 45000);
+  return Number.isFinite(value) && value > 0 ? value : 45000;
 }
 
 function getApiKey() {
@@ -78,7 +78,16 @@ async function fetchJson<T>(
     });
 
     if (!response.ok) {
-      throw new Error(`lm_studio_http_${response.status}`);
+      const detail = await response
+        .text()
+        .then((body) => body.replace(/\s+/g, " ").slice(0, 500))
+        .catch(() => "");
+
+      throw new Error(
+        detail
+          ? `lm_studio_http_${response.status}: ${detail}`
+          : `lm_studio_http_${response.status}`
+      );
     }
 
     return (await response.json()) as T;

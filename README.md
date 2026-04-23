@@ -119,10 +119,10 @@ Optional local AI settings for LM Studio:
 ```bash
 LM_STUDIO_BASE_URL=http://localhost:1234/v1
 LM_STUDIO_MODEL=
-LM_STUDIO_TIMEOUT_MS=8000
+LM_STUDIO_TIMEOUT_MS=45000
 ```
 
-If `LM_STUDIO_MODEL` is blank, Meowsliver uses the first model returned by LM Studio's `/v1/models` endpoint. Start LM Studio's Local Server and load a model before using dashboard AI chat or `/api/ai/*` routes.
+If `LM_STUDIO_MODEL` is blank, Meowsliver uses the first model returned by LM Studio's `/v1/models` endpoint. Start LM Studio's Local Server and load a model before using dashboard AI chat or `/api/ai/*` routes. Local models can be slow on larger metric prompts, so the default timeout is intentionally longer than standard API calls.
 
 ### Local Postgres
 
