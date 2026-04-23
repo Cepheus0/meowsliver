@@ -190,13 +190,15 @@ export function serializeDashboardAiContext(context: DashboardAiContext) {
 export function buildDashboardAiSystemPrompt() {
   return [
     "คุณคือ Meowsliver CFO Copilot สำหรับ dashboard การเงินส่วนบุคคลภาษาไทย",
+    "",
     "กฎสำคัญ:",
     "1. ใช้ตัวเลขจาก METRIC_CONTEXT เท่านั้น ห้ามเดาตัวเลขหรือสร้างตัวเลขใหม่",
-    "2. ถ้าข้อมูลมี caveat ให้พูด caveat แบบกระชับและตรงไปตรงมา",
-    "3. ตอบเป็นภาษาไทยที่ชัดเจน เหมาะกับผู้ใช้ที่ต้องตัดสินใจเร็ว",
-    "4. แยก Highlights / Risks / Next Actions เมื่อผู้ใช้ถามเชิงสรุปหรือวางแผน",
-    "5. ห้ามให้คำแนะนำการลงทุนแบบฟันธง เพราะ holdings และ market data ยังไม่ครบ",
-    "6. ถ้าคำถามต้องใช้ข้อมูลที่ยังไม่มี ให้บอกว่า current schema ยังตอบไม่ได้ และแนะนำข้อมูลที่ต้องเพิ่ม",
+    "2. ตอบแบบ CONCISE และ ACTIONABLE เท่านั้น ไม่ต้องอธิบายยาว",
+    "3. ถ้าข้อมูลมี caveat ให้พูด caveat แบบกระชับและตรงไปตรงมา",
+    "4. ตอบเป็นภาษาไทยที่ชัดเจน เหมาะกับผู้ใช้ที่ต้องตัดสินใจเร็ว",
+    "5. แยก Highlights / Risks / Next Actions เมื่อผู้ใช้ถามเชิงสรุปหรือวางแผน",
+    "6. ห้ามให้คำแนะนำการลงทุนแบบฟันธง เพราะ holdings และ market data ยังไม่ครบ",
+    "7. ถ้าคำถามต้องใช้ข้อมูลที่ยังไม่มี ให้บอกว่า current schema ยังตอบไม่ได้ และแนะนำข้อมูลที่ต้องเพิ่ม",
   ].join("\n");
 }
 
@@ -204,10 +206,18 @@ export function buildDashboardInsightUserPrompt(context: DashboardAiContext) {
   return [
     "สร้าง dashboard insight summary จาก METRIC_CONTEXT ต่อไปนี้",
     "",
-    "รูปแบบคำตอบ:",
-    "Highlights: 2-3 bullet",
-    "Risks: 1-2 bullet",
-    "Next Actions: 2-3 bullet",
+    "รูปแบบคำตอบ (STRICT):",
+    "## Highlights",
+    "* [1 bullet สำคัญที่สุด]",
+    "* [1 bullet สำคัญรองลงมา]",
+    "",
+    "## Risks",
+    "* [1 bullet ถ้ามี]",
+    "",
+    "## Next Actions",
+    "* [1-2 action ที่ต้องทำ]",
+    "",
+    "เขียนให้กระชับ ไม่ต้องอธิบายยาว ตัวเลขเท่านั้นที่ต้องแสดง",
     "",
     "METRIC_CONTEXT:",
     serializeDashboardAiContext(context),

@@ -59,8 +59,8 @@ export async function GET(request: Request) {
         { role: "system", content: buildDashboardAiSystemPrompt() },
         { role: "user", content: buildDashboardInsightUserPrompt(context) },
       ],
-      maxTokens: 300,
-      temperature: 0.2,
+      maxTokens: 200,
+      temperature: 0.1,
     });
 
     return NextResponse.json({

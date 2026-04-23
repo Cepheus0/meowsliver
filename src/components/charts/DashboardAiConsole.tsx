@@ -1,11 +1,64 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Bot, CircleAlert, Loader2, Send, Sparkles, WifiOff } from "lucide-react";
+import { Bot, CircleAlert, Loader2, Send, Sparkles, WifiOff, AlertCircle, CheckCircle2, Zap } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { useTr } from "@/lib/i18n";
 import { useFinanceStore } from "@/store/finance-store";
 import type { AiChatMessage } from "@/lib/ai/types";
+
+function AiSummaryContent({ content }: { content: string }) {
+  // Parse AI summary into structured sections
+  const sections = content.split(/\n(?=###|##|\*\*|Highlights|Risks|Next Actions)/i).filter(Boolean);
+  
+  return (
+    <div className="space-y-4">
+      {sections.map((section, idx) => {
+        const trimmed = section.trim();
+        if (!trimmed) return null;
+        
+        // Check for section headers
+        const isHighlights = /^(###|##|\*\*)?\s*Highlights|highlights/i.test(trimmed);
+        const isRisks = /^(###|##|\*\*)?\s*Risks|risks/i.test(trimmed);
+        const isNextActions = /^(###|##|\*\*)?\s*Next Actions|next actions/i.test(trimmed);
+        
+        const icon = isHighlights ? <CheckCircle2 size={16} className="text-[color:var(--income-text)]" /> 
+                   : isRisks ? <AlertCircle size={16} className="text-[color:var(--expense-text)]" />
+                   : isNextActions ? <Zap size={16} className="text-[color:var(--app-brand-text)]" />
+                   : null;
+        
+        // Extract bullet points
+        const lines = trimmed.split('\n').filter(line => line.trim());
+        const headerLine = lines[0];
+        const bullets = lines.slice(1).filter(line => /^[*\-•]/.test(line.trim()));
+        
+        return (
+          <div key={idx} className="space-y-2">
+            {(isHighlights || isRisks || isNextActions) && (
+              <div className="flex items-center gap-2">
+                {icon}
+                <h4 className="font-semibold text-[color:var(--app-text)]">
+                  {headerLine.replace(/^(###|##|\*\*|[*\-•])?\s*/, '').replace(/\*\*$/g, '')}
+                </h4>
+              </div>
+            )}
+            {bullets.length > 0 ? (
+              <ul className="space-y-1.5 ml-6">
+                {bullets.map((bullet, bIdx) => (
+                  <li key={bIdx} className="text-sm text-[color:var(--app-text)] before:content-['•'] before:mr-2 before:text-[color:var(--app-text-muted)]">
+                    {bullet.replace(/^[*\-•]\s*/, '')}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-[color:var(--app-text)]">{trimmed}</p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 interface AiHealthResponse {
   health?: {
@@ -159,7 +212,7 @@ export function DashboardAiConsole() {
 
   return (
     <Card className="animate-fade-slide-up anim-delay-2 overflow-hidden">
-      <div className="grid gap-5 lg:grid-cols-[0.92fr_1.08fr]">
+          <div className="grid gap-5 lg:grid-cols-[0.92fr_1.08fr]">
         <section className="flex min-h-[280px] flex-col justify-between rounded-[22px] border border-[color:var(--app-brand-border)] bg-[linear-gradient(135deg,var(--app-brand-soft)_0%,transparent_72%)] p-5">
           <div>
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -221,7 +274,7 @@ export function DashboardAiConsole() {
           ) : null}
         </section>
 
-        <section className="min-h-[280px] rounded-[22px] border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] p-4">
+        <section className="flex flex-col rounded-[22px] border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] p-4 min-h-[280px]">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-text-subtle)]">
@@ -234,14 +287,14 @@ export function DashboardAiConsole() {
             </div>
           </div>
 
-          <div className="min-h-[120px] whitespace-pre-line rounded-2xl bg-[color:var(--app-surface)] p-4 text-sm leading-6 text-[color:var(--app-text)]">
+          <div className="flex-1 min-h-[120px] max-h-[240px] overflow-y-auto rounded-2xl bg-[color:var(--app-surface)] p-4 text-sm leading-6 text-[color:var(--app-text)] space-y-2">
             {isInsightLoading ? (
               <span className="inline-flex items-center gap-2 text-[color:var(--app-text-muted)]">
                 <Loader2 className="animate-spin" size={16} />
                 {tr("กำลังให้ LM Studio อ่าน metrics", "Asking LM Studio to read the metrics")}
               </span>
             ) : aiInsight ? (
-              aiInsight
+              <AiSummaryContent content={aiInsight} />
             ) : (
               <span className="text-[color:var(--app-text-muted)]">
                 {health?.ok
@@ -251,14 +304,14 @@ export function DashboardAiConsole() {
             )}
           </div>
 
-          <div className="mt-4 space-y-3">
-            {messages.slice(-4).map((message, index) => (
+          <div className="mt-3 space-y-2 flex-1 overflow-y-auto max-h-[120px]">
+            {messages.slice(-2).map((message, index) => (
               <div
                 key={`${message.role}-${index}-${message.content.slice(0, 12)}`}
-                className={`rounded-2xl px-4 py-3 text-sm leading-6 ${
+                className={`rounded-2xl px-3 py-2 text-xs leading-5 ${
                   message.role === "user"
-                    ? "ml-8 bg-[color:var(--app-brand-soft)] text-[color:var(--app-text)]"
-                    : "mr-8 bg-[color:var(--app-surface)] text-[color:var(--app-text-muted)]"
+                    ? "ml-8 bg-[color:var(--app-brand-soft)] text-[color:var(--app-text)] whitespace-pre-wrap break-words"
+                    : "mr-8 bg-[color:var(--app-surface)] text-[color:var(--app-text-muted)] whitespace-pre-wrap break-words"
                 }`}
               >
                 {message.content}
