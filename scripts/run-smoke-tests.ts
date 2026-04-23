@@ -140,6 +140,8 @@ async function main() {
       "application/json"
     );
     console.log("PASS api /api/insights/dashboard");
+    await expectOk("/api/ai/health", "application/json");
+    console.log("PASS api /api/ai/health");
 
     const accountsResponse = await request("/api/accounts");
     const accountsJson = (await accountsResponse.json()) as {

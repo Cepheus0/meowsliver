@@ -12,6 +12,7 @@ It is designed for users who already track their money in a ledger or banking ap
 - Transaction list with search and filters
 - DB-backed manual transaction CRUD and account reconciliation detail
 - DB-backed savings goals with per-goal progress, growth, and movement history
+- Deterministic metrics APIs plus local LM Studio AI copilot scaffolding
 - Token-based dark mode across shell, charts, forms, and analytics surfaces
 - PostgreSQL + Drizzle-backed import history, duplicate preview, and append-with-de-dup
 - Client-side persistence retained for local UX state while long-lived savings goals now persist in Postgres
@@ -41,6 +42,7 @@ This project currently focuses on transaction-driven analytics.
 - Dashboard and transaction pages can hydrate from the database on cold start when local state is empty
 - Local browser persistence is still retained for selected year, sidebar state, and other UX convenience state
 - Assets, liabilities, and investment holdings are still scaffolded as product surfaces and are not yet fully backed by real imported data models
+- AI features use deterministic metric packets as context and require a separately running LM Studio local server
 - Authentication and production API workflows are not wired yet
 
 ## Key Features
@@ -59,6 +61,8 @@ This project currently focuses on transaction-driven analytics.
 - Total income, expenses, net cashflow, and savings rate
 - Monthly cashflow charts
 - Year-over-year comparison table
+- Deterministic insight strip backed by metrics
+- Local LM Studio dashboard copilot panel when the LM Studio server is running
 - Empty-state guidance when no transaction data has been imported yet
 
 ### 3. Transactions
@@ -109,6 +113,16 @@ Default local development URL:
 ```bash
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/meowsliver
 ```
+
+Optional local AI settings for LM Studio:
+
+```bash
+LM_STUDIO_BASE_URL=http://localhost:1234/v1
+LM_STUDIO_MODEL=
+LM_STUDIO_TIMEOUT_MS=8000
+```
+
+If `LM_STUDIO_MODEL` is blank, Meowsliver uses the first model returned by LM Studio's `/v1/models` endpoint. Start LM Studio's Local Server and load a model before using dashboard AI chat or `/api/ai/*` routes.
 
 ### Local Postgres
 
