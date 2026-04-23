@@ -1,64 +1,12 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Bot, CircleAlert, Loader2, Send, Sparkles, WifiOff, AlertCircle, CheckCircle2, Zap } from "lucide-react";
+import { Bot, CircleAlert, Loader2, Send, Sparkles, WifiOff } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { AiSummaryRenderer } from "@/components/charts/AiSummaryRenderer";
 import { useTr } from "@/lib/i18n";
 import { useFinanceStore } from "@/store/finance-store";
 import type { AiChatMessage } from "@/lib/ai/types";
-
-function AiSummaryContent({ content }: { content: string }) {
-  // Parse AI summary into structured sections
-  const sections = content.split(/\n(?=###|##|\*\*|Highlights|Risks|Next Actions)/i).filter(Boolean);
-  
-  return (
-    <div className="space-y-4">
-      {sections.map((section, idx) => {
-        const trimmed = section.trim();
-        if (!trimmed) return null;
-        
-        // Check for section headers
-        const isHighlights = /^(###|##|\*\*)?\s*Highlights|highlights/i.test(trimmed);
-        const isRisks = /^(###|##|\*\*)?\s*Risks|risks/i.test(trimmed);
-        const isNextActions = /^(###|##|\*\*)?\s*Next Actions|next actions/i.test(trimmed);
-        
-        const icon = isHighlights ? <CheckCircle2 size={16} className="text-[color:var(--income-text)]" /> 
-                   : isRisks ? <AlertCircle size={16} className="text-[color:var(--expense-text)]" />
-                   : isNextActions ? <Zap size={16} className="text-[color:var(--app-brand-text)]" />
-                   : null;
-        
-        // Extract bullet points
-        const lines = trimmed.split('\n').filter(line => line.trim());
-        const headerLine = lines[0];
-        const bullets = lines.slice(1).filter(line => /^[*\-•]/.test(line.trim()));
-        
-        return (
-          <div key={idx} className="space-y-2">
-            {(isHighlights || isRisks || isNextActions) && (
-              <div className="flex items-center gap-2">
-                {icon}
-                <h4 className="font-semibold text-[color:var(--app-text)]">
-                  {headerLine.replace(/^(###|##|\*\*|[*\-•])?\s*/, '').replace(/\*\*$/g, '')}
-                </h4>
-              </div>
-            )}
-            {bullets.length > 0 ? (
-              <ul className="space-y-1.5 ml-6">
-                {bullets.map((bullet, bIdx) => (
-                  <li key={bIdx} className="text-sm text-[color:var(--app-text)] before:content-['•'] before:mr-2 before:text-[color:var(--app-text-muted)]">
-                    {bullet.replace(/^[*\-•]\s*/, '')}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-[color:var(--app-text)]">{trimmed}</p>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 interface AiHealthResponse {
   health?: {
@@ -294,7 +242,7 @@ export function DashboardAiConsole() {
                 {tr("กำลังให้ LM Studio อ่าน metrics", "Asking LM Studio to read the metrics")}
               </span>
             ) : aiInsight ? (
-              <AiSummaryContent content={aiInsight} />
+              <AiSummaryRenderer content={aiInsight} />
             ) : (
               <span className="text-[color:var(--app-text-muted)]">
                 {health?.ok
