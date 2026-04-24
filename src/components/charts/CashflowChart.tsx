@@ -13,19 +13,24 @@ import {
 } from "recharts";
 import { useRouter } from "next/navigation";
 import { useFinanceStore } from "@/store/finance-store";
-import { formatBaht } from "@/lib/utils";
+import { formatBaht, getMonthLabel } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { ChartViewport } from "@/components/charts/ChartViewport";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { chartTheme, chartColors } from "@/lib/chart-theme";
 import { ChartColumnIncreasing, Table2 } from "lucide-react";
-import { useTr } from "@/lib/i18n";
+import { useLanguage, useTr } from "@/lib/i18n";
 
 export function CashflowChart() {
   const { getMonthlyCashflow, selectedYear } = useFinanceStore();
   const router = useRouter();
   const tr = useTr();
+  const language = useLanguage();
   const data = getMonthlyCashflow();
+  const chartData = data.map((month) => ({
+    ...month,
+    monthLabel: getMonthLabel(month.monthIndex, language),
+  }));
   const hasData = data.some((month) => month.income > 0 || month.expense > 0);
 
   const handleBarClick = (barData: any) => {
@@ -66,7 +71,7 @@ export function CashflowChart() {
           <ComposedChart
             width={width}
             height={height}
-            data={data}
+            data={chartData}
             barCategoryGap="20%"
             barGap={3}
             margin={{ top: 8, right: 16, left: 4, bottom: 4 }}
@@ -78,7 +83,7 @@ export function CashflowChart() {
               vertical={false}
             />
             <XAxis
-              dataKey="month"
+              dataKey="monthLabel"
               tick={{ fontSize: 11, fill: chartTheme.axis }}
               axisLine={false}
               tickLine={false}
@@ -93,6 +98,12 @@ export function CashflowChart() {
             />
             <Tooltip
               formatter={(value) => formatBaht(Number(value))}
+              labelFormatter={(_, payload) => {
+                const monthIndex = payload?.[0]?.payload?.monthIndex;
+                return typeof monthIndex === "number"
+                  ? getMonthLabel(monthIndex, language)
+                  : "";
+              }}
               contentStyle={chartTheme.tooltipStyle}
               cursor={{ fill: "var(--app-surface-soft)", opacity: 0.6 }}
             />

@@ -8,32 +8,33 @@ interface AiSummaryRendererProps {
 
 export function AiSummaryRenderer({ content }: AiSummaryRendererProps) {
   return (
-    <div className="prose prose-invert prose-sm max-w-none">
+    <div className="max-w-none">
       <ReactMarkdown
         components={{
           h2: ({ children }) => (
-            <h3 className="text-sm font-semibold text-[color:var(--app-text)] mt-3 mb-2 first:mt-0">
+            <h3 className="mt-5 border-t border-[color:var(--app-divider)] pt-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--app-text-subtle)] first:mt-0 first:border-t-0 first:pt-0">
               {children}
             </h3>
           ),
           h3: ({ children }) => (
-            <h4 className="text-xs font-semibold text-[color:var(--app-text-muted)] mt-2 mb-1">
+            <h4 className="mt-3 text-sm font-semibold text-[color:var(--app-text)]">
               {children}
             </h4>
           ),
           p: ({ children }) => (
-            <p className="text-sm text-[color:var(--app-text)] leading-6 my-1">
+            <p className="my-2 whitespace-pre-wrap text-sm leading-7 text-[color:var(--app-text)]">
               {children}
             </p>
           ),
           ul: ({ children }) => (
-            <ul className="space-y-1.5 my-2 ml-4">
+            <ul className="my-3 space-y-2 pl-1">
               {children}
             </ul>
           ),
           li: ({ children }) => (
-            <li className="text-sm text-[color:var(--app-text)] leading-6 list-disc">
-              {children}
+            <li className="flex gap-2 text-sm leading-7 text-[color:var(--app-text)]">
+              <span className="mt-[0.8em] h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--app-brand)]" />
+              <span>{children}</span>
             </li>
           ),
           strong: ({ children }) => (
@@ -47,17 +48,17 @@ export function AiSummaryRenderer({ content }: AiSummaryRendererProps) {
             </em>
           ),
           code: ({ children }) => (
-            <code className="bg-[color:var(--app-surface)] px-2 py-0.5 rounded text-xs font-mono text-[color:var(--app-brand-text)]">
+            <code className="rounded bg-[color:var(--app-surface-soft)] px-1.5 py-0.5 text-xs font-mono text-[color:var(--app-brand-text)]">
               {children}
             </code>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="border-l-2 border-[color:var(--app-brand)] pl-3 italic text-[color:var(--app-text-muted)] my-2">
+            <blockquote className="my-3 rounded-r-2xl border-l-2 border-[color:var(--app-brand)] bg-[color:var(--app-brand-soft)]/60 py-2 pl-3 italic text-[color:var(--app-text-muted)]">
               {children}
             </blockquote>
           ),
           hr: () => (
-            <hr className="my-2 border-[color:var(--app-border)]" />
+            <hr className="my-4 border-[color:var(--app-divider)]" />
           ),
         }}
       >

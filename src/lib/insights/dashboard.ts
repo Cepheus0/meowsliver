@@ -17,11 +17,14 @@ import type {
 } from "@/lib/metrics/transactions";
 import type { InsightCandidate, InsightSeverity } from "@/lib/insights/types";
 
+type InsightLanguage = "th" | "en";
+
 interface BuildDashboardInsightPacketInput {
   anomalyPacket: MetricPacket<TransactionAnomalyMetrics, TransactionAnomalyEvidence>;
   accountHealthPacket: MetricPacket<AccountHealthMetrics, AccountHealthEvidence>;
   goalHealthPacket: MetricPacket<GoalHealthMetrics, GoalHealthEvidence>;
   importQualityPacket: MetricPacket<ImportQualityMetrics, ImportQualityEvidence>;
+  language?: InsightLanguage;
   generatedAt?: string;
 }
 
@@ -36,12 +39,35 @@ export interface DashboardInsightEvidence {
   insights: InsightCandidate[];
 }
 
-function formatBaht(value: number) {
-  return `฿${Math.round(value).toLocaleString("th-TH")}`;
+function t(language: InsightLanguage, th: string, en: string) {
+  return language === "en" ? en : th;
 }
 
-function formatPercent(value: number | null) {
-  return value === null ? "n/a" : `${value.toLocaleString("th-TH")}%`;
+function formatBaht(value: number, language: InsightLanguage) {
+  return `฿${Math.round(value).toLocaleString(language === "en" ? "en-US" : "th-TH")}`;
+}
+
+function formatPercent(value: number | null, language: InsightLanguage) {
+  if (value === null) {
+    return language === "en" ? "n/a" : "n/a";
+  }
+
+  return `${value.toLocaleString(language === "en" ? "en-US" : "th-TH")}%`;
+}
+
+function getAccountStatusLabel(
+  status: string,
+  language: InsightLanguage
+) {
+  if (status === "no_linked_transactions") {
+    return t(language, "ยังไม่มีรายการที่เชื่อม", "No linked transactions yet");
+  }
+
+  if (status === "needs_attention") {
+    return t(language, "ยอดยังไม่ตรงกับ ledger", "Balance differs from ledger");
+  }
+
+  return t(language, "ตรงกับ ledger", "Aligned with ledger");
 }
 
 function severityRank(severity: InsightSeverity) {
@@ -74,7 +100,8 @@ function anomalySeverity(
 }
 
 function buildTransactionAnomalyInsight(
-  packet: MetricPacket<TransactionAnomalyMetrics, TransactionAnomalyEvidence>
+  packet: MetricPacket<TransactionAnomalyMetrics, TransactionAnomalyEvidence>,
+  language: InsightLanguage
 ): InsightCandidate | null {
   if (packet.metrics.anomalyLevel === "normal") {
     return null;
@@ -87,19 +114,32 @@ function buildTransactionAnomalyInsight(
     surface: "dashboard",
     type: "anomaly",
     severity: anomalySeverity(packet.metrics.anomalyLevel),
-    title: "พบสัญญาณใช้จ่ายผิดปกติ",
+    title: t(language, "พบสัญญาณใช้จ่ายผิดปกติ", "Unusual spending detected"),
     summary: topCategory
-      ? `วันนี้มีรายจ่าย ${formatBaht(packet.metrics.expenseTotal)} โดย driver หลักคือ ${topCategory.name}`
-      : `วันนี้มีรายจ่าย ${formatBaht(packet.metrics.expenseTotal)} สูงกว่า baseline ที่ระบบคำนวณไว้`,
+      ? t(
+          language,
+          `วันนี้มีรายจ่าย ${formatBaht(packet.metrics.expenseTotal, language)} โดย driver หลักคือ ${topCategory.name}`,
+          `Today's expense reached ${formatBaht(packet.metrics.expenseTotal, language)} and ${topCategory.name} is the main driver.`
+        )
+      : t(
+          language,
+          `วันนี้มีรายจ่าย ${formatBaht(packet.metrics.expenseTotal, language)} สูงกว่า baseline ที่ระบบคำนวณไว้`,
+          `Today's expense is ${formatBaht(packet.metrics.expenseTotal, language)}, above the system baseline.`
+        ),
+    actionHref: "/transactions",
+    actionLabel: t(language, "เปิดดูรายการ", "Open transactions"),
     evidence: [
-      { label: "วันที่", value: packet.metrics.date },
-      { label: "รายจ่ายวันนี้", value: formatBaht(packet.metrics.expenseTotal) },
+      { label: t(language, "วันที่", "Date"), value: packet.metrics.date },
       {
-        label: "เทียบค่าเฉลี่ย 30 วัน",
-        value: formatPercent(packet.metrics.expenseVsRolling30dPercent),
+        label: t(language, "รายจ่ายวันนี้", "Expense today"),
+        value: formatBaht(packet.metrics.expenseTotal, language),
       },
       {
-        label: "อันดับรายจ่ายในประวัติ",
+        label: t(language, "เทียบค่าเฉลี่ย 30 วัน", "Vs rolling 30d"),
+        value: formatPercent(packet.metrics.expenseVsRolling30dPercent, language),
+      },
+      {
+        label: t(language, "อันดับรายจ่ายในประวัติ", "Historical rank"),
         value:
           packet.metrics.dailyExpenseRankInHistory === null
             ? "n/a"
@@ -110,7 +150,8 @@ function buildTransactionAnomalyInsight(
 }
 
 function buildAccountHealthInsight(
-  packet: MetricPacket<AccountHealthMetrics, AccountHealthEvidence>
+  packet: MetricPacket<AccountHealthMetrics, AccountHealthEvidence>,
+  language: InsightLanguage
 ): InsightCandidate | null {
   const highestRisk = packet.evidence?.highestRiskAccounts[0];
   if (!highestRisk || highestRisk.riskLevel === "green") {
@@ -125,27 +166,60 @@ function buildAccountHealthInsight(
     surface: "dashboard",
     type: "coverage",
     severity,
-    title: "มีบัญชีที่ควรตรวจสอบความน่าเชื่อถือของยอด",
-    summary: `${highestRisk.name} มีสถานะ ${highestRisk.reconciliationStatus} และส่วนต่าง ${formatBaht(
-      Math.abs(highestRisk.balanceDifference)
-    )}`,
+    title: t(
+      language,
+      "มีบัญชีที่ควรตรวจสอบความน่าเชื่อถือของยอด",
+      "An account balance needs review"
+    ),
+    summary:
+      highestRisk.reconciliationStatus === "no_linked_transactions"
+        ? t(
+            language,
+            `${highestRisk.name} ยังไม่มีรายการที่เชื่อมไว้ จึงยังอธิบายยอด ${formatBaht(
+              Math.abs(highestRisk.storedBalance),
+              language
+            )} จาก ledger ไม่ได้`,
+            `${highestRisk.name} has no linked transactions yet, so the ledger cannot explain the ${formatBaht(
+              Math.abs(highestRisk.storedBalance),
+              language
+            )} balance.`
+          )
+        : t(
+            language,
+            `${highestRisk.name} มียอดต่างจาก ledger อยู่ ${formatBaht(
+              Math.abs(highestRisk.balanceDifference),
+              language
+            )}`,
+            `${highestRisk.name} is off from the linked ledger by ${formatBaht(
+              Math.abs(highestRisk.balanceDifference),
+              language
+            )}.`
+          ),
+    actionHref: `/accounts/${highestRisk.accountId}`,
+    actionLabel: t(language, "ตรวจสอบบัญชี", "Review account"),
     evidence: [
-      { label: "บัญชี", value: highestRisk.name },
-      { label: "สถานะ", value: highestRisk.reconciliationStatus },
+      { label: t(language, "บัญชี", "Account"), value: highestRisk.name },
       {
-        label: "ส่วนต่าง",
-        value: formatBaht(Math.abs(highestRisk.balanceDifference)),
+        label: t(language, "สถานะ", "Status"),
+        value: getAccountStatusLabel(highestRisk.reconciliationStatus, language),
       },
       {
-        label: "รายการที่เชื่อมไว้",
-        value: highestRisk.linkedTransactionCount.toLocaleString("th-TH"),
+        label: t(language, "ส่วนต่าง", "Difference"),
+        value: formatBaht(Math.abs(highestRisk.balanceDifference), language),
+      },
+      {
+        label: t(language, "รายการที่เชื่อมไว้", "Linked transactions"),
+        value: highestRisk.linkedTransactionCount.toLocaleString(
+          language === "en" ? "en-US" : "th-TH"
+        ),
       },
     ],
   };
 }
 
 function buildGoalRiskInsight(
-  packet: MetricPacket<GoalHealthMetrics, GoalHealthEvidence>
+  packet: MetricPacket<GoalHealthMetrics, GoalHealthEvidence>,
+  language: InsightLanguage
 ): InsightCandidate | null {
   const goal = packet.evidence?.atRiskGoals[0];
   if (!goal) {
@@ -157,33 +231,56 @@ function buildGoalRiskInsight(
     surface: "dashboard",
     type: "risk",
     severity: goal.riskLevel === "red" ? "warning" : "watch",
-    title: "มีเป้าหมายการออมที่ pace ยังไม่พอ",
-    summary: `${goal.name} ต้องใช้ pace ประมาณ ${formatBaht(
-      goal.monthlyPaceNeeded ?? 0
-    )}/เดือน แต่ recent pace อยู่ที่ ${formatBaht(goal.recentContributionPace)}/เดือน`,
+    title: t(
+      language,
+      "มีเป้าหมายการออมที่ pace ยังไม่พอ",
+      "A savings goal is behind pace"
+    ),
+    summary: t(
+      language,
+      `${goal.name} ต้องใช้ pace ประมาณ ${formatBaht(
+        goal.monthlyPaceNeeded ?? 0,
+        language
+      )}/เดือน แต่ recent pace อยู่ที่ ${formatBaht(goal.recentContributionPace, language)}/เดือน`,
+      `${goal.name} needs about ${formatBaht(
+        goal.monthlyPaceNeeded ?? 0,
+        language
+      )}/month, while recent pace is ${formatBaht(goal.recentContributionPace, language)}/month.`
+    ),
+    actionHref: `/buckets/${goal.goalId}`,
+    actionLabel: t(language, "เปิดดูเป้าหมาย", "Open goal"),
     evidence: [
-      { label: "เป้าหมาย", value: goal.name },
+      { label: t(language, "เป้าหมาย", "Goal"), value: goal.name },
       {
-        label: "ยอดคงเหลือ",
-        value: formatBaht(goal.remainingAmount),
+        label: t(language, "ยอดคงเหลือ", "Remaining"),
+        value: formatBaht(goal.remainingAmount, language),
       },
       {
-        label: "pace ที่ต้องใช้",
+        label: t(language, "pace ที่ต้องใช้", "Required pace"),
         value:
           goal.monthlyPaceNeeded === null
             ? "n/a"
-            : `${formatBaht(goal.monthlyPaceNeeded)}/เดือน`,
+            : t(
+                language,
+                `${formatBaht(goal.monthlyPaceNeeded, language)}/เดือน`,
+                `${formatBaht(goal.monthlyPaceNeeded, language)}/month`
+              ),
       },
       {
-        label: "recent pace",
-        value: `${formatBaht(goal.recentContributionPace)}/เดือน`,
+        label: t(language, "recent pace", "Recent pace"),
+        value: t(
+          language,
+          `${formatBaht(goal.recentContributionPace, language)}/เดือน`,
+          `${formatBaht(goal.recentContributionPace, language)}/month`
+        ),
       },
     ],
   };
 }
 
 function buildImportQualityInsight(
-  packet: MetricPacket<ImportQualityMetrics, ImportQualityEvidence>
+  packet: MetricPacket<ImportQualityMetrics, ImportQualityEvidence>,
+  language: InsightLanguage
 ): InsightCandidate | null {
   const latestRun = packet.metrics.latestRun;
   if (!latestRun) {
@@ -207,15 +304,34 @@ function buildImportQualityInsight(
       latestRun.conflictRatePercent >= 20
         ? "warning"
         : "watch",
-    title: "คุณภาพ import รอบล่าสุดควรตรวจสอบ",
-    summary: `${latestRun.sourceFilename} มี conflict ${formatPercent(
-      latestRun.conflictRatePercent
-    )} และ skipped ${formatPercent(latestRun.skipRatePercent)}`,
+    title: t(language, "คุณภาพ import รอบล่าสุดควรตรวจสอบ", "Latest import quality needs review"),
+    summary: t(
+      language,
+      `${latestRun.sourceFilename} มี conflict ${formatPercent(
+        latestRun.conflictRatePercent,
+        language
+      )} และ skipped ${formatPercent(latestRun.skipRatePercent, language)}`,
+      `${latestRun.sourceFilename} shows ${formatPercent(
+        latestRun.conflictRatePercent,
+        language
+      )} conflicts and ${formatPercent(latestRun.skipRatePercent, language)} skipped rows.`
+    ),
+    actionHref: "/import",
+    actionLabel: t(language, "กลับไปดูรอบนำเข้า", "Review import run"),
     evidence: [
-      { label: "ไฟล์", value: latestRun.sourceFilename },
-      { label: "จำนวนแถว", value: latestRun.totalRows.toLocaleString("th-TH") },
-      { label: "conflict rate", value: formatPercent(latestRun.conflictRatePercent) },
-      { label: "skip rate", value: formatPercent(latestRun.skipRatePercent) },
+      { label: t(language, "ไฟล์", "File"), value: latestRun.sourceFilename },
+      {
+        label: t(language, "จำนวนแถว", "Rows"),
+        value: latestRun.totalRows.toLocaleString(language === "en" ? "en-US" : "th-TH"),
+      },
+      {
+        label: t(language, "conflict rate", "Conflict rate"),
+        value: formatPercent(latestRun.conflictRatePercent, language),
+      },
+      {
+        label: t(language, "skip rate", "Skip rate"),
+        value: formatPercent(latestRun.skipRatePercent, language),
+      },
     ],
   };
 }
@@ -225,16 +341,17 @@ export function buildDashboardInsightPacket({
   accountHealthPacket,
   goalHealthPacket,
   importQualityPacket,
+  language = "th",
   generatedAt = new Date().toISOString(),
 }: BuildDashboardInsightPacketInput): MetricPacket<
   DashboardInsightMetrics,
   DashboardInsightEvidence
 > {
   const insights = [
-    buildTransactionAnomalyInsight(anomalyPacket),
-    buildAccountHealthInsight(accountHealthPacket),
-    buildGoalRiskInsight(goalHealthPacket),
-    buildImportQualityInsight(importQualityPacket),
+    buildTransactionAnomalyInsight(anomalyPacket, language),
+    buildAccountHealthInsight(accountHealthPacket, language),
+    buildGoalRiskInsight(goalHealthPacket, language),
+    buildImportQualityInsight(importQualityPacket, language),
   ]
     .filter((insight): insight is InsightCandidate => insight !== null)
     .sort((left, right) => severityRank(right.severity) - severityRank(left.severity));

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   buildDashboardAiSystemPrompt,
   buildDashboardInsightUserPrompt,
+  type DashboardAiLanguage,
 } from "@/lib/ai/dashboard-context";
 import { getDashboardAiContext } from "@/lib/server/ai-context";
 import { createLmStudioChatCompletion } from "@/lib/server/lm-studio";
@@ -33,6 +34,10 @@ function resolveDate(value: string | null) {
   return value;
 }
 
+function resolveLanguage(value: string | null): DashboardAiLanguage {
+  return value === "en" ? "en" : "th";
+}
+
 function errorStatus(error: Error) {
   if (error.message === "invalid_year" || error.message === "invalid_date") {
     return 400;
@@ -53,11 +58,12 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const year = resolveYear(url.searchParams.get("year"));
     const date = resolveDate(url.searchParams.get("date"));
+    const language = resolveLanguage(url.searchParams.get("language"));
     const context = await getDashboardAiContext({ year, date });
     const completion = await createLmStudioChatCompletion({
       messages: [
-        { role: "system", content: buildDashboardAiSystemPrompt() },
-        { role: "user", content: buildDashboardInsightUserPrompt(context) },
+        { role: "system", content: buildDashboardAiSystemPrompt(language) },
+        { role: "user", content: buildDashboardInsightUserPrompt(context, language) },
       ],
       maxTokens: 200,
       temperature: 0.1,

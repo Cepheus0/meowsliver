@@ -8,6 +8,8 @@ import { BucketsOverview } from "@/components/charts/BucketsOverview";
 import { DashboardInsights } from "@/components/charts/DashboardInsights";
 import { DashboardAiConsole } from "@/components/charts/DashboardAiConsole";
 import { AccountsOverview } from "@/components/accounts/AccountsOverview";
+import { SpendingCategoryExplorer } from "@/components/charts/SpendingCategoryExplorer";
+import { DashboardCalendarHeatmap } from "@/components/charts/DashboardCalendarHeatmap";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -114,38 +116,20 @@ export default function DashboardPage() {
           {/* Section 1: Summary Cards */}
           <SummaryCards />
 
-          {/* Section 2: Asset Allocation Pie + Status panel */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <AssetPieChart />
+          <SpendingCategoryExplorer />
 
-            <Card className="flex flex-col justify-between">
-              <div>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[color:var(--app-text-muted)]">
-                  {tr("สถานะข้อมูล", "Data status")}
-                </p>
-                <EmptyState
-                  className="border-0 bg-transparent px-0 py-0"
-                  icon={<DatabaseZap size={20} />}
-                  title={tr("แดชบอร์ดใช้ข้อมูลจริงจากระบบแล้ว", "Dashboard data is live")}
-                  description={tr(
-                    `มีข้อมูลธุรกรรมที่นำเข้าแล้ว ${importedTransactions.length.toLocaleString()} รายการ และกำลังแสดงผลตามปี ${selectedYear} บัญชีและเป้าหมายออมใช้ข้อมูลที่บันทึกจริง ส่วนภาพสินทรัพย์/หนี้สินยังอิงยอดบัญชีปัจจุบันจนกว่าจะมีโมเดลพอร์ตลงทุนเต็มรูปแบบ`,
-                    `${importedTransactions.length.toLocaleString()} transactions are imported and rendering for FY ${selectedYear}. Accounts and savings goals use persisted records; asset and liability views are still account-balance based until the full investment holdings model exists.`
-                  )}
-                  actionHref="/transactions"
-                  actionLabel={tr("ดูรายการทั้งหมด", "View all transactions")}
-                />
-              </div>
-            </Card>
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <BucketsOverview />
+            <DashboardCalendarHeatmap />
           </div>
+
+          <AssetPieChart />
 
           {/* Section 3: Cashflow Chart */}
           <CashflowChart />
 
           {/* Section 4: Yearly Comparison Table */}
           <YearlyComparisonTable />
-
-          {/* Section 5: Savings Buckets */}
-          <BucketsOverview />
         </>
       )}
     </div>

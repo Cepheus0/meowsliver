@@ -211,6 +211,7 @@ export async function getImportQualityMetricPacket(limit = 10) {
 export async function getDashboardInsightPacket(input: {
   date?: string;
   importLimit?: number;
+  language?: "th" | "en";
 }) {
   const [anomalyPacket, accountHealthPacket, goalHealthPacket, importQualityPacket] =
     await Promise.all([
@@ -225,5 +226,6 @@ export async function getDashboardInsightPacket(input: {
     accountHealthPacket,
     goalHealthPacket,
     importQualityPacket,
+    language: input.language,
   });
 }

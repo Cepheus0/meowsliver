@@ -5,6 +5,8 @@ import type {
   DashboardAiContext,
 } from "@/lib/ai/types";
 
+export type DashboardAiLanguage = "th" | "en";
+
 interface BuildDashboardAiContextInput {
   dashboardPacket: MetricPacket<unknown, unknown>;
   deterministicInsightPacket: MetricPacket<unknown, unknown>;
@@ -187,38 +189,83 @@ export function serializeDashboardAiContext(context: DashboardAiContext) {
   return `${serialized.slice(0, MAX_JSON_CHARS)}\n...TRUNCATED_FOR_TOKEN_BUDGET`;
 }
 
-export function buildDashboardAiSystemPrompt() {
+export function buildDashboardAiSystemPrompt(
+  language: DashboardAiLanguage = "th"
+) {
+  if (language === "en") {
+    return [
+      "You are the Meowsliver CFO Copilot for a personal finance dashboard.",
+      "",
+      "Rules:",
+      "1. Use numbers from METRIC_CONTEXT only. Never invent or estimate missing values.",
+      "2. Reply in concise, practical English.",
+      "3. Keep the answer decision-oriented: explain what matters, why, and what to do next.",
+      "4. If caveats materially affect trust, say so clearly.",
+      "5. Use clean Markdown with short sections and bullets.",
+      "6. Do not give definitive investment advice because holdings and market coverage are incomplete.",
+      "7. If the schema cannot answer something, say that directly and name the missing data.",
+      "8. When source labels are Thai transaction tags or categories, keep the original labels instead of mistranslating them.",
+    ].join("\n");
+  }
+
   return [
-    "คุณคือ Meowsliver CFO Copilot สำหรับ dashboard การเงินส่วนบุคคลภาษาไทย",
+    "คุณคือ Meowsliver CFO Copilot สำหรับ dashboard การเงินส่วนบุคคล",
     "",
     "กฎสำคัญ:",
     "1. ใช้ตัวเลขจาก METRIC_CONTEXT เท่านั้น ห้ามเดาตัวเลขหรือสร้างตัวเลขใหม่",
-    "2. ตอบแบบ CONCISE และ ACTIONABLE เท่านั้น ไม่ต้องอธิบายยาว",
-    "3. ถ้าข้อมูลมี caveat ให้พูด caveat แบบกระชับและตรงไปตรงมา",
-    "4. ตอบเป็นภาษาไทยที่ชัดเจน เหมาะกับผู้ใช้ที่ต้องตัดสินใจเร็ว",
-    "5. ใช้ Markdown format เพื่อให้ output อ่านง่ายและเป็นระเบียบ",
-    "6. ห้ามให้คำแนะนำการลงทุนแบบฟันธง เพราะ holdings และ market data ยังไม่ครบ",
-    "7. ถ้าคำถามต้องใช้ข้อมูลที่ยังไม่มี ให้บอกว่า current schema ยังตอบไม่ได้ และแนะนำข้อมูลที่ต้องเพิ่ม",
+    "2. ตอบแบบกระชับ ตรงประเด็น และ actionable",
+    "3. ถ้ามี caveat ที่กระทบความน่าเชื่อถือ ให้บอกตรง ๆ แบบสั้นและชัด",
+    "4. ใช้ Markdown ที่อ่านง่าย มีหัวข้อสั้น และ bullet ที่สแกนได้เร็ว",
+    "5. ห้ามให้คำแนะนำการลงทุนแบบฟันธง เพราะ holdings และ market data ยังไม่ครบ",
+    "6. ถ้าคำถามต้องใช้ข้อมูลที่ยังไม่มี ให้บอกว่า schema ปัจจุบันยังตอบไม่ได้ และแนะนำว่าต้องเพิ่มข้อมูลอะไร",
   ].join("\n");
 }
 
-export function buildDashboardInsightUserPrompt(context: DashboardAiContext) {
+export function buildDashboardInsightUserPrompt(
+  context: DashboardAiContext,
+  language: DashboardAiLanguage = "th"
+) {
+  if (language === "en") {
+    return [
+      "Create a dashboard summary from the METRIC_CONTEXT below.",
+      "",
+      "Return simple Markdown with this exact structure:",
+      "",
+      "## Snapshot",
+      "- **[key metric]** - what it means now",
+      "- **[largest expense category]** - amount and share",
+      "- **[top tag or spend pattern]** - why it matters",
+      "",
+      "## Cut First",
+      "- 3 to 5 concrete spend-reduction ideas, starting with the biggest leverage",
+      "",
+      "## Watchouts",
+      "- caveats, trust gaps, or blocked decisions that matter right now",
+      "",
+      "Keep it compact. Use only facts from the context.",
+      "",
+      "METRIC_CONTEXT:",
+      serializeDashboardAiContext(context),
+    ].join("\n");
+  }
+
   return [
-    "สร้าง dashboard insight summary จาก METRIC_CONTEXT ต่อไปนี้",
+    "สร้าง dashboard summary จาก METRIC_CONTEXT ต่อไปนี้",
     "",
-    "ตอบแบบ Markdown ที่เรียบง่าย (STRICT):",
+    "ตอบเป็น Markdown ตามโครงนี้เท่านั้น:",
     "",
-    "## สรุปที่สำคัญ",
-    "* **[ตัวเลข/สำคัญที่สุด]** - สำคัญหรือกิจกรรม",
-    "* **[ตัวเลข/สำคัญรองลงมา]** - สำคัญหรือกิจกรรม",
+    "## ภาพรวมตอนนี้",
+    "- **[ตัวเลขสำคัญ]** - ความหมายของสถานะตอนนี้",
+    "- **[หมวดที่ใช้เยอะสุด]** - จำนวนเงินและสัดส่วน",
+    "- **[tag หรือ pattern ที่เด่น]** - ทำไมต้องสนใจ",
     "",
-    "## ความเสี่ยง (ถ้ามี)",
-    "* **[ความเสี่ยง]** - คำอธิบายหรือคำแนะนำ",
+    "## ควรตัดรายจ่ายจากอะไรก่อน",
+    "- ให้ 3 ถึง 5 ข้อ เรียงจากจุดที่ลดแล้ว impact มากสุด",
     "",
-    "## ขั้นตอนไป",
-    "* **[ขั้นตอน]** - กิจกรรมที่ต้องทำตอไป",
+    "## ข้อควรระวัง",
+    "- caveat หรือข้อจำกัดของข้อมูลที่กระทบการตัดสินใจตอนนี้",
     "",
-    "เขียนให้กระชับ ไม่ต้องอธิบายยาว ใช้ตัวเลขและข้อเท็จจริงเท่านั้น",
+    "เขียนให้กระชับ ใช้เฉพาะข้อเท็จจริงจาก context",
     "",
     "METRIC_CONTEXT:",
     serializeDashboardAiContext(context),
@@ -227,14 +274,15 @@ export function buildDashboardInsightUserPrompt(context: DashboardAiContext) {
 
 export function buildDashboardChatMessages(
   context: DashboardAiContext,
-  messages: AiChatMessage[]
+  messages: AiChatMessage[],
+  language: DashboardAiLanguage = "th"
 ) {
   const recentMessages = messages.slice(-8);
 
   return [
     {
       role: "system" as const,
-      content: buildDashboardAiSystemPrompt(),
+      content: buildDashboardAiSystemPrompt(language),
     },
     {
       role: "user" as const,
@@ -242,7 +290,9 @@ export function buildDashboardChatMessages(
         "METRIC_CONTEXT:",
         serializeDashboardAiContext(context),
         "",
-        "ตอบคำถามต่อไปนี้โดยยึด METRIC_CONTEXT เท่านั้น",
+        language === "en"
+          ? "Answer the following conversation using METRIC_CONTEXT only."
+          : "ตอบคำถามต่อไปนี้โดยยึด METRIC_CONTEXT เท่านั้น",
       ].join("\n"),
     },
     ...recentMessages.map((message) => ({

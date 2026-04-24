@@ -34,18 +34,20 @@ export function Sidebar() {
     <aside
       className={cn(
         "fixed left-0 top-0 z-40 flex h-screen flex-col bg-[color:var(--app-bg-elevated)] shadow-[inset_-1px_0_0_color-mix(in_srgb,var(--app-shell-border)_30%,transparent)] transition-all duration-200",
-        sidebarCollapsed ? "w-[52px]" : "w-[220px]"
+        sidebarCollapsed ? "w-[52px]" : "w-[52px] md:w-[220px]"
       )}
     >
       {/* Header: logo (expanded) + collapse button pinned top-right */}
       <div
         className={cn(
           "flex h-[52px] items-center shadow-[inset_0_-1px_0_color-mix(in_srgb,var(--app-shell-border)_30%,transparent)]",
-          sidebarCollapsed ? "justify-center px-2" : "justify-between px-3"
+          sidebarCollapsed
+            ? "justify-center px-2"
+            : "justify-center px-2 md:justify-between md:px-3"
         )}
       >
         {!sidebarCollapsed && (
-          <div className="flex items-center gap-2 overflow-hidden">
+          <div className="hidden items-center gap-2 overflow-hidden md:flex">
             <div className="flex shrink-0 items-center justify-center overflow-hidden rounded-md">
               <span
                 aria-hidden="true"
@@ -74,11 +76,11 @@ export function Sidebar() {
       <nav
         className={cn(
           "flex-1 overflow-y-auto pb-2 pt-3",
-          sidebarCollapsed ? "px-2" : "pl-0 pr-2"
+          sidebarCollapsed ? "px-2" : "px-2 md:pl-0 md:pr-2"
         )}
       >
         {!sidebarCollapsed && (
-          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--app-text-subtle)]">
+          <p className="mb-2 hidden px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--app-text-subtle)] md:block">
             Navigation
           </p>
         )}
@@ -103,7 +105,9 @@ export function Sidebar() {
                   title={sidebarCollapsed ? label : undefined}
                   className={cn(
                     "group flex h-9 items-center rounded-lg text-[13px] font-medium transition-all duration-150",
-                    sidebarCollapsed ? "justify-center px-0" : "gap-2.5 pl-3 pr-2",
+                    sidebarCollapsed
+                      ? "justify-center px-0"
+                      : "justify-center px-0 md:justify-start md:gap-2.5 md:pl-3 md:pr-2",
                     isActive
                       ? "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)]"
                       : "text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
@@ -116,7 +120,7 @@ export function Sidebar() {
                       !isActive && "group-hover:scale-110"
                     )}
                   />
-                  {!sidebarCollapsed && <span className="truncate">{label}</span>}
+                  {!sidebarCollapsed && <span className="hidden truncate md:inline">{label}</span>}
                 </Link>
               </div>
             );

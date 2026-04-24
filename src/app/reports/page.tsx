@@ -16,7 +16,7 @@ import {
   Cell,
 } from "recharts";
 import { useFinanceStore } from "@/store/finance-store";
-import { formatBaht, THAI_MONTHS, EN_MONTHS } from "@/lib/utils";
+import { formatBaht, getMonthLabel } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ChartViewport } from "@/components/charts/ChartViewport";
@@ -62,7 +62,8 @@ export default function ReportsPage() {
     importedTransactions,
     selectedYear
   ).map((point) => ({
-    label: point.month,
+    label: getMonthLabel(point.monthIndex, language),
+    monthIndex: point.monthIndex,
     netWorth: point.netWorth,
   }));
   const shouldUseMonthlyNetWorthView =
@@ -275,13 +276,9 @@ export default function ReportsPage() {
                     width={width}
                     height={height}
                     data={monthly}
-                    onClick={(state) => {
-                      const monthLabel = state?.activeLabel as string | undefined;
-                      if (!monthLabel) return;
-                      const monthIndex = THAI_MONTHS.indexOf(
-                        monthLabel as (typeof THAI_MONTHS)[number]
-                      );
-                      if (monthIndex < 0) return;
+                    onClick={(state: any) => {
+                      const monthIndex = state?.activePayload?.[0]?.payload?.monthIndex;
+                      if (typeof monthIndex !== "number" || monthIndex < 0) return;
                       router.push(`/reports/${selectedYear}/${monthIndex + 1}`);
                     }}
                   >
@@ -289,11 +286,7 @@ export default function ReportsPage() {
                     <XAxis 
                       dataKey="month" 
                       tick={{ fontSize: 10, fill: chartTheme.axis }} 
-                      tickFormatter={(v) => {
-                        const idx = THAI_MONTHS.indexOf(v);
-                        if (idx >= 0 && language === "en") return EN_MONTHS[idx];
-                        return v;
-                      }}
+                      tickFormatter={(_, index) => getMonthLabel(index, language)}
                     />
                     <YAxis
                       tick={{ fontSize: 10, fill: chartTheme.axis }}
@@ -301,6 +294,12 @@ export default function ReportsPage() {
                     />
                     <Tooltip
                       formatter={(value) => formatBaht(Number(value))}
+                      labelFormatter={(_, payload) => {
+                        const monthIndex = payload?.[0]?.payload?.monthIndex;
+                        return typeof monthIndex === "number"
+                          ? getMonthLabel(monthIndex, language)
+                          : "";
+                      }}
                       contentStyle={chartTheme.tooltipStyle}
                       cursor={{ fill: "var(--app-brand-soft)" }}
                     />

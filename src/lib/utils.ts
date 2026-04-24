@@ -74,6 +74,23 @@ export const EN_MONTHS_FULL = [
   "July", "August", "September", "October", "November", "December",
 ] as const;
 
+export function getMonthLabel(
+  monthIndex: number,
+  language: "th" | "en" = "th",
+  format: "short" | "full" = "short"
+) {
+  const months =
+    format === "full"
+      ? language === "en"
+        ? EN_MONTHS_FULL
+        : THAI_MONTHS_FULL
+      : language === "en"
+        ? EN_MONTHS
+        : THAI_MONTHS;
+
+  return months[monthIndex] ?? "";
+}
+
 /**
  * Format a YYYY-MM-DD date string to a short "D MMM" label.
  * Returns empty string on malformed input.
@@ -84,6 +101,5 @@ export function formatShortDate(dateStr: string, language: "th" | "en" = "th"): 
   const month = parseInt(parts[1] ?? "0", 10);
   const day = parseInt(parts[2] ?? "0", 10);
   if (!month || !day) return dateStr;
-  const monthsArr = language === "en" ? EN_MONTHS : THAI_MONTHS;
-  return `${day} ${monthsArr[month - 1] ?? ""}`;
+  return `${day} ${getMonthLabel(month - 1, language)}`;
 }

@@ -55,7 +55,7 @@ describe("dashboard AI context", () => {
     expect(messages.at(-1)?.content).toBe("เดือนนี้ควรดูอะไร");
   });
 
-  it("builds an insight prompt with executive sections", () => {
+  it("builds language-aware insight prompts with decision sections", () => {
     const context = buildDashboardAiContext({
       dashboardPacket: packet("dashboard"),
       deterministicInsightPacket: packet("dashboard.insights"),
@@ -65,7 +65,8 @@ describe("dashboard AI context", () => {
       importQualityPacket: packet("imports.recent"),
     });
 
-    expect(buildDashboardInsightUserPrompt(context)).toContain("Next Actions");
+    expect(buildDashboardInsightUserPrompt(context)).toContain("## ภาพรวมตอนนี้");
+    expect(buildDashboardInsightUserPrompt(context, "en")).toContain("## Cut First");
   });
 
   it("keeps large evidence arrays inside a local model prompt budget", () => {

@@ -42,7 +42,7 @@ export function PageHeader({
   return (
     <section
       className={cn(
-        "relative overflow-hidden rounded-[30px] border border-[color:var(--app-border)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--app-surface)_94%,transparent),color-mix(in_srgb,var(--app-surface-soft)_34%,transparent))] px-5 py-6 shadow-[0_30px_80px_-52px_rgba(26,20,16,0.38)] backdrop-blur-sm sm:px-6 sm:py-7",
+        "relative overflow-hidden rounded-[30px] border border-[color:var(--app-border)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--app-surface)_94%,transparent),color-mix(in_srgb,var(--app-surface-soft)_34%,transparent))] px-5 py-6 shadow-[0_30px_80px_-52px_rgba(26,20,16,0.38)] backdrop-blur-sm sm:px-6 sm:py-6",
         className
       )}
     >
@@ -51,28 +51,28 @@ export function PageHeader({
         <div className="absolute bottom-[-12rem] left-[-7rem] h-[18rem] w-[18rem] rounded-full bg-[radial-gradient(circle,var(--app-glow-secondary)_0%,transparent_72%)] opacity-70" />
       </div>
 
-      <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-4xl">
           {eyebrow ? (
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--app-text-subtle)]">
               {eyebrow}
             </p>
           ) : null}
-          <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.03em] text-[color:var(--app-text)] sm:text-[2.35rem]">
+          <h1 className="mt-2 text-[1.95rem] font-semibold tracking-[-0.03em] text-[color:var(--app-text)] sm:text-[2.25rem]">
             {title}
           </h1>
           {description ? (
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--app-text-muted)] sm:text-[15px]">
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[color:var(--app-text-muted)] sm:text-[15px] sm:leading-7">
               {description}
             </p>
           ) : null}
           {meta.length > 0 ? (
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-wrap gap-2.5">
               {meta.map((item, index) => (
                 <div
                   key={index}
                   className={cn(
-                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium shadow-[0_12px_30px_-24px_rgba(26,20,16,0.35)]",
+                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium shadow-[0_12px_30px_-24px_rgba(26,20,16,0.35)] backdrop-blur-sm",
                     toneClasses[item.tone ?? "default"]
                   )}
                 >
@@ -85,7 +85,7 @@ export function PageHeader({
         </div>
 
         {actions ? (
-          <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">{actions}</div>
         ) : null}
       </div>
     </section>

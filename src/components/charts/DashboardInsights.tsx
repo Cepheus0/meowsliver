@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Activity, AlertTriangle, ShieldCheck, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { useTr } from "@/lib/i18n";
 import type { InsightCandidate, InsightSeverity } from "@/lib/insights/types";
+import { useFinanceStore } from "@/store/finance-store";
 
 interface DashboardInsightResponse {
   packet?: {
@@ -55,6 +57,7 @@ function getSeverityClass(severity: InsightSeverity) {
 
 export function DashboardInsights() {
   const tr = useTr();
+  const language = useFinanceStore((state) => state.language);
   const [insights, setInsights] = useState<InsightCandidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const insightGridClassName =
@@ -68,7 +71,7 @@ export function DashboardInsights() {
     async function loadInsights() {
       try {
         const response = await fetch(
-          `/api/insights/dashboard?date=${getTodayIsoDate()}`,
+          `/api/insights/dashboard?date=${getTodayIsoDate()}&language=${language}`,
           {
             signal: controller.signal,
           }
@@ -93,7 +96,7 @@ export function DashboardInsights() {
     void loadInsights();
 
     return () => controller.abort();
-  }, []);
+  }, [language]);
 
   if (!isLoading && insights.length === 0) {
     return null;
@@ -139,7 +142,13 @@ export function DashboardInsights() {
                         {severity.icon}
                       </div>
                       <span className="rounded-full bg-[color:var(--app-surface)]/80 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em]">
-                        {insight.severity}
+                        {insight.severity === "warning"
+                          ? tr("Warning", "Warning")
+                          : insight.severity === "critical"
+                            ? tr("Critical", "Critical")
+                            : insight.severity === "watch"
+                              ? tr("Watch", "Watch")
+                              : tr("Info", "Info")}
                       </span>
                     </div>
                     <h3 className="text-sm font-semibold text-[color:var(--app-text)]">
@@ -148,6 +157,16 @@ export function DashboardInsights() {
                     <p className="mt-2 line-clamp-3 text-xs leading-5 text-[color:var(--app-text-muted)]">
                       {insight.summary}
                     </p>
+                    {insight.actionHref && insight.actionLabel ? (
+                      <div className="mt-4">
+                        <Link
+                          href={insight.actionHref}
+                          className="inline-flex items-center rounded-full bg-[color:var(--app-surface)]/80 px-3 py-1.5 text-xs font-semibold text-[color:var(--app-text)] transition-colors hover:bg-[color:var(--app-surface)]"
+                        >
+                          {insight.actionLabel}
+                        </Link>
+                      </div>
+                    ) : null}
                   </article>
                 );
               })}

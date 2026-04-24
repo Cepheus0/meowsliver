@@ -3,6 +3,7 @@ import {
   getMonthlyCashflowFromTransactions,
   getTransactionsForYear,
 } from "@/lib/finance-analytics";
+import { getSpendCategoryDrilldownFromTransactions } from "@/lib/dashboard-surface-analytics";
 import type {
   Account,
   MonthlyCashflow,
@@ -66,6 +67,12 @@ export interface DashboardTopExpenseCategory {
   sharePercent: number;
 }
 
+export interface DashboardTopExpenseTag {
+  name: string;
+  amount: number;
+  sharePercent: number;
+}
+
 export interface DashboardMonthlyExtreme {
   month: string;
   monthIndex: number;
@@ -75,6 +82,7 @@ export interface DashboardMonthlyExtreme {
 export interface DashboardEvidence {
   monthlyCashflow: MonthlyCashflow[];
   topExpenseCategories: DashboardTopExpenseCategory[];
+  topExpenseTags: DashboardTopExpenseTag[];
   bestNetCashflowMonth?: DashboardMonthlyExtreme;
   worstNetCashflowMonth?: DashboardMonthlyExtreme;
 }
@@ -198,6 +206,24 @@ export function buildDashboardMetricPacket({
     amount: roundCurrency(category.value),
     sharePercent: expenseTotal > 0 ? roundPercent((category.value / expenseTotal) * 100) : 0,
   }));
+  const normalizedTopExpenseTags = [...getSpendCategoryDrilldownFromTransactions(
+    transactions,
+    year,
+    10
+  )
+    .flatMap((category) => category.topTags)
+    .reduce<Map<string, number>>((map, item) => {
+      map.set(item.label, (map.get(item.label) ?? 0) + item.amount);
+      return map;
+    }, new Map())
+    .entries()]
+    .map(([name, amount]) => ({
+      name,
+      amount: roundCurrency(amount),
+      sharePercent: expenseTotal > 0 ? roundPercent((amount / expenseTotal) * 100) : 0,
+    }))
+    .sort((left, right) => right.amount - left.amount)
+    .slice(0, 5);
 
   const hasTransactions = transactions.length > 0;
   const hasSelectedYearTransactions = selectedYearTransactions.length > 0;
@@ -237,6 +263,7 @@ export function buildDashboardMetricPacket({
     evidence: {
       monthlyCashflow,
       topExpenseCategories,
+      topExpenseTags: normalizedTopExpenseTags,
       bestNetCashflowMonth: getMonthlyExtreme(monthlyCashflow, (left, right) =>
         left.net >= right.net ? left : right
       ),
@@ -260,4 +287,3 @@ export function buildDashboardMetricPacket({
     },
   };
 }
-

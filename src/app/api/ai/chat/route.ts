@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   buildDashboardChatMessages,
   serializeDashboardAiContext,
+  type DashboardAiLanguage,
 } from "@/lib/ai/dashboard-context";
 import type { AiChatMessage } from "@/lib/ai/types";
 import { getDashboardAiContext } from "@/lib/server/ai-context";
@@ -66,6 +67,10 @@ function normalizeMessages(value: unknown): AiChatMessage[] {
   return messages;
 }
 
+function resolveLanguage(value: unknown): DashboardAiLanguage {
+  return value === "en" ? "en" : "th";
+}
+
 function errorStatus(error: Error) {
   if (
     error.message === "invalid_year" ||
@@ -91,9 +96,10 @@ export async function POST(request: Request) {
     const year = resolveYear(body.year);
     const date = resolveDate(body.date);
     const messages = normalizeMessages(body.messages);
+    const language = resolveLanguage(body.language);
     const context = await getDashboardAiContext({ year, date });
     const completion = await createLmStudioChatCompletion({
-      messages: buildDashboardChatMessages(context, messages),
+      messages: buildDashboardChatMessages(context, messages, language),
       maxTokens: 150,
       temperature: 0.1,
     });

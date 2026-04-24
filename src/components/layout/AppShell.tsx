@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main
         className={cn(
           "relative transition-all duration-200",
-          sidebarCollapsed ? "ml-[52px]" : "ml-[220px]"
+          sidebarCollapsed ? "ml-[52px]" : "ml-[52px] md:ml-[220px]"
         )}
       >
         <TopBar />

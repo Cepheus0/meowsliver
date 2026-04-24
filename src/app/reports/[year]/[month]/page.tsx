@@ -49,7 +49,7 @@ import {
 } from "@/lib/transaction-presentation";
 import { useFinanceStore } from "@/store/finance-store";
 import { useFinanceStoreHydrated } from "@/store/use-finance-store-hydrated";
-import { formatBaht, formatShortDate, THAI_MONTHS_FULL } from "@/lib/utils";
+import { formatBaht, formatShortDate, getMonthLabel } from "@/lib/utils";
 import type { Transaction, TransactionType } from "@/lib/types";
 
 // Warm editorial palette matching the rest of the app. Keeps the pie
@@ -153,7 +153,8 @@ export default function MonthlyReportPage() {
 
   if (!detail) return null;
 
-  const { totals, daily, breakdowns, monthLabelFull } = detail;
+  const { totals, daily, breakdowns } = detail;
+  const monthTitle = getMonthLabel(monthIndex, language, "full");
   const hasData = totals.count > 0;
 
   const toggleInSet = (key: keyof MonthlyFilterState, value: string) => {
@@ -176,7 +177,7 @@ export default function MonthlyReportPage() {
     });
   };
 
-  const chartData = rollupDaily(daily, detail.monthLabelFull, granularity);
+  const chartData = rollupDaily(daily, monthTitle, granularity);
 
   const handleBarClick = (state: { activeLabel?: unknown }) => {
     const label = state?.activeLabel;
@@ -235,7 +236,7 @@ export default function MonthlyReportPage() {
         <BackLink />
         <PageHeader
           eyebrow="MONTHLY REPORT"
-          title={`${monthLabelFull} ${year}`}
+          title={`${monthTitle} ${year}`}
           description={
             hasData
               ? tr("ดูโครงสร้างรายรับ รายจ่าย ช่วงเวลา และรายการที่ขับเคลื่อนผลของเดือนนี้แบบ drill-down", "View breakdown of income, expenses, timeline, and transactions driving this month's results via drill-down")
@@ -260,7 +261,7 @@ export default function MonthlyReportPage() {
       {!hasData ? (
         <Card>
           <EmptyState
-            title={tr(`ยังไม่มีข้อมูล ${monthLabelFull} ${year}`, `No data for ${monthLabelFull} ${year}`)}
+            title={tr(`ยังไม่มีข้อมูล ${monthTitle} ${year}`, `No data for ${monthTitle} ${year}`)}
             description={tr("ลองเลือกเดือนอื่นจากปุ่มด้านบน หรือไปหน้านำเข้าเพื่อเพิ่มข้อมูลของเดือนนี้", "Try selecting another month from the top button, or go to the import page to add data for this month")}
             actionHref="/import"
             actionLabel={tr("ไปหน้านำเข้า", "Go to import")}
@@ -641,7 +642,7 @@ export default function MonthlyReportPage() {
       <TransactionDetailDrawer
         transaction={selectedTx}
         scopeTransactions={detail.transactions}
-        scopeLabel={tr(`เดือน ${monthLabelFull}`, `${monthLabelFull} month`)}
+        scopeLabel={tr(`เดือน ${monthTitle}`, `${monthTitle} month`)}
         onClose={() => setSelectedTx(null)}
       />
     </div>
@@ -695,7 +696,7 @@ function MonthSwitcher({
         ←
       </button>
       <span className="px-3 text-sm font-medium text-[color:var(--app-text)]">
-        {language === "th" ? THAI_MONTHS_FULL[monthIndex] : ["January","February","March","April","May","June","July","August","September","October","November","December"][monthIndex]} {year}
+        {getMonthLabel(monthIndex, language, "full")} {year}
       </span>
       <button
         onClick={() => goto(1)}

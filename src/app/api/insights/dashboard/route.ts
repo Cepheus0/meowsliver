@@ -15,11 +15,16 @@ function resolveDate(value: string | null) {
   return value;
 }
 
+function resolveLanguage(value: string | null): "th" | "en" {
+  return value === "en" ? "en" : "th";
+}
+
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const date = resolveDate(url.searchParams.get("date"));
-    const packet = await getDashboardInsightPacket({ date });
+    const language = resolveLanguage(url.searchParams.get("language"));
+    const packet = await getDashboardInsightPacket({ date, language });
 
     return NextResponse.json({ packet });
   } catch (error) {

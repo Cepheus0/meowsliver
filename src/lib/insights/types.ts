@@ -22,6 +22,8 @@ export interface InsightCandidate {
   severity: InsightSeverity;
   title: string;
   summary: string;
+  actionHref?: string;
+  actionLabel?: string;
   evidence: Array<{
     label: string;
     value: string;

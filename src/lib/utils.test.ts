@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatBaht, formatPercent, formatNumber, getYearRange } from "@/lib/utils";
+import {
+  formatBaht,
+  formatPercent,
+  formatNumber,
+  getMonthLabel,
+  getYearRange,
+} from "@/lib/utils";
 
 describe("utils", () => {
   it("formats baht and plain numbers with Thai locale separators", () => {
@@ -18,5 +24,11 @@ describe("utils", () => {
     expect(years[0]).toBe(new Date().getFullYear());
     expect(years.at(-1)).toBe(2015);
     expect(years).toContain(2026);
+  });
+
+  it("returns localized month labels", () => {
+    expect(getMonthLabel(0, "th")).toBe("ม.ค.");
+    expect(getMonthLabel(0, "en")).toBe("Jan");
+    expect(getMonthLabel(3, "en", "full")).toBe("April");
   });
 });
