@@ -10,6 +10,7 @@ import { DashboardAiConsole } from "@/components/charts/DashboardAiConsole";
 import { AccountsOverview } from "@/components/accounts/AccountsOverview";
 import { SpendingCategoryExplorer } from "@/components/charts/SpendingCategoryExplorer";
 import { DashboardCalendarHeatmap } from "@/components/charts/DashboardCalendarHeatmap";
+import { DashboardEditorialSummary } from "@/components/charts/DashboardEditorialSummary";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -66,28 +67,16 @@ export default function DashboardPage() {
           },
         ]}
         actions={
-          <>
-            <Link
-              href={hasTransactions ? "/transactions" : "/import"}
-              className="inline-flex items-center justify-center rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-sm font-medium text-[color:var(--app-text)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)]"
-            >
-              {hasTransactions
-                ? tr("ดูรายการทั้งหมด", "View all transactions")
-                : tr("เริ่มนำเข้าข้อมูล", "Start importing data")}
-            </Link>
-            <Link
-              href="/accounts"
-              className="inline-flex items-center justify-center rounded-xl border border-[color:var(--app-brand)] bg-[color:var(--app-brand)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_32px_-20px_var(--app-brand-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[color:var(--app-brand-hover)]"
-            >
-              {tr("จัดการบัญชี", "Manage accounts")}
-            </Link>
-          </>
+          <Link
+            href={hasTransactions ? "/transactions" : "/import"}
+            className="inline-flex items-center justify-center rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-sm font-medium text-[color:var(--app-text)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)]"
+          >
+            {hasTransactions
+              ? tr("ดูรายการทั้งหมด", "View all transactions")
+              : tr("เริ่มนำเข้าข้อมูล", "Start importing data")}
+          </Link>
         }
       />
-
-      <DashboardInsights />
-
-      <DashboardAiConsole />
 
       {!hasTransactions ? (
         <>
@@ -110,6 +99,12 @@ export default function DashboardPage() {
         </>
       ) : (
         <>
+          <DashboardEditorialSummary />
+
+          <DashboardInsights />
+
+          <DashboardAiConsole />
+
           {/* Section 0: Accounts / Net Worth */}
           <AccountsOverview />
 

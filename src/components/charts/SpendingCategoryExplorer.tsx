@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowUpRight, ReceiptText, Tags } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ReceiptText, Tags } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useFinanceStore } from "@/store/finance-store";
@@ -22,6 +23,14 @@ const CATEGORY_SWATCHES = [
   "#7a3d11",
   "#5f2d0d",
 ];
+
+function buildTransactionsHref(year: number, category: string) {
+  const params = new URLSearchParams();
+  params.set("year", String(year));
+  params.set("type", "expense");
+  params.set("category", category);
+  return `/transactions?${params.toString()}`;
+}
 
 export function SpendingCategoryExplorer() {
   const tr = useTr();
@@ -82,13 +91,12 @@ export function SpendingCategoryExplorer() {
               const isActive = selected?.category === category.category;
 
               return (
-                <button
+                <Link
                   key={category.category}
-                  type="button"
-                  onClick={() => setActiveCategory(category.category)}
+                  href={buildTransactionsHref(selectedYear, category.category)}
                   onMouseEnter={() => setActiveCategory(category.category)}
                   onFocus={() => setActiveCategory(category.category)}
-                  className={`w-full rounded-[24px] border px-5 py-4 text-left transition-all duration-200 ${
+                  className={`block w-full rounded-[24px] border px-5 py-4 text-left transition-all duration-200 ${
                     isActive
                       ? "border-[color:var(--app-border-strong)] bg-[color:var(--app-surface)] shadow-[0_20px_50px_-40px_rgba(18,13,9,0.7)]"
                       : "border-transparent bg-transparent hover:border-[color:var(--app-border)] hover:bg-[color:var(--app-surface)]/72"
@@ -110,6 +118,10 @@ export function SpendingCategoryExplorer() {
                               ? `${formatNumber(category.count)} transactions`
                             : `${formatNumber(category.count)} รายการ`}
                           </p>
+                          <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--app-brand-text)] opacity-80">
+                            {tr("ดูรายการที่กรองแล้ว", "Open filtered ledger")}
+                            <ArrowRight size={12} />
+                          </span>
                         </div>
                         <div className="flex items-baseline justify-between gap-3 text-left sm:block sm:text-right">
                           <p className="font-[family-name:var(--font-geist-mono)] text-lg font-semibold text-[color:var(--app-text)] sm:text-xl">
@@ -131,7 +143,7 @@ export function SpendingCategoryExplorer() {
                       </div>
                     </div>
                   </div>
-                </button>
+                </Link>
               );
             })}
           </div>

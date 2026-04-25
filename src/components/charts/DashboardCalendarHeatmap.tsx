@@ -10,7 +10,7 @@ import { getExpenseHeatmapFromTransactions } from "@/lib/dashboard-surface-analy
 import { formatBahtCompact, getMonthLabel } from "@/lib/utils";
 
 const HEAT_COLORS = [
-  "color-mix(in_srgb,var(--app-surface-soft)_72%,transparent)",
+  "color-mix(in_srgb,var(--app-text-muted)_22%,var(--app-surface)_78%)",
   "#4c2d18",
   "#7a411d",
   "#a3541f",
@@ -102,11 +102,11 @@ export function DashboardCalendarHeatmap() {
         </div>
 
         <div className="flex items-center gap-2 text-sm text-[color:var(--app-text-muted)]">
-          <span>{tr("น้อย", "Low")}</span>
-          {HEAT_COLORS.slice(1).map((color, index) => (
+          <span>{tr("ศูนย์", "Zero")}</span>
+          {HEAT_COLORS.map((color, index) => (
             <span
               key={index}
-              className="h-4 w-4 rounded-[5px]"
+              className="h-4 w-4 rounded-[5px] border border-[color:var(--app-border)]"
               style={{ backgroundColor: color }}
             />
           ))}
@@ -139,7 +139,9 @@ export function DashboardCalendarHeatmap() {
                     className={`h-4 w-4 rounded-[5px] border transition-transform duration-150 ${
                       isFocused
                         ? "scale-110 border-white/90 shadow-[0_0_0_1px_rgba(255,255,255,0.28)]"
-                        : "border-transparent"
+                        : cell.level === 0
+                          ? "border-[color:var(--app-border)]"
+                          : "border-transparent"
                     }`}
                     style={{
                       backgroundColor: HEAT_COLORS[cell.level],

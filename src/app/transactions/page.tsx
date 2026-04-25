@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFinanceStore } from "@/store/finance-store";
 import { useFinanceStoreHydrated } from "@/store/use-finance-store-hydrated";
 import { refreshFinanceStoreFromServer } from "@/lib/client/finance-sync";
-import { formatBaht, formatShortDate } from "@/lib/utils";
+import { formatBaht, formatBahtCompact, formatShortDate } from "@/lib/utils";
 import {
   getTransactionAmountPrefix,
   getTransactionTypeLabel,
@@ -24,6 +24,8 @@ import {
   ChevronRight,
   Sliders,
   Trash2,
+  Plus,
+  Upload,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TransactionDetailDrawer } from "@/components/transactions/TransactionDetailDrawer";
@@ -35,13 +37,80 @@ import {
 import {
   applyMonthlyFilters,
   buildBreakdown,
-  EMPTY_FILTER_STATE,
+  computeTotals,
   type MonthlyFilterState,
 } from "@/lib/monthly-detail-analytics";
 import type { Transaction, TransactionType } from "@/lib/types";
 import { useTr, useLanguage } from "@/lib/i18n";
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
+
+function createEmptyFilterState(): MonthlyFilterState {
+  return {
+    types: new Set(),
+    categories: new Set(),
+    subcategories: new Set(),
+    tags: new Set(),
+    paymentChannels: new Set(),
+    payFroms: new Set(),
+    recipients: new Set(),
+    search: "",
+  };
+}
+
+function splitParamValues(params: URLSearchParams, key: string) {
+  return params
+    .getAll(key)
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+function parseUrlFilters() {
+  const filters = createEmptyFilterState();
+  const params = new URLSearchParams(window.location.search);
+  const nextYear = Number(params.get("year"));
+  const validTypes = new Set<TransactionType>(["income", "expense", "transfer"]);
+
+  for (const type of splitParamValues(params, "type")) {
+    if (validTypes.has(type as TransactionType)) {
+      filters.types.add(type as TransactionType);
+    }
+  }
+
+  for (const category of splitParamValues(params, "category")) filters.categories.add(category);
+  for (const tag of splitParamValues(params, "tag")) filters.tags.add(tag);
+  for (const channel of splitParamValues(params, "paymentChannel")) {
+    filters.paymentChannels.add(channel);
+  }
+  for (const payFrom of splitParamValues(params, "payFrom")) filters.payFroms.add(payFrom);
+  for (const recipient of splitParamValues(params, "recipient")) {
+    filters.recipients.add(recipient);
+  }
+
+  filters.search = params.get("q") ?? params.get("search") ?? "";
+
+  const date = params.get("date");
+  if (date) {
+    filters.dateFrom = date;
+    filters.dateTo = date;
+    filters.dateRangeLabel = date;
+  }
+
+  return {
+    filters,
+    hasFilters:
+      filters.types.size > 0 ||
+      filters.categories.size > 0 ||
+      filters.tags.size > 0 ||
+      filters.paymentChannels.size > 0 ||
+      filters.payFroms.size > 0 ||
+      filters.recipients.size > 0 ||
+      Boolean(filters.search) ||
+      Boolean(filters.dateFrom),
+    nextYear: Number.isInteger(nextYear) ? nextYear : null,
+  };
+}
 
 export default function TransactionsPage() {
   const {
@@ -61,15 +130,28 @@ export default function TransactionsPage() {
     [storeHydrated, transactions]
   );
 
-  const [filters, setFilters] = useState<MonthlyFilterState>(EMPTY_FILTER_STATE);
+  const [filters, setFilters] = useState<MonthlyFilterState>(() => createEmptyFilterState());
   const [pageSize, setPageSize] = useState<(typeof PAGE_SIZE_OPTIONS)[number]>(50);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [showCreateTx, setShowCreateTx] = useState(false);
   const [mutationBusy, setMutationBusy] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [pendingDeleteTx, setPendingDeleteTx] = useState<Transaction | null>(null);
+
+  useEffect(() => {
+    const { filters: nextFilters, hasFilters, nextYear } = parseUrlFilters();
+    if (nextYear !== null) {
+      setSelectedYear(nextYear);
+    }
+    if (hasFilters) {
+      setFilters(nextFilters);
+      setShowAdvancedFilters(true);
+      setCurrentPage(1);
+    }
+  }, [setSelectedYear]);
 
   /**
    * Dimension breakdowns are computed from the *unfiltered* year dataset so the
@@ -93,6 +175,8 @@ export default function TransactionsPage() {
     () => applyMonthlyFilters(visibleTransactions, filters),
     [visibleTransactions, filters]
   );
+  const visibleTotals = useMemo(() => computeTotals(visibleTransactions), [visibleTransactions]);
+  const filteredTotals = useMemo(() => computeTotals(filtered), [filtered]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -191,6 +275,37 @@ export default function TransactionsPage() {
     }
   };
 
+  const handleCreateSubmit = async (values: TransactionFormValues) => {
+    setMutationBusy(true);
+    setMutationError(null);
+
+    try {
+      const response = await fetch("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(
+          data.error ?? tr("ไม่สามารถบันทึกรายการได้", "Could not save transaction")
+        );
+      }
+
+      await refreshAfterMutation(Number(values.date.slice(0, 4)));
+      setShowCreateTx(false);
+    } catch (error) {
+      setMutationError(
+        error instanceof Error
+          ? error.message
+          : tr("ไม่สามารถบันทึกรายการได้", "Could not save transaction")
+      );
+    } finally {
+      setMutationBusy(false);
+    }
+  };
+
   const handleDelete = (transaction: Transaction) => {
     setPendingDeleteTx(transaction);
   };
@@ -267,16 +382,19 @@ export default function TransactionsPage() {
         ]}
         actions={
           <>
-            <Link
-              href="/reports"
+            <button
+              type="button"
+              onClick={() => setShowCreateTx(true)}
               className="inline-flex items-center justify-center rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-sm font-medium text-[color:var(--app-text)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)]"
             >
-              {tr("ดูรายงาน", "Open reports")}
-            </Link>
+              <Plus size={15} className="mr-2" />
+              {tr("เพิ่มรายการ", "Add transaction")}
+            </button>
             <Link
               href="/import"
               className="inline-flex items-center justify-center rounded-xl border border-[color:var(--app-brand)] bg-[color:var(--app-brand)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_32px_-20px_var(--app-brand-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[color:var(--app-brand-hover)]"
             >
+              <Upload size={15} className="mr-2" />
               {tr("นำเข้าข้อมูลเพิ่ม", "Import more data")}
             </Link>
           </>
@@ -318,6 +436,68 @@ export default function TransactionsPage() {
         </Card>
       ) : (
         <>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <Card className="min-h-[120px]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--app-text-subtle)]">
+                {activeFilterCount > 0 ? tr("Showing", "Showing") : tr("ทั้งหมด", "Total")}
+              </p>
+              <p className="mt-3 font-[family-name:var(--font-geist-mono)] text-3xl font-semibold text-[color:var(--app-text)]">
+                {filtered.length.toLocaleString()}
+              </p>
+              <p className="mt-2 text-sm text-[color:var(--app-text-muted)]">
+                {tr(
+                  `จาก ${visibleTransactions.length.toLocaleString()} รายการในปีนี้`,
+                  `of ${visibleTransactions.length.toLocaleString()} rows this year`
+                )}
+              </p>
+            </Card>
+            <Card className="min-h-[120px]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--income-text)]">
+                {tr("รายรับ", "Income")}
+              </p>
+              <p className="mt-3 font-[family-name:var(--font-geist-mono)] text-3xl font-semibold text-[color:var(--income-text)]">
+                +{formatBahtCompact(filteredTotals.income)}
+              </p>
+              <p className="mt-2 text-sm text-[color:var(--app-text-muted)]">
+                {filteredTotals.incomeCount.toLocaleString()} {tr("รายการ", "rows")}
+              </p>
+            </Card>
+            <Card className="min-h-[120px]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--expense-text)]">
+                {tr("รายจ่าย", "Expense")}
+              </p>
+              <p className="mt-3 font-[family-name:var(--font-geist-mono)] text-3xl font-semibold text-[color:var(--expense-text)]">
+                -{formatBahtCompact(filteredTotals.expense)}
+              </p>
+              <p className="mt-2 text-sm text-[color:var(--app-text-muted)]">
+                {filteredTotals.expenseCount.toLocaleString()} {tr("รายการ", "rows")}
+              </p>
+            </Card>
+            <Card className="min-h-[120px]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--app-text-subtle)]">
+                {tr("เงินคงเหลือ", "Net")}
+              </p>
+              <p
+                className="mt-3 font-[family-name:var(--font-geist-mono)] text-3xl font-semibold"
+                style={{
+                  color:
+                    filteredTotals.net >= 0
+                      ? "var(--income-text)"
+                      : "var(--expense-text)",
+                }}
+              >
+                {filteredTotals.net >= 0 ? "+" : "-"}
+                {formatBahtCompact(Math.abs(filteredTotals.net))}
+              </p>
+              <p className="mt-2 text-sm text-[color:var(--app-text-muted)]">
+                {tr(
+                  `ทั้งปี ${formatBahtCompact(visibleTotals.net)}`,
+                  `Year total ${formatBahtCompact(visibleTotals.net)}`
+                )}
+              </p>
+            </Card>
+          </div>
+
           {/* Primary filter row: search + type segmented control + advanced toggle */}
           <Card>
             <div className="flex flex-wrap items-center gap-3">
@@ -383,10 +563,11 @@ export default function TransactionsPage() {
               </button>
               {activeFilterCount > 0 && (
                 <button
-                  onClick={() => {
-                    setFilters(EMPTY_FILTER_STATE);
-                    setCurrentPage(1);
-                  }}
+	                  onClick={() => {
+	                    setFilters(createEmptyFilterState());
+	                    setCurrentPage(1);
+	                    window.history.replaceState(null, "", "/transactions");
+	                  }}
                   className="text-xs font-medium text-[color:var(--app-text-muted)] underline underline-offset-2 hover:text-[color:var(--app-text)]"
                 >
                   {tr("ล้างทั้งหมด", "Clear all")}
