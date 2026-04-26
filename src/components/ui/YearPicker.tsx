@@ -21,11 +21,11 @@ export function YearPicker() {
       const dateStr = (tx as any).transactionDate || (tx as any).date;
       if (dateStr) {
         const y = new Date(`${dateStr}T00:00:00`).getFullYear();
-        if (!Number.isNaN(y)) set.add(y);
+        if (Number.isInteger(y) && y > 0) set.add(y);
       }
     }
     set.add(currentYear);
-    set.add(selectedYear);
+    if (Number.isInteger(selectedYear) && selectedYear > 0) set.add(selectedYear);
 
     return Array.from(set).sort((a, b) => a - b); // ascending
   }, [importedTransactions, selectedYear]);

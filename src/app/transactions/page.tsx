@@ -69,7 +69,8 @@ function splitParamValues(params: URLSearchParams, key: string) {
 function parseUrlFilters() {
   const filters = createEmptyFilterState();
   const params = new URLSearchParams(window.location.search);
-  const nextYear = Number(params.get("year"));
+  const yearParam = params.get("year");
+  const nextYear = yearParam !== null ? Number(yearParam) : null;
   const validTypes = new Set<TransactionType>(["income", "expense", "transfer"]);
 
   for (const type of splitParamValues(params, "type")) {
@@ -108,7 +109,7 @@ function parseUrlFilters() {
       filters.recipients.size > 0 ||
       Boolean(filters.search) ||
       Boolean(filters.dateFrom),
-    nextYear: Number.isInteger(nextYear) ? nextYear : null,
+    nextYear: nextYear !== null && Number.isInteger(nextYear) && nextYear > 0 ? nextYear : null,
   };
 }
 

@@ -760,162 +760,177 @@ export default function SavingsGoalDetailPage() {
       </Card>
 
       {isEditingGoal && !detail.goal.isArchived ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{tr("แก้ไขเป้าหมายนี้", "Edit this goal")}</CardTitle>
-          </CardHeader>
-          <form className="space-y-4" onSubmit={handleUpdateGoal}>
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-              <label className="space-y-2 text-sm">
-                <span className="font-medium text-[color:var(--app-text-muted)]">
-                  {tr("ชื่อเป้าหมาย", "Goal name")}
-                </span>
-                <input
-                  required
-                  value={goalForm.name}
-                  onChange={(event) =>
-                    setGoalForm((currentForm) => ({
-                      ...currentForm,
-                      name: event.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
-                />
-              </label>
-
-              <label className="space-y-2 text-sm">
-                <span className="font-medium text-[color:var(--app-text-muted)]">
-                  {tr("ประเภทเป้าหมาย", "Goal type")}
-                </span>
-                <Select
-                  value={goalForm.category}
-                  onChange={(v) =>
-                    setGoalForm((currentForm) => {
-                      const category = v as SavingsGoalCategory;
-                      const preset = getGoalPreset(category);
-                      return {
-                        ...currentForm,
-                        category,
-                        icon: preset?.icon ?? currentForm.icon,
-                        color: preset?.color ?? currentForm.color,
-                        strategyLabel:
-                          preset?.strategyLabel ?? currentForm.strategyLabel,
-                      };
-                    })
-                  }
-                  options={Object.entries(
-                    language === "en" ? GOAL_CATEGORY_LABELS_EN : GOAL_CATEGORY_LABELS
-                  ).map(([value, label]) => ({
-                    value,
-                    label,
-                  }))}
-                />
-              </label>
-
-              <label className="space-y-2 text-sm">
-                <span className="font-medium text-[color:var(--app-text-muted)]">
-                  {tr("เป้าหมาย (บาท)", "Target (THB)")}
-                </span>
-                <input
-                  required
-                  type="number"
-                  min="1"
-                  step="0.01"
-                  value={goalForm.targetAmount}
-                  onChange={(event) =>
-                    setGoalForm((currentForm) => ({
-                      ...currentForm,
-                      targetAmount: event.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
-                />
-              </label>
-
-              <label className="space-y-2 text-sm">
-                <span className="font-medium text-[color:var(--app-text-muted)]">
-                  {tr("วันเป้าหมาย", "Target date")}
-                </span>
-                <input
-                  type="date"
-                  value={goalForm.targetDate}
-                  onChange={(event) =>
-                    setGoalForm((currentForm) => ({
-                      ...currentForm,
-                      targetDate: event.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
-                />
-              </label>
-
-              <label className="space-y-2 text-sm">
-                <span className="font-medium text-[color:var(--app-text-muted)]">
-                  {tr("ช่องทางออม / กลยุทธ์", "Vehicle / strategy")}
-                </span>
-                <input
-                  value={goalForm.strategyLabel}
-                  onChange={(event) =>
-                    setGoalForm((currentForm) => ({
-                      ...currentForm,
-                      strategyLabel: event.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
-                />
-              </label>
-
-              <label className="space-y-2 text-sm">
-                <span className="font-medium text-[color:var(--app-text-muted)]">
-                  {tr("ไอคอน", "Icon")}
-                </span>
-                <input
-                  value={goalForm.icon}
-                  onChange={(event) =>
-                    setGoalForm((currentForm) => ({
-                      ...currentForm,
-                      icon: event.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
-                />
-              </label>
-            </div>
-
-            <label className="space-y-2 text-sm">
-              <span className="font-medium text-[color:var(--app-text-muted)]">
-                {tr("บันทึกเพิ่มเติม", "Additional notes")}
-              </span>
-              <textarea
-                rows={4}
-                value={goalForm.notes}
-                onChange={(event) =>
-                  setGoalForm((currentForm) => ({
-                    ...currentForm,
-                    notes: event.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-3 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
-              />
-            </label>
-
-            <div className="flex flex-wrap gap-3">
-              <Button type="submit" disabled={isSavingGoal}>
-                <Save size={16} />
-                {isSavingGoal
-                  ? tr("กำลังบันทึก...", "Saving...")
-                  : tr("บันทึกการแก้ไข", "Save changes")}
-              </Button>
-              <Button
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[color:var(--app-overlay)]/90 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+          <div className="theme-border theme-surface-strong flex w-full max-w-xl flex-col rounded-t-[28px] border shadow-[0_32px_80px_-48px_rgba(0,0,0,0.55)] sm:rounded-[28px]">
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[color:var(--app-divider-soft)]">
+              <h2 className="text-lg font-bold text-[color:var(--app-text)]">
+                {tr("แก้ไขเป้าหมายนี้", "Edit this goal")}
+              </h2>
+              <button
                 type="button"
-                variant="ghost"
                 onClick={() => setIsEditingGoal(false)}
+                className="rounded-xl p-2 text-[color:var(--app-text-subtle)] transition-colors hover:bg-[color:var(--app-surface-soft)]"
+                aria-label={tr("ปิด", "Close")}
               >
-                {tr("ยกเลิก", "Cancel")}
-              </Button>
+                <X size={20} />
+              </button>
             </div>
-          </form>
-        </Card>
+            <form className="overflow-y-auto" onSubmit={handleUpdateGoal}>
+              <div className="space-y-4 px-6 py-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <label className="space-y-2 text-sm">
+                    <span className="font-medium text-[color:var(--app-text-muted)]">
+                      {tr("ชื่อเป้าหมาย", "Goal name")}
+                    </span>
+                    <input
+                      required
+                      value={goalForm.name}
+                      onChange={(event) =>
+                        setGoalForm((currentForm) => ({
+                          ...currentForm,
+                          name: event.target.value,
+                        }))
+                      }
+                      className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
+                    />
+                  </label>
+
+                  <label className="space-y-2 text-sm">
+                    <span className="font-medium text-[color:var(--app-text-muted)]">
+                      {tr("ประเภทเป้าหมาย", "Goal type")}
+                    </span>
+                    <Select
+                      value={goalForm.category}
+                      onChange={(v) =>
+                        setGoalForm((currentForm) => {
+                          const category = v as SavingsGoalCategory;
+                          const preset = getGoalPreset(category);
+                          return {
+                            ...currentForm,
+                            category,
+                            icon: preset?.icon ?? currentForm.icon,
+                            color: preset?.color ?? currentForm.color,
+                            strategyLabel:
+                              preset?.strategyLabel ?? currentForm.strategyLabel,
+                          };
+                        })
+                      }
+                      options={Object.entries(
+                        language === "en" ? GOAL_CATEGORY_LABELS_EN : GOAL_CATEGORY_LABELS
+                      ).map(([value, label]) => ({
+                        value,
+                        label,
+                      }))}
+                    />
+                  </label>
+
+                  <label className="space-y-2 text-sm">
+                    <span className="font-medium text-[color:var(--app-text-muted)]">
+                      {tr("เป้าหมาย (บาท)", "Target (THB)")}
+                    </span>
+                    <input
+                      required
+                      type="number"
+                      min="1"
+                      step="0.01"
+                      value={goalForm.targetAmount}
+                      onChange={(event) =>
+                        setGoalForm((currentForm) => ({
+                          ...currentForm,
+                          targetAmount: event.target.value,
+                        }))
+                      }
+                      className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
+                    />
+                  </label>
+
+                  <label className="space-y-2 text-sm">
+                    <span className="font-medium text-[color:var(--app-text-muted)]">
+                      {tr("วันเป้าหมาย", "Target date")}
+                    </span>
+                    <input
+                      type="date"
+                      value={goalForm.targetDate}
+                      onChange={(event) =>
+                        setGoalForm((currentForm) => ({
+                          ...currentForm,
+                          targetDate: event.target.value,
+                        }))
+                      }
+                      className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
+                    />
+                  </label>
+
+                  <label className="space-y-2 text-sm">
+                    <span className="font-medium text-[color:var(--app-text-muted)]">
+                      {tr("ช่องทางออม / กลยุทธ์", "Vehicle / strategy")}
+                    </span>
+                    <input
+                      value={goalForm.strategyLabel}
+                      onChange={(event) =>
+                        setGoalForm((currentForm) => ({
+                          ...currentForm,
+                          strategyLabel: event.target.value,
+                        }))
+                      }
+                      className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
+                    />
+                  </label>
+
+                  <label className="space-y-2 text-sm">
+                    <span className="font-medium text-[color:var(--app-text-muted)]">
+                      {tr("ไอคอน", "Icon")}
+                    </span>
+                    <input
+                      value={goalForm.icon}
+                      onChange={(event) =>
+                        setGoalForm((currentForm) => ({
+                          ...currentForm,
+                          icon: event.target.value,
+                        }))
+                      }
+                      className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-2.5 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
+                    />
+                  </label>
+                </div>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-[color:var(--app-text-muted)]">
+                    {tr("บันทึกเพิ่มเติม", "Additional notes")}
+                  </span>
+                  <textarea
+                    rows={3}
+                    value={goalForm.notes}
+                    onChange={(event) =>
+                      setGoalForm((currentForm) => ({
+                        ...currentForm,
+                        notes: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-[color:var(--app-border)] bg-transparent px-4 py-3 text-[color:var(--app-text)] outline-none transition-colors focus:border-[color:var(--app-brand-text)] focus:ring-2 focus:ring-[color:var(--app-brand-soft-strong)]"
+                  />
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-[color:var(--app-divider-soft)] px-6 py-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsEditingGoal(false)}
+                  disabled={isSavingGoal}
+                >
+                  {tr("ยกเลิก", "Cancel")}
+                </Button>
+                <Button type="submit" disabled={isSavingGoal}>
+                  <Save size={16} />
+                  {isSavingGoal
+                    ? tr("กำลังบันทึก...", "Saving...")
+                    : tr("บันทึกการแก้ไข", "Save changes")}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

@@ -40,10 +40,8 @@ export function DashboardCalendarHeatmap() {
     () => getExpenseHeatmapFromTransactions(importedTransactions, selectedYear),
     [importedTransactions, selectedYear]
   );
-  const activeCells = cells.filter((cell) => cell.amount > 0);
-  const initialDate = activeCells.at(-1)?.date ?? cells[0]?.date ?? null;
-  const [selectedDate, setSelectedDate] = useState<string | null>(initialDate);
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  const focused = hoveredDate ? cells.find((cell) => cell.date === hoveredDate) ?? null : null;
 
   const groupedWeeks = useMemo(() => {
     const weeks = new Map<number, typeof cells>();
@@ -57,13 +55,6 @@ export function DashboardCalendarHeatmap() {
       .sort((left, right) => left[0] - right[0])
       .map(([, weekCells]) => weekCells.sort((left, right) => left.dayOfWeek - right.dayOfWeek));
   }, [cells]);
-
-  const focused =
-    cells.find((cell) => cell.date === hoveredDate) ??
-    cells.find((cell) => cell.date === selectedDate) ??
-    activeCells.at(-1) ??
-    cells[0] ??
-    null;
 
   if (cells.length === 0) {
     return (
@@ -96,7 +87,7 @@ export function DashboardCalendarHeatmap() {
             </p>
           ) : (
             <p className="mt-3 text-sm text-[color:var(--app-text-muted)]">
-              {tr("ยังไม่มีวันใดที่มีรายจ่าย", "No spending days yet")}
+              {tr("วางเมาส์บนวันที่เพื่อดูยอดใช้จ่าย", "Hover a day to see the spend")}
             </p>
           )}
         </div>
@@ -135,7 +126,6 @@ export function DashboardCalendarHeatmap() {
                     onMouseLeave={() => setHoveredDate(null)}
                     onFocus={() => setHoveredDate(cell.date)}
                     onBlur={() => setHoveredDate(null)}
-                    onClick={() => setSelectedDate(cell.date)}
                     className={`h-4 w-4 rounded-[5px] border transition-transform duration-150 ${
                       isFocused
                         ? "scale-110 border-white/90 shadow-[0_0_0_1px_rgba(255,255,255,0.28)]"

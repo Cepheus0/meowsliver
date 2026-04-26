@@ -82,7 +82,11 @@ export const useFinanceStore = create<FinanceStore>()(
   persist(
     (set, get) => ({
       selectedYear: new Date().getFullYear(),
-      setSelectedYear: (year) => set({ selectedYear: year }),
+      setSelectedYear: (year) => {
+        if (Number.isInteger(year) && year > 0) {
+          set({ selectedYear: year });
+        }
+      },
 
       sidebarCollapsed: false,
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
@@ -173,6 +177,11 @@ export const useFinanceStore = create<FinanceStore>()(
         accountsExpanded: state.accountsExpanded,
         bucketOrder: state.bucketOrder,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state && (!Number.isInteger(state.selectedYear) || state.selectedYear <= 0)) {
+          state.selectedYear = new Date().getFullYear();
+        }
+      },
     }
   )
 );

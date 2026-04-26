@@ -95,6 +95,10 @@ export function DashboardAiConsole() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
+  const fabRef = useRef<HTMLButtonElement | null>(null);
+  const fabDragRef = useRef<{ startX: number; startY: number; startLeft: number; startTop: number } | null>(null);
+  const fabHasDragged = useRef(false);
+  const [fabPos, setFabPos] = useState<{ left: number; top: number } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -284,24 +288,46 @@ export function DashboardAiConsole() {
       </Card>
 
       {!isDrawerOpen ? (
-        <button
-          type="button"
-          onClick={() => setIsDrawerOpen(true)}
-          className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center gap-3 rounded-full border border-[color:var(--app-brand-border)] bg-[color:var(--app-brand)] p-0 text-white shadow-[0_22px_50px_-28px_var(--app-brand-shadow)] transition-all duration-200 hover:-translate-y-1 hover:bg-[color:var(--app-brand-hover)] sm:right-6 sm:h-auto sm:w-auto sm:px-4 sm:py-3"
-          aria-label={tr("เปิด AI agent", "Open AI agent")}
+        <div
+          className="fixed z-40 group"
+          style={fabPos ? { left: fabPos.left, top: fabPos.top } : { bottom: "6rem", right: "1rem" }}
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
-            <MessageSquare size={18} />
+          <button
+            ref={fabRef}
+            type="button"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              const rect = fabRef.current!.getBoundingClientRect();
+              fabDragRef.current = { startX: e.clientX, startY: e.clientY, startLeft: rect.left, startTop: rect.top };
+              fabHasDragged.current = false;
+              e.currentTarget.setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={(e) => {
+              if (!fabDragRef.current) return;
+              const dx = e.clientX - fabDragRef.current.startX;
+              const dy = e.clientY - fabDragRef.current.startY;
+              if (!fabHasDragged.current && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) fabHasDragged.current = true;
+              if (fabHasDragged.current) {
+                setFabPos({
+                  left: Math.max(0, Math.min(window.innerWidth - 40, fabDragRef.current.startLeft + dx)),
+                  top: Math.max(0, Math.min(window.innerHeight - 40, fabDragRef.current.startTop + dy)),
+                });
+              }
+            }}
+            onPointerUp={() => {
+              if (!fabHasDragged.current) setIsDrawerOpen(true);
+              fabDragRef.current = null;
+              fabHasDragged.current = false;
+            }}
+            className="flex h-10 w-10 cursor-grab select-none items-center justify-center rounded-full border border-[color:var(--app-brand-border)] bg-[color:var(--app-brand)] text-white shadow-[0_8px_24px_-8px_var(--app-brand-shadow)] transition-colors hover:bg-[color:var(--app-brand-hover)] active:cursor-grabbing"
+            aria-label={tr("เปิด AI agent", "Open AI agent")}
+          >
+            <MessageSquare size={16} />
+          </button>
+          <span className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-[color:var(--app-text)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-bg)] opacity-0 transition-opacity group-hover:opacity-100">
+            {tr("คุยกับ Agent", "Ask Agent")}
           </span>
-          <span className="hidden text-left sm:block">
-            <span className="block text-xs uppercase tracking-[0.2em] text-white/70">
-              {tr("Agent", "Agent")}
-            </span>
-            <span className="block text-sm font-semibold">
-              {tr("คุยกับเหมียวเงิน", "Ask Meowsliver")}
-            </span>
-          </span>
-        </button>
+        </div>
       ) : null}
 
       {isDrawerOpen ? (

@@ -11,7 +11,7 @@ import {
   getSpendCategoryDrilldownFromTransactions,
   type SpendCategoryDrilldown,
 } from "@/lib/dashboard-surface-analytics";
-import { formatBaht, formatBahtCompact, formatNumber } from "@/lib/utils";
+import { formatBaht, formatBahtCompact, formatNumber, getMonthLabel } from "@/lib/utils";
 
 const CATEGORY_SWATCHES = [
   "#ffe2c9",
@@ -37,9 +37,20 @@ export function SpendingCategoryExplorer() {
   const language = useLanguage();
   const importedTransactions = useFinanceStore((state) => state.importedTransactions);
   const selectedYear = useFinanceStore((state) => state.selectedYear);
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const filteredTransactions = useMemo(
+    () =>
+      selectedMonth === null
+        ? importedTransactions
+        : importedTransactions.filter((tx) => {
+            const d = new Date(tx.date);
+            return d.getFullYear() === selectedYear && d.getMonth() + 1 === selectedMonth;
+          }),
+    [importedTransactions, selectedYear, selectedMonth]
+  );
   const categories = useMemo(
-    () => getSpendCategoryDrilldownFromTransactions(importedTransactions, selectedYear, 9),
-    [importedTransactions, selectedYear]
+    () => getSpendCategoryDrilldownFromTransactions(filteredTransactions, selectedYear, 9),
+    [filteredTransactions, selectedYear]
   );
   const [activeCategory, setActiveCategory] = useState<string | null>(categories[0]?.category ?? null);
 
@@ -85,7 +96,35 @@ export function SpendingCategoryExplorer() {
             </div>
           </div>
 
-          <div className="mt-6 space-y-3">
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setSelectedMonth(null)}
+              className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                selectedMonth === null
+                  ? "bg-[color:var(--app-brand)] text-white"
+                  : "border border-[color:var(--app-border)] text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+              }`}
+            >
+              {tr("ทั้งปี", "All year")}
+            </button>
+            {Array.from({ length: 12 }, (_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setSelectedMonth(i + 1)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                  selectedMonth === i + 1
+                    ? "bg-[color:var(--app-brand)] text-white"
+                    : "border border-[color:var(--app-border)] text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+                }`}
+              >
+                {getMonthLabel(i, language)}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-4 space-y-3">
             {categories.map((category, index) => {
               const swatch = CATEGORY_SWATCHES[index % CATEGORY_SWATCHES.length];
               const isActive = selected?.category === category.category;
@@ -154,6 +193,12 @@ export function SpendingCategoryExplorer() {
             <>
               <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[color:var(--app-text-subtle)]">
                 {tr("Drilldown", "Drilldown")} / {selected.category}
+              </p>
+              <p className="mt-2 text-xs leading-5 text-[color:var(--app-text-muted)]">
+                {tr(
+                  `คำนวณจากรายการรายจ่ายจริงในปี ${selectedYear} ที่ hydrate จากฐานข้อมูล`,
+                  `Calculated from real ${selectedYear} expense rows hydrated from the database`
+                )}
               </p>
               <div className="mt-3 flex min-w-0 flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:gap-3">
                 <p className="break-words font-[family-name:var(--font-geist-mono)] text-3xl font-semibold leading-none text-[color:var(--app-text)] md:text-5xl">

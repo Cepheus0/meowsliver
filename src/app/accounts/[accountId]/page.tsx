@@ -125,6 +125,7 @@ export default function AccountDetailPage() {
 
   const upsertAccount = useFinanceStore((s) => s.upsertAccount);
   const accounts = useFinanceStore((s) => s.accounts);
+  const selectedYear = useFinanceStore((s) => s.selectedYear);
 
   const [detail, setDetail] = useState<AccountDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -495,6 +496,32 @@ export default function AccountDetailPage() {
               </Button>
             </div>
 
+            {detail.reconciliation.status === "no_linked_transactions" ? (
+              <div className="mt-5 rounded-2xl border border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] p-4">
+                <p className="text-sm font-semibold text-[color:var(--app-text)]">
+                  {tr("วิธีแก้ยอดที่ยังไม่มี ledger อธิบาย", "How to make this balance explainable")}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--app-text-muted)]">
+                  {tr(
+                    "ถ้ายอดนี้เป็น opening balance หรือยอดสินทรัพย์ที่ไม่ได้ import ผ่าน CSV ให้เพิ่ม alias ให้ตรงกับ payFrom ในรายการจริง หรือเพิ่มรายการปรับยอดตั้งต้นหนึ่งรายการ แล้วบัญชีนี้จะออกจาก warning ได้",
+                    "If this is an opening balance or an asset that was never imported from CSV, add aliases that match real payFrom values or create one opening adjustment transaction so the account can leave warning state."
+                  )}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
+                    <PencilLine size={14} />
+                    {tr("แก้ alias / ยอดตั้งต้น", "Edit alias / opening balance")}
+                  </Button>
+                  <Link
+                    href={`/transactions?year=${selectedYear}&search=${encodeURIComponent(detail.account.name)}`}
+                    className="inline-flex items-center justify-center rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-3 py-2 text-xs font-semibold text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+                  >
+                    {tr("ค้นหารายการที่อาจเกี่ยวข้อง", "Search possible rows")}
+                  </Link>
+                </div>
+              </div>
+            ) : null}
+
             <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
@@ -596,13 +623,13 @@ export default function AccountDetailPage() {
               </div>
             </CardHeader>
 
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div>
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]">
+              <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
                   {tr("ยอดคงเหลือ", "Current balance")}
                 </p>
                 <p
-                  className={`mt-1 font-[family-name:var(--font-geist-mono)] text-3xl font-bold ${
+                  className={`mt-1 break-words font-[family-name:var(--font-geist-mono)] text-3xl font-bold leading-tight md:text-4xl lg:text-3xl xl:text-4xl ${
                     detail.account.currentBalance < 0
                       ? "text-[color:var(--expense-text)]"
                       : "text-[color:var(--app-text)]"
@@ -614,7 +641,7 @@ export default function AccountDetailPage() {
               {detail.account.type === "credit_card" &&
                 detail.account.creditLimit != null && (
                   <>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
                         {tr("วงเงิน", "Credit limit")}
                       </p>
@@ -622,7 +649,7 @@ export default function AccountDetailPage() {
                         {formatBaht(detail.account.creditLimit)}
                       </p>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
                         {tr("เหลือใช้", "Available")}
                       </p>
@@ -635,7 +662,7 @@ export default function AccountDetailPage() {
                     </div>
                   </>
                 )}
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-wide text-[color:var(--app-text-muted)]">
                   {tr("จำนวนรายการ", "Transaction count")}
                 </p>
@@ -670,7 +697,7 @@ export default function AccountDetailPage() {
                 {tr("รายการล่าสุด", "Recent transactions")}
               </h3>
               <Link
-                href={`/transactions?account=${detail.account.id}`}
+                href={`/transactions?account=${detail.account.id}&year=${selectedYear}`}
                 className="inline-flex items-center gap-1 text-xs font-medium text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
               >
                 {tr("ดูทั้งหมด", "View all")}

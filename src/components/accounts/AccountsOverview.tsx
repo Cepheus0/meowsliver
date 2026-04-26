@@ -3,6 +3,14 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
   ArrowRight,
   Plus,
   Wallet,
@@ -15,11 +23,14 @@ import {
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AccountIcon } from "@/components/accounts/AccountIcon";
+import { ChartViewport } from "@/components/charts/ChartViewport";
+import { chartTheme } from "@/lib/chart-theme";
 import { useFinanceStore } from "@/store/finance-store";
 import { useFinanceStoreHydrated } from "@/store/use-finance-store-hydrated";
 import { type Account } from "@/lib/types";
-import { formatBaht } from "@/lib/utils";
-import { useAccountTypeLabels, useT } from "@/lib/i18n";
+import { getMonthlyCashflowFromTransactions } from "@/lib/finance-analytics";
+import { formatBaht, formatBahtCompact, getMonthLabel } from "@/lib/utils";
+import { useAccountTypeLabels, useLanguage, useT } from "@/lib/i18n";
 
 /**
  * Given the raw active accounts and a persisted order array (ids), return
@@ -44,10 +55,20 @@ function applyOrder(active: Account[], order: number[]): Account[] {
   return result;
 }
 
+const NET_WORTH_RANGES = [
+  { label: "1M", months: 1 },
+  { label: "3M", months: 3 },
+  { label: "6M", months: 6 },
+  { label: "1Y", months: 12 },
+] as const;
+
 export function AccountsOverview() {
   const t = useT();
+  const language = useLanguage();
   const storeHydrated = useFinanceStoreHydrated();
   const accounts = useFinanceStore((s) => s.accounts);
+  const importedTransactions = useFinanceStore((s) => s.importedTransactions);
+  const selectedYear = useFinanceStore((s) => s.selectedYear);
   const accountOrder = useFinanceStore((s) => s.accountOrder);
   const setAccountOrder = useFinanceStore((s) => s.setAccountOrder);
   const accountsExpanded = useFinanceStore((s) => s.accountsExpanded);
@@ -55,6 +76,9 @@ export function AccountsOverview() {
 
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [overId, setOverId] = useState<number | null>(null);
+  const [netWorthRange, setNetWorthRange] = useState<(typeof NET_WORTH_RANGES)[number]>(
+    NET_WORTH_RANGES[2]
+  );
 
   const active = useMemo(() => {
     const filtered = accounts
@@ -79,6 +103,40 @@ export function AccountsOverview() {
   const totalLiabilities = active
     .filter((a) => a.currentBalance < 0)
     .reduce((sum, a) => sum + Math.abs(a.currentBalance), 0);
+  const netWorthTrend = (() => {
+    const prevMonthly = getMonthlyCashflowFromTransactions(importedTransactions, selectedYear - 1);
+    const currMonthly = getMonthlyCashflowFromTransactions(importedTransactions, selectedYear);
+    const allMonths = [
+      ...prevMonthly.map((m) => ({ ...m, year: selectedYear - 1 })),
+      ...currMonthly.map((m) => ({ ...m, year: selectedYear })),
+    ];
+    const lastActiveIndex =
+      allMonths
+        .map((month, index) => ({ month, index }))
+        .filter(({ month }) => month.income > 0 || month.expense > 0 || month.net !== 0)
+        .at(-1)?.index ?? allMonths.length - 1;
+    const startIndex = Math.max(0, lastActiveIndex - netWorthRange.months + 1);
+    const visibleMonths = allMonths.slice(startIndex, lastActiveIndex + 1);
+    const windowNet = visibleMonths.reduce((sum, month) => sum + month.net, 0);
+    const startingNetWorth = netWorth - windowNet;
+
+    return visibleMonths.reduce<Array<{ label: string; netWorth: number; monthlyNet: number }>>((points, month) => {
+      const previousNetWorth = points.at(-1)?.netWorth ?? startingNetWorth;
+      const currentNetWorth = previousNetWorth + month.net;
+      const label =
+        month.year === selectedYear
+          ? getMonthLabel(month.monthIndex, language)
+          : `${getMonthLabel(month.monthIndex, language)} '${String(month.year).slice(2)}`;
+      return [
+        ...points,
+        {
+          label,
+          netWorth: currentNetWorth,
+          monthlyNet: month.net,
+        },
+      ];
+    }, []);
+  })();
 
   if (active.length === 0) {
     return (
@@ -141,7 +199,7 @@ export function AccountsOverview() {
   return (
     <Card className="animate-fade-slide-up anim-delay-0 overflow-hidden">
       {/* Net Worth hero */}
-      <div className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="grid gap-5 pb-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,1fr)]">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-[color:var(--app-text-subtle)]">
             {t("summary.netWorth")}
@@ -162,23 +220,89 @@ export function AccountsOverview() {
               {active.length} {t("summary.activeAccounts")}
             </span>
           </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Link
+              href="/accounts"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-3 py-1.5 text-xs font-medium text-[color:var(--app-text-muted)] transition-colors hover:border-[color:var(--app-border-strong)] hover:text-[color:var(--app-text)]"
+            >
+              {t("accounts.manage")}
+              <ArrowRight size={12} />
+            </Link>
+            <Link
+              href="/accounts"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[color:var(--app-brand-text)] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:opacity-90"
+            >
+              <Plus size={12} />
+              {t("accounts.add")}
+            </Link>
+          </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <Link
-            href="/accounts"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-3 py-1.5 text-xs font-medium text-[color:var(--app-text-muted)] transition-colors hover:border-[color:var(--app-border-strong)] hover:text-[color:var(--app-text)]"
-          >
-            {t("accounts.manage")}
-            <ArrowRight size={12} />
-          </Link>
-          <Link
-            href="/accounts"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[color:var(--app-brand-text)] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:opacity-90"
-          >
-            <Plus size={12} />
-            {t("accounts.add")}
-          </Link>
+        <div className="rounded-2xl border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] p-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[color:var(--app-text-subtle)]">
+              {t("summary.netWorth")} trend
+            </p>
+            <div className="inline-flex rounded-xl bg-[color:var(--app-surface)] p-1">
+              {NET_WORTH_RANGES.map((range) => (
+                <button
+                  key={range.label}
+                  type="button"
+                  onClick={() => setNetWorthRange(range)}
+                  className={`rounded-lg px-2.5 py-1 font-[family-name:var(--font-geist-mono)] text-[11px] font-semibold transition-colors ${
+                    netWorthRange.label === range.label
+                      ? "bg-[color:var(--app-surface-strong)] text-[color:var(--app-text)]"
+                      : "text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+                  }`}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <ChartViewport className="h-32">
+            {({ width, height }) => (
+              <LineChart
+                width={width}
+                height={height}
+                data={netWorthTrend}
+                margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid
+                  stroke={chartTheme.grid}
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  opacity={0.28}
+                />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 10, fill: chartTheme.axis }}
+                  axisLine={false}
+                  tickLine={false}
+                  padding={{ left: 16, right: 8 }}
+                />
+                <YAxis hide domain={["auto", "auto"]} />
+                <Tooltip
+                  formatter={(value, name) => [
+                    name === "monthlyNet"
+                      ? formatBahtCompact(Number(value))
+                      : formatBaht(Number(value)),
+                    name === "monthlyNet" ? "Monthly net" : "Net worth",
+                  ]}
+                  contentStyle={chartTheme.tooltipStyle}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="netWorth"
+                  stroke="var(--app-brand)"
+                  strokeWidth={2}
+                  dot={{ r: 2, fill: "var(--app-brand)" }}
+                  activeDot={{ r: 4 }}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            )}
+          </ChartViewport>
         </div>
       </div>
 
