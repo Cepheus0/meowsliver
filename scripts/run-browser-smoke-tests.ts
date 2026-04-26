@@ -31,6 +31,7 @@ function buildPersistedState() {
       })),
       selectedYear: browserTestYear,
       sidebarCollapsed: false,
+      language: "th",
     },
     version: 0,
   };
@@ -151,14 +152,14 @@ async function main() {
   }, buildPersistedState());
 
   try {
-    await page.goto(`${appUrl}/transactions`, {
+    await page.goto(`${appUrl}/transactions?year=${browserTestYear}`, {
       waitUntil: "networkidle",
       timeout: 30_000,
     });
 
     await page.waitForFunction(() => {
       const summary = document.body.innerText;
-      return summary.includes("60 รายการ");
+      return summary.includes("60 รายการ") || summary.includes("60 rows");
     });
 
     const pageText = await page.textContent("body");

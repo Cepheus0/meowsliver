@@ -21,6 +21,8 @@ const th: Dict = {
   "nav.buckets": "ออมเป้า",
   "nav.investments": "การลงทุน",
   "nav.reports": "รายงาน",
+  "nav.forecast": "Forecast",
+  "nav.smartAlerts": "Smart Alerts",
 
   // Branding / shell
   "brand.name": "เหมียวเงิน",
@@ -114,6 +116,8 @@ const en: Dict = {
   "nav.buckets": "Buckets",
   "nav.investments": "Investments",
   "nav.reports": "Reports",
+  "nav.forecast": "Forecast",
+  "nav.smartAlerts": "Smart Alerts",
 
   // Branding / shell
   "brand.name": "Meowsliver",

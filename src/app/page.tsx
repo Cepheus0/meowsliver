@@ -1,6 +1,4 @@
 "use client";
-
-import Link from "next/link";
 import { AssetPieChart } from "@/components/charts/AssetPieChart";
 import { SummaryCards } from "@/components/charts/SummaryCards";
 import { CashflowChart, YearlyComparisonTable } from "@/components/charts/CashflowChart";
@@ -66,16 +64,6 @@ export default function DashboardPage() {
             ),
           },
         ]}
-        actions={
-          <Link
-            href={hasTransactions ? "/transactions" : "/import"}
-            className="inline-flex items-center justify-center rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4 py-2.5 text-sm font-medium text-[color:var(--app-text)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[color:var(--app-border-strong)]"
-          >
-            {hasTransactions
-              ? tr("ดูรายการทั้งหมด", "View all transactions")
-              : tr("เริ่มนำเข้าข้อมูล", "Start importing data")}
-          </Link>
-        }
       />
 
       {!hasTransactions ? (

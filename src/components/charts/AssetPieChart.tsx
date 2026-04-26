@@ -44,6 +44,7 @@ export function AssetPieChart() {
   const { getAssets, getLiabilities, getNetWorth, getTotalAssets, getTotalLiabilities } = useFinanceStore();
   const tr = useTr();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"donut" | "bars" | "stacked">("donut");
 
   const assets = getAssets();
   const liabilities = getLiabilities();
@@ -66,6 +67,7 @@ export function AssetPieChart() {
         color: l.color,
       })),
   ];
+  const totalAllocation = pieData.reduce((sum, item) => sum + item.value, 0);
 
   if (pieData.length === 0) {
     return (
@@ -89,6 +91,22 @@ export function AssetPieChart() {
     <Card className="col-span-full lg:col-span-2">
       <CardHeader>
         <CardTitle>Net Worth 100% - {tr("สินทรัพย์สุทธิ", "Net Assets")}</CardTitle>
+        <div className="inline-flex rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] p-1">
+          {(["donut", "bars", "stacked"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setViewMode(mode)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${
+                viewMode === mode
+                  ? "bg-[color:var(--app-surface-strong)] text-[color:var(--app-text)] shadow-[var(--app-card-shadow)]"
+                  : "text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
+              }`}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
       </CardHeader>
 
       {/* Net Worth big number */}
@@ -102,49 +120,114 @@ export function AssetPieChart() {
         </p>
       </div>
 
-      {/* Pie Chart */}
-      <ChartViewport className="h-80">
-        {({ width, height }) => (
-          <PieChart width={width} height={height}>
-            <Pie
-              data={pieData}
-              cx="50%"
-              cy="50%"
-              innerRadius={80}
-              outerRadius={120}
-              paddingAngle={2}
-              dataKey="value"
-              nameKey="label"
-              isAnimationActive={false}
-              onMouseEnter={(_, index) =>
-                setHoveredItem(pieData[index]?.label ?? null)
-              }
-              onMouseLeave={() => setHoveredItem(null)}
-            >
-              {pieData.map((entry, index) => {
-                const fill = chartColors.categories[index % chartColors.categories.length];
-                return (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={fill}
-                    opacity={
-                      hoveredItem === null || hoveredItem === entry.label
-                        ? 1
-                        : 0.35
-                    }
-                    stroke="transparent"
-                    strokeWidth={0}
+      {viewMode === "donut" ? (
+        <ChartViewport className="h-80">
+          {({ width, height }) => (
+            <PieChart width={width} height={height}>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                innerRadius={80}
+                outerRadius={120}
+                paddingAngle={2}
+                dataKey="value"
+                nameKey="label"
+                isAnimationActive={false}
+                onMouseEnter={(_, index) =>
+                  setHoveredItem(pieData[index]?.label ?? null)
+                }
+                onMouseLeave={() => setHoveredItem(null)}
+              >
+                {pieData.map((entry, index) => {
+                  const fill = chartColors.categories[index % chartColors.categories.length];
+                  return (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={fill}
+                      opacity={
+                        hoveredItem === null || hoveredItem === entry.label
+                          ? 1
+                          : 0.35
+                      }
+                      stroke="transparent"
+                      strokeWidth={0}
+                    />
+                  );
+                })}
+              </Pie>
+              <Tooltip
+                formatter={(value) => formatBaht(Number(value))}
+                contentStyle={chartTheme.tooltipStyle}
+              />
+            </PieChart>
+          )}
+        </ChartViewport>
+      ) : viewMode === "stacked" ? (
+        <div className="mt-8">
+          <div className="flex h-8 overflow-hidden rounded-full border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)]">
+            {pieData.map((item, index) => {
+              const width = totalAllocation > 0 ? (item.value / totalAllocation) * 100 : 0;
+              const color = chartColors.categories[index % chartColors.categories.length];
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  title={`${item.label} ${formatBaht(item.value)}`}
+                  onMouseEnter={() => setHoveredItem(item.label)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                  className="h-full transition-opacity"
+                  style={{
+                    width: `${width}%`,
+                    minWidth: width > 0 ? 6 : 0,
+                    backgroundColor: color,
+                    opacity: hoveredItem === null || hoveredItem === item.label ? 1 : 0.35,
+                  }}
+                />
+              );
+            })}
+          </div>
+          <p className="mt-4 text-sm text-[color:var(--app-text-muted)]">
+            {tr(
+              "Stacked view แสดงสัดส่วนสินทรัพย์/หนี้สินทั้งหมดในแถบเดียวเพื่อเทียบน้ำหนักแบบเร็ว",
+              "Stacked view shows all asset/liability allocation in one bar for quick weight comparison."
+            )}
+          </p>
+        </div>
+      ) : (
+        <div className="mt-6 space-y-3">
+          {pieData.map((item, index) => {
+            const color = chartColors.categories[index % chartColors.categories.length];
+            const share = totalAllocation > 0 ? item.value / totalAllocation : 0;
+            return (
+              <button
+                key={item.label}
+                type="button"
+                onMouseEnter={() => setHoveredItem(item.label)}
+                onMouseLeave={() => setHoveredItem(null)}
+                className="w-full text-left"
+              >
+                <div className="mb-1 flex items-center justify-between gap-4 text-sm">
+                  <span className="truncate text-[color:var(--app-text)]">{item.label}</span>
+                  <span className="font-[family-name:var(--font-geist-mono)] text-[color:var(--app-text-muted)]">
+                    {formatBaht(item.value)}
+                  </span>
+                </div>
+                <div className="h-3 overflow-hidden rounded-full bg-[color:var(--app-surface-soft)]">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${Math.max(share * 100, 1)}%`,
+                      backgroundColor: color,
+                      opacity: hoveredItem === null || hoveredItem === item.label ? 1 : 0.35,
+                    }}
                   />
-                );
-              })}
-            </Pie>
-            <Tooltip
-              formatter={(value) => formatBaht(Number(value))}
-              contentStyle={chartTheme.tooltipStyle}
-            />
-          </PieChart>
-        )}
-      </ChartViewport>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Legend */}
       <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">

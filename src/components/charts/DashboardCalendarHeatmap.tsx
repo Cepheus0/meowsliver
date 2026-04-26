@@ -74,6 +74,7 @@ export function DashboardCalendarHeatmap() {
   return (
     <Card className="overflow-hidden">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        {/* Left: stable title — never changes size */}
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[color:var(--app-text-subtle)]">
             {tr("Calendar heatmap", "Calendar heatmap")}
@@ -81,27 +82,37 @@ export function DashboardCalendarHeatmap() {
           <h2 className="mt-2 text-3xl font-semibold text-[color:var(--app-text)] md:text-4xl">
             {tr("ใช้หนักวันไหน", "Daily spend map")}
           </h2>
-          {focused ? (
-            <p className="mt-3 font-[family-name:var(--font-geist-mono)] text-2xl text-[color:var(--app-text)] md:text-3xl">
-              {formatHeatmapDate(focused.date, language)} · {formatBahtCompact(focused.amount)}
-            </p>
-          ) : (
-            <p className="mt-3 text-sm text-[color:var(--app-text-muted)]">
-              {tr("วางเมาส์บนวันที่เพื่อดูยอดใช้จ่าย", "Hover a day to see the spend")}
-            </p>
-          )}
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-[color:var(--app-text-muted)]">
-          <span>{tr("ศูนย์", "Zero")}</span>
-          {HEAT_COLORS.map((color, index) => (
-            <span
-              key={index}
-              className="h-4 w-4 rounded-[5px] border border-[color:var(--app-border)]"
-              style={{ backgroundColor: color }}
-            />
-          ))}
-          <span>{tr("มาก", "High")}</span>
+        {/* Right: legend + fixed-size info card (h/w never change → grid never shifts) */}
+        <div className="flex shrink-0 flex-col items-end gap-3">
+          <div className="flex items-center gap-2 text-sm text-[color:var(--app-text-muted)]">
+            <span>{tr("ศูนย์", "Zero")}</span>
+            {HEAT_COLORS.map((color, index) => (
+              <span
+                key={index}
+                className="h-4 w-4 rounded-[5px] border border-[color:var(--app-border)]"
+                style={{ backgroundColor: color }}
+              />
+            ))}
+            <span>{tr("มาก", "High")}</span>
+          </div>
+          <div className="flex h-[72px] w-52 flex-col justify-center rounded-2xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4">
+            {focused ? (
+              <>
+                <p className="text-[11px] font-semibold text-[color:var(--app-text-subtle)]">
+                  {formatHeatmapDate(focused.date, language)}
+                </p>
+                <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-xl font-semibold text-[color:var(--app-text)]">
+                  {formatBahtCompact(focused.amount)}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm leading-5 text-[color:var(--app-text-muted)]">
+                {tr("วางเมาส์บนวันที่เพื่อดูยอดใช้จ่าย", "Hover a day to see the spend")}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

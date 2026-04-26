@@ -11,6 +11,8 @@ import {
   Landmark,
   PanelLeftClose,
   PanelLeftOpen,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFinanceStore } from "@/store/finance-store";
@@ -23,6 +25,11 @@ const NAV_ITEMS = [
   { href: "/buckets", icon: Wallet, key: "nav.buckets" },
   { href: "/reports", icon: BarChart3, key: "nav.reports" },
   { href: "/import", icon: Upload, key: "nav.import" },
+] as const;
+
+const AI_NAV_ITEMS = [
+  { href: "/forecast", icon: TrendingUp, key: "nav.forecast" },
+  { href: "/smart-alerts", icon: Sparkles, key: "nav.smartAlerts" },
 ] as const;
 
 export function Sidebar() {
@@ -94,6 +101,50 @@ export function Sidebar() {
             return (
               <div key={item.href} className="relative">
                 {/* Active left indicator — hangs at the sidebar's left edge */}
+                {isActive && (
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[color:var(--app-brand)]"
+                  />
+                )}
+                <Link
+                  href={item.href}
+                  title={sidebarCollapsed ? label : undefined}
+                  className={cn(
+                    "group flex h-9 items-center rounded-lg text-[13px] font-medium transition-all duration-150",
+                    sidebarCollapsed
+                      ? "justify-center px-0"
+                      : "justify-center px-0 md:justify-start md:gap-2.5 md:pl-3 md:pr-2",
+                    isActive
+                      ? "bg-[color:var(--app-brand-soft)] text-[color:var(--app-brand-text)]"
+                      : "text-[color:var(--app-text-muted)] hover:bg-[color:var(--app-surface-soft)] hover:text-[color:var(--app-text)]"
+                  )}
+                >
+                  <item.icon
+                    size={16}
+                    className={cn(
+                      "shrink-0 transition-transform duration-150",
+                      !isActive && "group-hover:scale-110"
+                    )}
+                  />
+                  {!sidebarCollapsed && <span className="hidden truncate md:inline">{label}</span>}
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+
+        {!sidebarCollapsed && (
+          <p className="mb-2 mt-5 hidden border-t border-[color:var(--app-divider-soft)] px-3 pt-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--app-brand-text)] md:block">
+            AI Tools
+          </p>
+        )}
+        <div className={cn("space-y-0.5", sidebarCollapsed ? "mt-4 px-0" : "")}>
+          {AI_NAV_ITEMS.map((item) => {
+            const isActive = pathname.startsWith(item.href);
+            const label = t(item.key);
+            return (
+              <div key={item.href} className="relative">
                 {isActive && (
                   <span
                     aria-hidden

@@ -196,7 +196,10 @@ function buildAccountHealthInsight(
             )}.`
           ),
     actionHref: `/accounts/${highestRisk.accountId}`,
-    actionLabel: t(language, "ตรวจสอบบัญชี", "Review account"),
+    actionLabel:
+      highestRisk.reconciliationStatus === "no_linked_transactions"
+        ? t(language, "ดูวิธีแก้", "View fix steps")
+        : t(language, "ตรวจสอบบัญชี", "Review account"),
     evidence: [
       { label: t(language, "บัญชี", "Account"), value: highestRisk.name },
       {

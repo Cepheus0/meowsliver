@@ -20,7 +20,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
 import { fetchAccountsFromApi } from "@/lib/client/finance-sync";
-import { cn, formatBaht } from "@/lib/utils";
+import { cn, formatBaht, formatBahtCompact } from "@/lib/utils";
 import { useFinanceStore } from "@/store/finance-store";
 import {
   parseFile,
@@ -913,7 +913,7 @@ export default function ImportPage() {
                 {tr(`รายรับ (${importStats.incomeRows})`, `Income (${importStats.incomeRows})`)}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--income-text)]">
-                {formatBaht(importStats.totalIncome)}
+                {formatBahtCompact(importStats.totalIncome)}
               </p>
             </div>
             <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
@@ -921,7 +921,7 @@ export default function ImportPage() {
                 {tr(`รายจ่าย (${importStats.expenseRows})`, `Expense (${importStats.expenseRows})`)}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--expense-text)]">
-                {formatBaht(importStats.totalExpense)}
+                {formatBahtCompact(importStats.totalExpense)}
               </p>
             </div>
             <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
@@ -929,7 +929,7 @@ export default function ImportPage() {
                 {tr(`ย้ายเงิน (${importStats.transferRows})`, `Transfer (${importStats.transferRows})`)}
               </p>
               <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-2xl font-bold text-[color:var(--app-brand-text)]">
-                {formatBaht(importStats.totalTransfer)}
+                {formatBahtCompact(importStats.totalTransfer)}
               </p>
             </div>
             <div className="theme-border rounded-xl border bg-[color:var(--app-surface)] p-4 shadow-sm">
