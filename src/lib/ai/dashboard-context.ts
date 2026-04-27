@@ -11,14 +11,16 @@ interface BuildDashboardAiContextInput {
   dashboardPacket: MetricPacket<unknown, unknown>;
   deterministicInsightPacket: MetricPacket<unknown, unknown>;
   anomalyPacket: MetricPacket<unknown, unknown>;
+  transactionIntelligencePacket: MetricPacket<unknown, unknown>;
   accountHealthPacket: MetricPacket<unknown, unknown>;
   goalHealthPacket: MetricPacket<unknown, unknown>;
   importQualityPacket: MetricPacket<unknown, unknown>;
   generatedAt?: string;
 }
 
-const MAX_JSON_CHARS = 4200;
+const MAX_JSON_CHARS = 6500;
 const MAX_ARRAY_ITEMS = 4;
+const PRESERVED_ARRAY_KEYS = new Set(["currentWeekDailyExpenses"]);
 const MAX_STRING_CHARS = 600;
 
 type JsonObject = Record<string, unknown>;
@@ -87,8 +89,12 @@ function prioritizePromptArray(values: unknown[]) {
     .map((item) => item.value);
 }
 
-function compactPromptValue(value: unknown): unknown {
+function compactPromptValue(value: unknown, key?: string): unknown {
   if (Array.isArray(value)) {
+    if (key && PRESERVED_ARRAY_KEYS.has(key)) {
+      return value.map((item) => compactPromptValue(item));
+    }
+
     const prioritized = prioritizePromptArray(value);
     const items = prioritized
       .slice(0, MAX_ARRAY_ITEMS)
@@ -113,7 +119,7 @@ function compactPromptValue(value: unknown): unknown {
     return Object.fromEntries(
       Object.entries(value as JsonObject).map(([key, nestedValue]) => [
         key,
-        compactPromptValue(nestedValue),
+        compactPromptValue(nestedValue, key),
       ])
     );
   }
@@ -155,6 +161,7 @@ export function buildDashboardAiContext({
   dashboardPacket,
   deterministicInsightPacket,
   anomalyPacket,
+  transactionIntelligencePacket,
   accountHealthPacket,
   goalHealthPacket,
   importQualityPacket,
@@ -164,6 +171,7 @@ export function buildDashboardAiContext({
     dashboard: compactPacket(dashboardPacket),
     deterministicInsights: compactPacket(deterministicInsightPacket),
     anomaly: compactPacket(anomalyPacket),
+    transactionIntelligence: compactPacket(transactionIntelligencePacket),
     accounts: compactPacket(accountHealthPacket),
     goals: compactPacket(goalHealthPacket),
     imports: compactPacket(importQualityPacket),

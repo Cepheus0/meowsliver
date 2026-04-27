@@ -7,6 +7,7 @@ import {
   getImportQualityMetricPacket,
   getTodayAnomalyMetricPacket,
 } from "@/lib/server/metrics";
+import { getTransactionIntelligenceMetricPacket } from "@/lib/server/transaction-intelligence";
 
 export async function getDashboardAiContext(input: {
   year: number;
@@ -15,12 +16,14 @@ export async function getDashboardAiContext(input: {
   const [
     dashboardPacket,
     anomalyPacket,
+    transactionIntelligencePacket,
     accountHealthPacket,
     goalHealthPacket,
     importQualityPacket,
   ] = await Promise.all([
     getDashboardMetricPacket(input.year),
     getTodayAnomalyMetricPacket(input.date),
+    getTransactionIntelligenceMetricPacket(input.date),
     getAccountHealthMetricPacket(),
     getGoalHealthMetricPacket(),
     getImportQualityMetricPacket(),
@@ -36,6 +39,7 @@ export async function getDashboardAiContext(input: {
     dashboardPacket,
     deterministicInsightPacket,
     anomalyPacket,
+    transactionIntelligencePacket,
     accountHealthPacket,
     goalHealthPacket,
     importQualityPacket,

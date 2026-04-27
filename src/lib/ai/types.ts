@@ -23,6 +23,7 @@ export interface DashboardAiContext {
     dashboard: AiContextPacket;
     deterministicInsights: AiContextPacket;
     anomaly: AiContextPacket;
+    transactionIntelligence: AiContextPacket;
     accounts: AiContextPacket;
     goals: AiContextPacket;
     imports: AiContextPacket;
