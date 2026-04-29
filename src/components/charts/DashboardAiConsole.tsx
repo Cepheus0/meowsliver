@@ -45,8 +45,18 @@ interface AiChatResponse {
   detail?: string;
 }
 
+const AI_AGENT_FAB_POSITION_KEY = "meowsliver.aiAgentFabPosition";
+const AI_AGENT_FAB_SIZE = 40;
+
 function getTodayIsoDate() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function clampFabPosition(position: { left: number; top: number }) {
+  return {
+    left: Math.max(8, Math.min(window.innerWidth - AI_AGENT_FAB_SIZE - 8, position.left)),
+    top: Math.max(8, Math.min(window.innerHeight - AI_AGENT_FAB_SIZE - 8, position.top)),
+  };
 }
 
 function defaultQuestion(language: "th" | "en") {
@@ -106,6 +116,7 @@ export function DashboardAiConsole() {
   const fabRef = useRef<HTMLButtonElement | null>(null);
   const fabDragRef = useRef<{ startX: number; startY: number; startLeft: number; startTop: number } | null>(null);
   const fabHasDragged = useRef(false);
+  const fabPosRef = useRef<{ left: number; top: number } | null>(null);
   const [fabPos, setFabPos] = useState<{ left: number; top: number } | null>(null);
 
   useEffect(() => {
@@ -161,6 +172,42 @@ export function DashboardAiConsole() {
 
     return () => controller.abort();
   }, [selectedYear, language, tr]);
+
+  useEffect(() => {
+    const fallback = {
+      left: window.innerWidth - AI_AGENT_FAB_SIZE - 16,
+      top: window.innerHeight - AI_AGENT_FAB_SIZE - 96,
+    };
+    const storedPosition = window.localStorage.getItem(AI_AGENT_FAB_POSITION_KEY);
+    let nextPosition = fallback;
+
+    if (storedPosition) {
+      try {
+        const parsed = JSON.parse(storedPosition) as Partial<{ left: number; top: number }>;
+        if (typeof parsed.left === "number" && typeof parsed.top === "number") {
+          nextPosition = { left: parsed.left, top: parsed.top };
+        }
+      } catch {
+        nextPosition = fallback;
+      }
+    }
+
+    const clampedPosition = clampFabPosition(nextPosition);
+    fabPosRef.current = clampedPosition;
+    setFabPos(clampedPosition);
+
+    function handleResize() {
+      setFabPos((current) => {
+        const clamped = clampFabPosition(current ?? fallback);
+        fabPosRef.current = clamped;
+        window.localStorage.setItem(AI_AGENT_FAB_POSITION_KEY, JSON.stringify(clamped));
+        return clamped;
+      });
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!isDrawerOpen) {
@@ -321,14 +368,23 @@ export function DashboardAiConsole() {
               const dy = e.clientY - fabDragRef.current.startY;
               if (!fabHasDragged.current && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) fabHasDragged.current = true;
               if (fabHasDragged.current) {
-                setFabPos({
-                  left: Math.max(0, Math.min(window.innerWidth - 40, fabDragRef.current.startLeft + dx)),
-                  top: Math.max(0, Math.min(window.innerHeight - 40, fabDragRef.current.startTop + dy)),
+                const nextPosition = clampFabPosition({
+                  left: fabDragRef.current.startLeft + dx,
+                  top: fabDragRef.current.startTop + dy,
                 });
+                fabPosRef.current = nextPosition;
+                setFabPos(nextPosition);
               }
             }}
             onPointerUp={() => {
               if (!fabHasDragged.current) setIsDrawerOpen(true);
+              if (fabHasDragged.current && fabPosRef.current) {
+                window.localStorage.setItem(AI_AGENT_FAB_POSITION_KEY, JSON.stringify(fabPosRef.current));
+              }
+              fabDragRef.current = null;
+              fabHasDragged.current = false;
+            }}
+            onPointerCancel={() => {
               fabDragRef.current = null;
               fabHasDragged.current = false;
             }}

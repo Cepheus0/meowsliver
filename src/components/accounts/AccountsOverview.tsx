@@ -199,8 +199,9 @@ export function AccountsOverview() {
   return (
     <Card className="animate-fade-slide-up anim-delay-0 overflow-hidden">
       {/* Net Worth hero */}
-      <div className="grid gap-5 pb-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,1fr)]">
-        <div>
+      <div className="grid items-start gap-5 pb-4 xl:grid-cols-[minmax(280px,0.78fr)_minmax(420px,1.22fr)]">
+        <div className="flex h-full min-w-0 flex-col justify-between gap-4">
+          <div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-[color:var(--app-text-subtle)]">
             {t("summary.netWorth")}
           </p>
@@ -220,17 +221,18 @@ export function AccountsOverview() {
               {active.length} {t("summary.activeAccounts")}
             </span>
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          </div>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             <Link
               href="/accounts"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-3 py-1.5 text-xs font-medium text-[color:var(--app-text-muted)] transition-colors hover:border-[color:var(--app-border-strong)] hover:text-[color:var(--app-text)]"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-3.5 py-2 text-xs font-medium text-[color:var(--app-text-muted)] transition-colors hover:border-[color:var(--app-border-strong)] hover:text-[color:var(--app-text)]"
             >
               {t("accounts.manage")}
               <ArrowRight size={12} />
             </Link>
             <Link
               href="/accounts"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[color:var(--app-brand-text)] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:opacity-90"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[color:var(--app-brand-text)] px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:opacity-90"
             >
               <Plus size={12} />
               {t("accounts.add")}
@@ -266,7 +268,7 @@ export function AccountsOverview() {
                 width={width}
                 height={height}
                 data={netWorthTrend}
-                margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                margin={{ top: 8, right: 18, left: 18, bottom: 0 }}
               >
                 <CartesianGrid
                   stroke={chartTheme.grid}
@@ -279,7 +281,9 @@ export function AccountsOverview() {
                   tick={{ fontSize: 10, fill: chartTheme.axis }}
                   axisLine={false}
                   tickLine={false}
-                  padding={{ left: 16, right: 8 }}
+                  interval={0}
+                  minTickGap={8}
+                  padding={{ left: 20, right: 20 }}
                 />
                 <YAxis hide domain={["auto", "auto"]} />
                 <Tooltip

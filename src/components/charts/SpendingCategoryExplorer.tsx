@@ -24,11 +24,28 @@ const CATEGORY_SWATCHES = [
   "#5f2d0d",
 ];
 
-function buildTransactionsHref(year: number, category: string) {
+function getMonthDateRange(year: number, month: number) {
+  const monthText = String(month).padStart(2, "0");
+  const lastDay = new Date(year, month, 0).getDate();
+
+  return {
+    dateFrom: `${year}-${monthText}-01`,
+    dateTo: `${year}-${monthText}-${String(lastDay).padStart(2, "0")}`,
+  };
+}
+
+function buildTransactionsHref(year: number, category: string, month: number | null) {
   const params = new URLSearchParams();
   params.set("year", String(year));
   params.set("type", "expense");
   params.set("category", category);
+
+  if (month !== null) {
+    const { dateFrom, dateTo } = getMonthDateRange(year, month);
+    params.set("dateFrom", dateFrom);
+    params.set("dateTo", dateTo);
+  }
+
   return `/transactions?${params.toString()}`;
 }
 
@@ -38,6 +55,10 @@ export function SpendingCategoryExplorer() {
   const importedTransactions = useFinanceStore((state) => state.importedTransactions);
   const selectedYear = useFinanceStore((state) => state.selectedYear);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const allYearCategories = useMemo(
+    () => getSpendCategoryDrilldownFromTransactions(importedTransactions, selectedYear, 9),
+    [importedTransactions, selectedYear]
+  );
   const filteredTransactions = useMemo(
     () =>
       selectedMonth === null
@@ -58,7 +79,7 @@ export function SpendingCategoryExplorer() {
     categories.find((category) => category.category === activeCategory) ?? categories[0] ?? null;
   const totalExpense = categories.reduce((sum, category) => sum + category.amount, 0);
 
-  if (categories.length === 0) {
+  if (allYearCategories.length === 0) {
     return (
       <Card>
         <EmptyState
@@ -124,68 +145,77 @@ export function SpendingCategoryExplorer() {
             ))}
           </div>
 
-          <div className="mt-4 space-y-3">
-            {categories.map((category, index) => {
-              const swatch = CATEGORY_SWATCHES[index % CATEGORY_SWATCHES.length];
-              const isActive = selected?.category === category.category;
+          {categories.length > 0 ? (
+            <div className="mt-4 space-y-3">
+              {categories.map((category, index) => {
+                const swatch = CATEGORY_SWATCHES[index % CATEGORY_SWATCHES.length];
+                const isActive = selected?.category === category.category;
 
-              return (
-                <Link
-                  key={category.category}
-                  href={buildTransactionsHref(selectedYear, category.category)}
-                  onMouseEnter={() => setActiveCategory(category.category)}
-                  onFocus={() => setActiveCategory(category.category)}
-                  className={`block w-full rounded-[24px] border px-5 py-4 text-left transition-all duration-200 ${
-                    isActive
-                      ? "border-[color:var(--app-border-strong)] bg-[color:var(--app-surface)] shadow-[0_20px_50px_-40px_rgba(18,13,9,0.7)]"
-                      : "border-transparent bg-transparent hover:border-[color:var(--app-border)] hover:bg-[color:var(--app-surface)]/72"
-                  }`}
-                >
-                  <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-                    <span
-                      className="mt-1 h-7 w-7 shrink-0 rounded-xl sm:h-8 sm:w-8"
-                      style={{ backgroundColor: swatch }}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
-                        <div className="min-w-0">
-                          <p className="truncate text-lg font-medium text-[color:var(--app-text)] sm:text-xl">
-                            {category.category}
-                          </p>
-                          <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
-                            {language === "en"
-                              ? `${formatNumber(category.count)} transactions`
-                            : `${formatNumber(category.count)} รายการ`}
-                          </p>
-                          <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--app-brand-text)] opacity-80">
-                            {tr("ดูรายการที่กรองแล้ว", "Open filtered ledger")}
-                            <ArrowRight size={12} />
-                          </span>
+                return (
+                  <Link
+                    key={category.category}
+                    href={buildTransactionsHref(selectedYear, category.category, selectedMonth)}
+                    onMouseEnter={() => setActiveCategory(category.category)}
+                    onFocus={() => setActiveCategory(category.category)}
+                    className={`block w-full rounded-[24px] border px-5 py-4 text-left transition-all duration-200 ${
+                      isActive
+                        ? "border-[color:var(--app-border-strong)] bg-[color:var(--app-surface)] shadow-[0_20px_50px_-40px_rgba(18,13,9,0.7)]"
+                        : "border-transparent bg-transparent hover:border-[color:var(--app-border)] hover:bg-[color:var(--app-surface)]/72"
+                    }`}
+                  >
+                    <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                      <span
+                        className="mt-1 h-7 w-7 shrink-0 rounded-xl sm:h-8 sm:w-8"
+                        style={{ backgroundColor: swatch }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
+                          <div className="min-w-0">
+                            <p className="truncate text-lg font-medium text-[color:var(--app-text)] sm:text-xl">
+                              {category.category}
+                            </p>
+                            <p className="mt-1 text-sm text-[color:var(--app-text-muted)]">
+                              {language === "en"
+                                ? `${formatNumber(category.count)} transactions`
+                              : `${formatNumber(category.count)} รายการ`}
+                            </p>
+                            <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--app-brand-text)] opacity-80">
+                              {tr("ดูรายการที่กรองแล้ว", "Open filtered ledger")}
+                              <ArrowRight size={12} />
+                            </span>
+                          </div>
+                          <div className="flex items-baseline justify-between gap-3 text-left sm:block sm:text-right">
+                            <p className="font-[family-name:var(--font-geist-mono)] text-lg font-semibold text-[color:var(--app-text)] sm:text-xl">
+                              {formatBahtCompact(category.amount)}
+                            </p>
+                            <p className="text-sm text-[color:var(--app-text-muted)] sm:mt-1">
+                              {(category.share * 100).toFixed(1)}%
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex items-baseline justify-between gap-3 text-left sm:block sm:text-right">
-                          <p className="font-[family-name:var(--font-geist-mono)] text-lg font-semibold text-[color:var(--app-text)] sm:text-xl">
-                            {formatBahtCompact(category.amount)}
-                          </p>
-                          <p className="text-sm text-[color:var(--app-text-muted)] sm:mt-1">
-                            {(category.share * 100).toFixed(1)}%
-                          </p>
+                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-[color:var(--app-surface-soft)]">
+                          <div
+                            className="h-full rounded-full transition-[width] duration-300"
+                            style={{
+                              width: `${Math.max(category.share * 100, 4)}%`,
+                              backgroundColor: swatch,
+                            }}
+                          />
                         </div>
-                      </div>
-                      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[color:var(--app-surface-soft)]">
-                        <div
-                          className="h-full rounded-full transition-[width] duration-300"
-                          style={{
-                            width: `${Math.max(category.share * 100, 4)}%`,
-                            backgroundColor: swatch,
-                          }}
-                        />
                       </div>
                     </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-[24px] border border-dashed border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-5 text-sm leading-6 text-[color:var(--app-text-muted)]">
+              {tr(
+                "เดือนนี้ยังไม่มีรายการรายจ่ายในหมวดที่นำมาแสดง ลองเลือกเดือนอื่นหรือกลับไปดูทั้งปี",
+                "This month has no expense categories to show. Try another month or switch back to all year."
+              )}
+            </div>
+          )}
         </section>
 
         <section className="min-w-0 rounded-[28px] border border-[color:var(--app-border)] bg-[color:var(--app-surface)] p-4 sm:p-5">

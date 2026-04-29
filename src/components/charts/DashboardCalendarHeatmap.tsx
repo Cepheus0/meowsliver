@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -41,7 +41,23 @@ export function DashboardCalendarHeatmap() {
     [importedTransactions, selectedYear]
   );
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
-  const focused = hoveredDate ? cells.find((cell) => cell.date === hoveredDate) ?? null : null;
+  const defaultSelectedDate = useMemo(() => {
+    const latestSpendDay = [...cells]
+      .reverse()
+      .find((cell) => cell.amount > 0);
+    return latestSpendDay?.date ?? cells.at(-1)?.date ?? null;
+  }, [cells]);
+  const [selectedDate, setSelectedDate] = useState<string | null>(defaultSelectedDate);
+  const selectedCell =
+    cells.find((cell) => cell.date === selectedDate) ??
+    cells.find((cell) => cell.date === defaultSelectedDate) ??
+    null;
+  const hoveredCell = hoveredDate ? cells.find((cell) => cell.date === hoveredDate) ?? null : null;
+  const focused = hoveredCell ?? selectedCell;
+
+  useEffect(() => {
+    setSelectedDate(defaultSelectedDate);
+  }, [defaultSelectedDate]);
 
   const groupedWeeks = useMemo(() => {
     const weeks = new Map<number, typeof cells>();
@@ -98,21 +114,30 @@ export function DashboardCalendarHeatmap() {
             <span>{tr("มาก", "High")}</span>
           </div>
           <div className="flex h-[72px] w-52 flex-col justify-center rounded-2xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-4">
-            {focused ? (
+            {selectedCell ? (
               <>
                 <p className="text-[11px] font-semibold text-[color:var(--app-text-subtle)]">
-                  {formatHeatmapDate(focused.date, language)}
+                  {formatHeatmapDate(selectedCell.date, language)}
                 </p>
                 <p className="mt-1 font-[family-name:var(--font-geist-mono)] text-xl font-semibold text-[color:var(--app-text)]">
-                  {formatBahtCompact(focused.amount)}
+                  {formatBahtCompact(selectedCell.amount)}
                 </p>
               </>
             ) : (
               <p className="text-sm leading-5 text-[color:var(--app-text-muted)]">
-                {tr("วางเมาส์บนวันที่เพื่อดูยอดใช้จ่าย", "Hover a day to see the spend")}
+                {tr("คลิกวันที่เพื่อดูยอดใช้จ่าย", "Click a day to pin the spend")}
               </p>
             )}
           </div>
+          {hoveredCell && hoveredCell.date !== selectedCell?.date ? (
+            <p className="max-w-52 text-right text-xs text-[color:var(--app-text-muted)]">
+              {formatHeatmapDate(hoveredCell.date, language)} · {formatBahtCompact(hoveredCell.amount)}
+            </p>
+          ) : (
+            <p className="max-w-52 text-right text-xs text-[color:var(--app-text-subtle)]">
+              {tr("คลิกเพื่อปักหมุดวัน", "Click to pin a day")}
+            </p>
+          )}
         </div>
       </div>
 
@@ -137,6 +162,7 @@ export function DashboardCalendarHeatmap() {
                     onMouseLeave={() => setHoveredDate(null)}
                     onFocus={() => setHoveredDate(cell.date)}
                     onBlur={() => setHoveredDate(null)}
+                    onClick={() => setSelectedDate(cell.date)}
                     className={`h-4 w-4 rounded-[5px] border transition-transform duration-150 ${
                       isFocused
                         ? "scale-110 border-white/90 shadow-[0_0_0_1px_rgba(255,255,255,0.28)]"

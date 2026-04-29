@@ -96,6 +96,15 @@ function parseUrlFilters() {
     filters.dateFrom = date;
     filters.dateTo = date;
     filters.dateRangeLabel = date;
+  } else {
+    const dateFrom = params.get("dateFrom");
+    const dateTo = params.get("dateTo");
+    if (dateFrom || dateTo) {
+      filters.dateFrom = dateFrom ?? undefined;
+      filters.dateTo = dateTo ?? undefined;
+      filters.dateRangeLabel =
+        dateFrom && dateTo ? `${dateFrom} - ${dateTo}` : dateFrom ?? dateTo ?? undefined;
+    }
   }
 
   return {
@@ -108,7 +117,7 @@ function parseUrlFilters() {
       filters.payFroms.size > 0 ||
       filters.recipients.size > 0 ||
       Boolean(filters.search) ||
-      Boolean(filters.dateFrom),
+      Boolean(filters.dateFrom || filters.dateTo),
     nextYear: nextYear !== null && Number.isInteger(nextYear) && nextYear > 0 ? nextYear : null,
   };
 }
@@ -203,7 +212,69 @@ export default function TransactionsPage() {
     (filters.search ? 1 : 0) +
     (filters.amountMin !== undefined ? 1 : 0) +
     (filters.amountMax !== undefined ? 1 : 0) +
-    (filters.dateFrom !== undefined ? 1 : 0);
+    (filters.dateFrom !== undefined || filters.dateTo !== undefined ? 1 : 0);
+
+  const dateRangeLabel = useMemo(() => {
+    if (!filters.dateFrom && !filters.dateTo) return null;
+    if (filters.dateFrom && filters.dateTo && filters.dateFrom === filters.dateTo) {
+      return formatShortDate(filters.dateFrom, language);
+    }
+    if (filters.dateFrom && filters.dateTo) {
+      return `${formatShortDate(filters.dateFrom, language)} - ${formatShortDate(
+        filters.dateTo,
+        language
+      )}`;
+    }
+    if (filters.dateFrom) {
+      return `${tr("ตั้งแต่", "From")} ${formatShortDate(filters.dateFrom, language)}`;
+    }
+    if (filters.dateTo) {
+      return `${tr("ถึง", "Until")} ${formatShortDate(filters.dateTo, language)}`;
+    }
+    return null;
+  }, [filters.dateFrom, filters.dateTo, language, tr]);
+
+  const activeFilterPills = useMemo(() => {
+    const pills: Array<{ label: string; value: string }> = [];
+
+    filters.types.forEach((type) => {
+      pills.push({ label: tr("ประเภท", "Type"), value: getTransactionTypeLabel(type, language) });
+    });
+    filters.categories.forEach((category) => {
+      pills.push({ label: tr("หมวด", "Category"), value: category });
+    });
+    filters.tags.forEach((tag) => {
+      pills.push({ label: tr("แท็ก", "Tag"), value: `#${tag}` });
+    });
+    filters.paymentChannels.forEach((channel) => {
+      pills.push({ label: tr("ช่องทาง", "Channel"), value: channel });
+    });
+    filters.payFroms.forEach((payFrom) => {
+      pills.push({ label: tr("บัญชี", "Account"), value: payFrom });
+    });
+    filters.recipients.forEach((recipient) => {
+      pills.push({ label: tr("ผู้รับ", "Recipient"), value: recipient });
+    });
+    if (filters.search) {
+      pills.push({ label: tr("ค้นหา", "Search"), value: filters.search });
+    }
+    if (dateRangeLabel) {
+      pills.push({ label: tr("ช่วงวันที่", "Date range"), value: dateRangeLabel });
+    }
+
+    return pills;
+  }, [
+    dateRangeLabel,
+    filters.categories,
+    filters.paymentChannels,
+    filters.payFroms,
+    filters.recipients,
+    filters.search,
+    filters.tags,
+    filters.types,
+    language,
+    tr,
+  ]);
 
   const toggleInSet = (key: keyof MonthlyFilterState, value: string) => {
     setFilters((prev) => {
@@ -564,17 +635,36 @@ export default function TransactionsPage() {
               </button>
               {activeFilterCount > 0 && (
                 <button
-	                  onClick={() => {
-	                    setFilters(createEmptyFilterState());
-	                    setCurrentPage(1);
-	                    window.history.replaceState(null, "", "/transactions");
-	                  }}
+                  onClick={() => {
+                    setFilters(createEmptyFilterState());
+                    setCurrentPage(1);
+                    window.history.replaceState(null, "", `/transactions?year=${selectedYear}`);
+                  }}
                   className="text-xs font-medium text-[color:var(--app-text-muted)] underline underline-offset-2 hover:text-[color:var(--app-text)]"
                 >
                   {tr("ล้างทั้งหมด", "Clear all")}
                 </button>
               )}
             </div>
+
+            {activeFilterPills.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[color:var(--app-divider-soft)] pt-3">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--app-text-subtle)]">
+                  {tr("ตัวกรองที่ใช้", "Active filters")}
+                </span>
+                {activeFilterPills.map((pill) => (
+                  <span
+                    key={`${pill.label}-${pill.value}`}
+                    className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-3 py-1 text-xs text-[color:var(--app-text-muted)]"
+                  >
+                    <span className="shrink-0 font-semibold text-[color:var(--app-text-subtle)]">
+                      {pill.label}
+                    </span>
+                    <span className="truncate text-[color:var(--app-text)]">{pill.value}</span>
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Advanced dimension filters — collapsible so the page stays scannable */}
             {showAdvancedFilters && (
