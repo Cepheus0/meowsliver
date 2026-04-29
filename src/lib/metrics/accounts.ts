@@ -35,6 +35,8 @@ export interface AccountHealthItem {
 
 export interface PayFromCoverageMetric {
   transactionWithPayFromCount: number;
+  attributedTransactionCount: number;
+  attributedTransactionRatePercent: number;
   unmatchedPayFromCount: number;
   unmatchedPayFromRatePercent: number;
   defaultAccountFallbackCount: number;
@@ -114,6 +116,7 @@ function buildPayFromCoverage(
     (account) => !account.isArchived && account.isDefault
   );
   let transactionWithPayFromCount = 0;
+  let attributedTransactionCount = 0;
   let unmatchedPayFromCount = 0;
   let defaultAccountFallbackCount = 0;
   const unmatchedValues = new Map<string, number>();
@@ -127,7 +130,9 @@ function buildPayFromCoverage(
     transactionWithPayFromCount += 1;
     const matchedAccountId = aliasMap.get(payFromKey);
 
-    if (!matchedAccountId) {
+    if (matchedAccountId && transaction.accountId === matchedAccountId) {
+      attributedTransactionCount += 1;
+    } else if (!matchedAccountId) {
       unmatchedPayFromCount += 1;
       unmatchedValues.set(
         transaction.payFrom?.trim() || "ไม่ระบุ",
@@ -143,6 +148,13 @@ function buildPayFromCoverage(
   return {
     metrics: {
       transactionWithPayFromCount,
+      attributedTransactionCount,
+      attributedTransactionRatePercent:
+        transactionWithPayFromCount > 0
+          ? roundPercent(
+              (attributedTransactionCount / transactionWithPayFromCount) * 100
+            )
+          : 0,
       unmatchedPayFromCount,
       unmatchedPayFromRatePercent:
         transactionWithPayFromCount > 0
@@ -163,8 +175,13 @@ function buildPayFromCoverage(
   };
 }
 
+function hasReconciliationEligibleRows(transactions: Transaction[]) {
+  return transactions.some((transaction) => transaction.source !== "import");
+}
+
 function buildAccountHealthItem(
-  detail: AccountHealthSource
+  detail: AccountHealthSource,
+  accountTransactions: Transaction[]
 ): AccountHealthItem {
   const { account, reconciliation } = detail;
   const reasons: string[] = [];
@@ -175,11 +192,18 @@ function buildAccountHealthItem(
     riskLevel = "info";
     reasons.push("account_archived");
   } else if (reconciliation.status === "needs_attention") {
-    riskLevel = absoluteDifference >= 10000 ? "critical" : "warning";
-    reasons.push("stored_balance_differs_from_transaction_ledger");
+    if (hasReconciliationEligibleRows(accountTransactions)) {
+      riskLevel = absoluteDifference >= 10000 ? "critical" : "warning";
+      reasons.push("legacy_linked_rows_need_cleanup");
+      reasons.push("stored_snapshot_differs_from_linked_rows");
+    } else {
+      riskLevel = "info";
+      reasons.push("import_account_attribution_only");
+      reasons.push("account_balance_snapshot_only");
+    }
   } else if (reconciliation.status === "no_linked_transactions") {
-    riskLevel = Math.abs(account.currentBalance) > 0 ? "watch" : "info";
-    reasons.push("no_linked_transactions");
+    riskLevel = "info";
+    reasons.push("account_balance_snapshot_only");
   }
 
   if (account.isDefault) {
@@ -207,7 +231,10 @@ function buildCoverageCaveats(input: {
   accountCount: number;
   transactionCount: number;
 }) {
-  const caveats: string[] = ["account_balances_are_stored_values"];
+  const caveats: string[] = [
+    "account_balances_are_stored_values",
+    "import_account_linking_is_optional",
+  ];
 
   if (input.accountCount === 0) {
     caveats.push("no_accounts_configured");
@@ -217,7 +244,7 @@ function buildCoverageCaveats(input: {
     caveats.push("no_transactions_imported");
   }
 
-  caveats.push("opening_balances_are_not_ledger_native");
+  caveats.push("meowjot_account_source_may_be_unreliable");
 
   return caveats;
 }
@@ -231,8 +258,23 @@ export function buildAccountHealthMetricPacket({
   AccountHealthEvidence
 > {
   const accounts = accountDetails.map((detail) => detail.account);
-  const items = accountDetails.map(buildAccountHealthItem);
+  const transactionsByAccountId = new Map<number, Transaction[]>();
+  for (const transaction of transactions) {
+    if (transaction.accountId == null) continue;
+    const accountTransactions = transactionsByAccountId.get(transaction.accountId) ?? [];
+    accountTransactions.push(transaction);
+    transactionsByAccountId.set(transaction.accountId, accountTransactions);
+  }
+  const items = accountDetails.map((detail) =>
+    buildAccountHealthItem(
+      detail,
+      transactionsByAccountId.get(detail.account.id) ?? []
+    )
+  );
   const activeItems = items.filter((item) => !item.isArchived);
+  const attentionItems = activeItems.filter(
+    (item) => getRiskWeight(item.riskLevel) >= getRiskWeight("warning")
+  );
   const payFromCoverage = buildPayFromCoverage(accounts, transactions);
 
   return {
@@ -244,14 +286,12 @@ export function buildAccountHealthMetricPacket({
       alignedAccountCount: activeItems.filter(
         (item) => item.reconciliationStatus === "aligned"
       ).length,
-      needsAttentionCount: activeItems.filter(
-        (item) => item.reconciliationStatus === "needs_attention"
-      ).length,
+      needsAttentionCount: attentionItems.length,
       noLinkedTransactionsCount: activeItems.filter(
         (item) => item.reconciliationStatus === "no_linked_transactions"
       ).length,
       totalAbsoluteBalanceDifference: roundCurrency(
-        activeItems.reduce(
+        attentionItems.reduce(
           (sum, item) => sum + Math.abs(item.balanceDifference),
           0
         )

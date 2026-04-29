@@ -14,7 +14,7 @@ export async function GET() {
     const portfolio = await getSavingsGoalsPortfolio();
     return NextResponse.json(portfolio);
   } catch (error) {
-    console.error("Failed to load savings goals", error);
+    console.warn("Failed to load savings goals", error);
     return NextResponse.json(
       { error: "ไม่สามารถโหลดเป้าหมายการออมได้" },
       { status: 500 }

@@ -81,6 +81,14 @@ function getQuickPrompts(language: "th" | "en") {
   ];
 }
 
+function shouldShowTechnicalDetail(detail: string | undefined) {
+  return Boolean(
+    detail &&
+      detail !== "provider_unavailable" &&
+      detail !== "database_unavailable"
+  );
+}
+
 export function DashboardAiConsole() {
   const tr = useTr();
   const { selectedYear, language } = useFinanceStore();
@@ -123,7 +131,12 @@ export function DashboardAiConsole() {
         );
         const insightData = (await insightResponse.json()) as AiInsightResponse;
         if (!insightResponse.ok) {
-          setError(insightData.error ?? tr("เรียก AI insight ไม่สำเร็จ", "AI insight failed"));
+          const msg = insightData.error ?? tr("เรียก AI insight ไม่สำเร็จ", "AI insight failed");
+          setError(
+            shouldShowTechnicalDetail(insightData.detail)
+              ? `${msg} (${insightData.detail})`
+              : msg
+          );
           return;
         }
 
@@ -239,8 +252,8 @@ export function DashboardAiConsole() {
           <div className="inline-flex items-center gap-2 self-start rounded-full border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-3 py-1.5 text-xs text-[color:var(--app-text-muted)]">
             {health?.ok ? <Bot size={13} /> : <WifiOff size={13} />}
             {health?.ok
-              ? tr("Local model ready", "Local model ready")
-              : tr("Local model offline", "Local model offline")}
+              ? tr("AI พร้อมใช้งาน", "AI ready")
+              : tr("AI ออฟไลน์", "AI offline")}
           </div>
         </div>
 
@@ -273,7 +286,7 @@ export function DashboardAiConsole() {
               <span className="text-sm text-[color:var(--app-text-muted)]">
                 {health?.ok
                   ? tr("ยังไม่มี AI summary", "No AI summary yet")
-                  : tr("เปิด LM Studio เพื่อสร้าง AI summary", "Start LM Studio to generate the AI summary")}
+                  : tr("AI provider ยังไม่พร้อม กรุณาตรวจสอบการตั้งค่า", "AI provider is not ready. Please check your configuration.")}
               </span>
             )}
           </div>
@@ -347,7 +360,7 @@ export function DashboardAiConsole() {
                       <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[color:var(--income-text)]" />
                       {health?.ok
                         ? tr("ผู้ช่วยการเงิน · online", "Financial assistant · online")
-                        : tr("รอ local model อยู่", "Waiting for local model")}
+                        : tr("AI ออฟไลน์", "AI offline")}
                     </p>
                   </div>
                 </div>
@@ -425,12 +438,12 @@ export function DashboardAiConsole() {
                     />
                     <div className="text-sm text-[color:var(--app-text-muted)]">
                       <p className="font-semibold text-[color:var(--app-text)]">
-                        {tr("LM Studio ยังไม่พร้อม", "LM Studio is not ready")}
+                        {tr("AI ยังไม่พร้อมใช้งาน", "AI is not ready")}
                       </p>
                       <p className="mt-1 leading-6">
                         {tr(
-                          "เปิด Local Server, โหลด model แล้วกลับมาคุยต่อได้ทันที",
-                          "Start the Local Server, load a model, then come back and continue the chat."
+                          "กรุณาตรวจสอบการตั้งค่า API key แล้วกลับมาคุยต่อได้ทันที",
+                          "Please check your API key configuration, then come back and continue the chat."
                         )}
                       </p>
                     </div>

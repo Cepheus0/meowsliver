@@ -84,7 +84,10 @@ export function DashboardInsights() {
         setInsights((data.packet?.evidence?.insights ?? []).slice(0, 3));
       } catch (error) {
         if (!controller.signal.aborted) {
-          console.error("Failed to load dashboard insights", error);
+          console.warn(
+            "Dashboard insights skipped:",
+            error instanceof Error ? error.message : "unknown_error"
+          );
         }
       } finally {
         if (!controller.signal.aborted) {

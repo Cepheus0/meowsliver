@@ -61,34 +61,34 @@ function buildReconciliationStatusMeta(
   return {
     aligned: {
       label: tr(
-        "ยอดตรงกับรายการที่เชื่อมแล้ว",
-        "Balance matches linked transactions"
+        "linked rows ตรงกับ snapshot",
+        "Linked rows match snapshot"
       ),
       className:
         "bg-[color:var(--income-soft)] text-[color:var(--income-text)]",
       description: tr(
-        "ยอดคงเหลือที่บันทึกไว้ตรงกับยอดที่ derive จากธุรกรรมที่เชื่อมกับบัญชีนี้",
-        "Stored balance matches the value derived from transactions linked to this account."
+        "stored balance snapshot ตรงกับยอดที่ derive จากรายการที่ตั้งใจผูกกับบัญชีนี้",
+        "The stored balance snapshot matches the value derived from rows intentionally linked to this account."
       ),
     },
     needs_attention: {
       label: tr(
-        "ยอดต่างจากรายการที่เชื่อมแล้ว",
-        "Balance differs from linked transactions"
+        "legacy linked rows ต่างจาก snapshot",
+        "Legacy linked rows differ from snapshot"
       ),
       className: "bg-[color:var(--neutral-soft)] text-[color:var(--neutral)]",
       description: tr(
-        "ยอดคงเหลือในบัญชีนี้ยังไม่ตรงกับธุรกรรมที่เชื่อมอยู่ อาจเกิดจาก opening balance หรือการปรับยอดด้วยมือ",
-        "Stored balance does not match the linked transactions. This may be due to an opening balance or manual adjustments."
+        "บัญชีนี้ยังมีรายการ legacy ที่ผูกไว้และทำให้ยอด linked rows ต่างจาก stored snapshot ควร cleanup หรือ unlink ก่อนใช้ reconciliation",
+        "This account still has legacy linked rows that differ from the stored snapshot. Clean up or unlink them before using reconciliation."
       ),
     },
     no_linked_transactions: {
-      label: tr("ยังไม่มีรายการที่เชื่อมไว้", "No linked transactions yet"),
+      label: tr("ใช้ยอดบัญชีเป็น snapshot", "Balance snapshot only"),
       className:
         "bg-[color:var(--app-surface-soft)] text-[color:var(--app-text-muted)]",
       description: tr(
-        "ตอนนี้ระบบยังอธิบายยอดด้วย transaction ledger ไม่ได้ เพราะยังไม่มีรายการที่ผูกกับบัญชีนี้",
-        "The system cannot explain the balance via the transaction ledger yet because no transactions are linked to this account."
+        "รายการนำเข้าจากเหมียวจดไม่ได้ผูกกับบัญชีโดยอัตโนมัติ เพราะข้อมูลบัญชีต้นทางอาจคลาดเคลื่อน ระบบจึงใช้ยอดบัญชีนี้เป็น snapshot แยกจาก cashflow",
+        "Meowjot imports are not automatically linked to accounts because source-account data may be inaccurate. This account balance is treated as a snapshot separate from cashflow."
       ),
     },
   };
@@ -282,8 +282,8 @@ export default function AccountDetailPage() {
     if (!detail.reconciliation.canReconcile) {
       setError(
         tr(
-          "บัญชีนี้ยังไม่มีรายการที่เชื่อมไว้ให้ reconcile",
-          "This account has no linked transactions to reconcile"
+          "บัญชีนี้เป็น snapshot และยังไม่มีรายการที่ตั้งใจผูกไว้สำหรับ reconciliation",
+          "This account is a snapshot and has no intentionally linked rows for reconciliation"
         )
       );
       return;
@@ -297,12 +297,12 @@ export default function AccountDetailPage() {
             detail.reconciliation.storedBalance
           )} เป็น ${formatBaht(
             detail.reconciliation.transactionDerivedBalance
-          )} ตามรายการที่เชื่อมแล้ว ต้องการดำเนินการต่อหรือไม่?`,
+          )} ตาม legacy linked rows ควรทำเฉพาะหลัง cleanup/unlink แล้ว ต้องการดำเนินการต่อหรือไม่?`,
           `The balance will be adjusted from ${formatBaht(
             detail.reconciliation.storedBalance
           )} to ${formatBaht(
             detail.reconciliation.transactionDerivedBalance
-          )} based on linked transactions. Continue?`
+          )} based on legacy linked rows. Only continue after cleanup/unlink review. Continue?`
         )
       );
 
@@ -383,8 +383,8 @@ export default function AccountDetailPage() {
             description={
               detail.account.notes ??
               tr(
-                "ตรวจยอดคงเหลือ วงเงิน และรายการที่เชื่อมกับบัญชีนี้ในมุมมองเดียว เพื่อดูว่าบัญชีนี้อธิบายตัวเองได้ดีแค่ไหน",
-                "Inspect balance, credit room, and linked transactions in one place to understand how well this account explains itself."
+                "ตรวจยอดคงเหลือ snapshot, วงเงิน และรายการที่ตั้งใจผูกกับบัญชีนี้ โดยไม่ถือว่า import จากเหมียวจดต้อง reconcile อัตโนมัติ",
+                "Inspect balance snapshot, credit room, and intentionally linked rows without assuming Meowjot imports must auto-reconcile."
               )
             }
             meta={[
@@ -397,7 +397,7 @@ export default function AccountDetailPage() {
                 icon: <Hash size={14} />,
                 label: tr(
                   `${detail.transactionCount.toLocaleString("th-TH")} รายการที่เชื่อม`,
-                  `${detail.transactionCount.toLocaleString("en-US")} linked transactions`
+                  `${detail.transactionCount.toLocaleString("en-US")} linked rows`
                 ),
               },
               ...(detail.account.isDefault
@@ -486,12 +486,12 @@ export default function AccountDetailPage() {
                 onClick={handleReconcile}
                 disabled={busy || !detail.reconciliation.canReconcile}
               >
-                <RotateCcw size={14} />
-                {detail.reconciliation.status === "aligned"
-                  ? tr("รีเช็กยอดจากรายการ", "Recheck balance from transactions")
+                    <RotateCcw size={14} />
+                    {detail.reconciliation.status === "aligned"
+                  ? tr("รีเช็ก snapshot จาก linked rows", "Recheck snapshot from linked rows")
                   : tr(
-                      "ปรับยอดตามรายการที่เชื่อมแล้ว",
-                      "Adjust balance from linked transactions"
+                      "ปรับ snapshot ตาม linked rows",
+                      "Adjust snapshot from linked rows"
                     )}
               </Button>
             </div>
@@ -499,24 +499,24 @@ export default function AccountDetailPage() {
             {detail.reconciliation.status === "no_linked_transactions" ? (
               <div className="mt-5 rounded-2xl border border-[color:var(--app-brand-border)] bg-[color:var(--app-brand-soft)] p-4">
                 <p className="text-sm font-semibold text-[color:var(--app-text)]">
-                  {tr("วิธีแก้ยอดที่ยังไม่มี ledger อธิบาย", "How to make this balance explainable")}
+                  {tr("สถานะ snapshot ที่ไม่ต้อง auto-link", "Snapshot state without auto-linking")}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-[color:var(--app-text-muted)]">
                   {tr(
-                    "ถ้ายอดนี้เป็น opening balance หรือยอดสินทรัพย์ที่ไม่ได้ import ผ่าน CSV ให้เพิ่ม alias ให้ตรงกับ payFrom ในรายการจริง หรือเพิ่มรายการปรับยอดตั้งต้นหนึ่งรายการ แล้วบัญชีนี้จะออกจาก warning ได้",
-                    "If this is an opening balance or an asset that was never imported from CSV, add aliases that match real payFrom values or create one opening adjustment transaction so the account can leave warning state."
+                    "ยอดนี้เป็น account balance snapshot แยกจาก cashflow รายการนำเข้าจากเหมียวจดจะไม่ผูกบัญชีอัตโนมัติ เว้นแต่คุณเพิ่ม alias ที่มั่นใจจริง ๆ",
+                    "This balance is an account snapshot separate from cashflow. Meowjot imports stay unlinked unless you add aliases you trust."
                   )}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
                     <PencilLine size={14} />
-                    {tr("แก้ alias / ยอดตั้งต้น", "Edit alias / opening balance")}
+                    {tr("แก้ alias / snapshot", "Edit alias / snapshot")}
                   </Button>
                   <Link
                     href={`/transactions?year=${selectedYear}&search=${encodeURIComponent(detail.account.name)}`}
                     className="inline-flex items-center justify-center rounded-xl border border-[color:var(--app-border)] bg-[color:var(--app-surface)] px-3 py-2 text-xs font-semibold text-[color:var(--app-text-muted)] hover:text-[color:var(--app-text)]"
                   >
-                    {tr("ค้นหารายการที่อาจเกี่ยวข้อง", "Search possible rows")}
+                    {tr("ค้นหารายการเพื่อ attribution", "Search attribution rows")}
                   </Link>
                 </div>
               </div>

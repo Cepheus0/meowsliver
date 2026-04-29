@@ -131,8 +131,7 @@ export const useFinanceStore = create<FinanceStore>()(
 
       getAssets: () => getAssetsFromAccounts(get().accounts),
       getLiabilities: () => getLiabilitiesFromAccounts(get().accounts),
-      getInvestments: () =>
-        getInvestmentsFromAccounts(get().accounts, get().importedTransactions),
+      getInvestments: () => getInvestmentsFromAccounts(get().accounts),
       getMonthlyCashflow: () =>
         getMonthlyCashflowFromTransactions(
           get().importedTransactions,

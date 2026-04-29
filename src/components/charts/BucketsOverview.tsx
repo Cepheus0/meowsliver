@@ -19,31 +19,33 @@ export function BucketsOverview() {
   useEffect(() => {
     let isCancelled = false;
 
-    void fetch("/api/savings-goals", { cache: "no-store" })
-      .then(async (response) => {
+    async function loadPortfolio() {
+      try {
+        const response = await fetch("/api/savings-goals", { cache: "no-store" });
         if (!response.ok) {
-          throw new Error("Failed to fetch savings goals");
+          if (!isCancelled) {
+            setError("load_failed");
+          }
+          return;
         }
 
-        return (await response.json()) as SavingsGoalsPortfolio;
-      })
-      .then((data) => {
+        const data = (await response.json()) as SavingsGoalsPortfolio;
         if (!isCancelled) {
           setPortfolio(data);
           setError(null);
         }
-      })
-      .catch((fetchError) => {
-        console.error("Failed to hydrate savings goals overview", fetchError);
+      } catch {
         if (!isCancelled) {
           setError("load_failed");
         }
-      })
-      .finally(() => {
+      } finally {
         if (!isCancelled) {
           setIsLoading(false);
         }
-      });
+      }
+    }
+
+    void loadPortfolio();
 
     return () => {
       isCancelled = true;

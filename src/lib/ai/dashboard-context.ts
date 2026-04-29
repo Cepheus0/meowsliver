@@ -213,6 +213,9 @@ export function buildDashboardAiSystemPrompt(
       "6. Do not give definitive investment advice because holdings and market coverage are incomplete.",
       "7. If the schema cannot answer something, say that directly and name the missing data.",
       "8. When source labels are Thai transaction tags or categories, keep the original labels instead of mistranslating them.",
+      "9. Treat imported account linking as optional attribution. Meowjot-style imports may have unreliable source-account data, so unlinked imported transactions are expected unless an account alias rule matched confidently.",
+      "10. For account caveats, use this framing: Meowjot imports are not automatically linked to accounts because source-account data may be inaccurate; transactions drive cashflow, while account balances are separate snapshots.",
+      "11. If an account has legacy linked rows that differ from the stored snapshot, frame it as cleanup/unlink work before reconciliation, not as proof that the account balance is wrong.",
     ].join("\n");
   }
 
@@ -226,6 +229,9 @@ export function buildDashboardAiSystemPrompt(
     "4. ใช้ Markdown ที่อ่านง่าย มีหัวข้อสั้น และ bullet ที่สแกนได้เร็ว",
     "5. ห้ามให้คำแนะนำการลงทุนแบบฟันธง เพราะ holdings และ market data ยังไม่ครบ",
     "6. ถ้าคำถามต้องใช้ข้อมูลที่ยังไม่มี ให้บอกว่า schema ปัจจุบันยังตอบไม่ได้ และแนะนำว่าต้องเพิ่มข้อมูลอะไร",
+    "7. การผูกบัญชีของรายการ import เป็น optional attribution เท่านั้น เพราะข้อมูลบัญชีจาก Meowjot/เหมียวจดอาจคลาดเคลื่อน รายการ import ที่ไม่ผูกบัญชีจึงเป็น expected state เว้นแต่มี account alias rule ที่ match ชัดเจน",
+    "8. เวลาอธิบาย caveat บัญชี ให้ใช้กรอบนี้: รายการนำเข้าจากเหมียวจดไม่ได้ผูกกับบัญชีโดยอัตโนมัติ เพราะข้อมูลบัญชีต้นทางอาจคลาดเคลื่อน ระบบจึงใช้ transactions สำหรับ cashflow และใช้ account balances เป็น snapshot แยกกัน",
+    "9. ถ้าบัญชีมี legacy linked rows ที่ยอดต่างจาก stored snapshot ให้บอกว่าเป็นงาน cleanup/unlink ก่อนใช้ reconciliation ไม่ใช่หลักฐานว่ายอดบัญชีผิด",
   ].join("\n");
 }
 

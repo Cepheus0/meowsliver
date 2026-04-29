@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import {
+  databaseUnavailableResponseBody,
+  isDatabaseUnavailableError,
+} from "@/lib/server/db-errors";
 import { getDashboardInsightPacket } from "@/lib/server/metrics";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +39,12 @@ export async function GET(request: Request) {
       );
     }
 
-    console.error("Failed to build dashboard insights", error);
+    if (isDatabaseUnavailableError(error)) {
+      console.warn("Dashboard insights are unavailable because the database is not ready.");
+      return NextResponse.json(databaseUnavailableResponseBody(), { status: 503 });
+    }
+
+    console.warn("Failed to build dashboard insights.");
     return NextResponse.json(
       { error: "ไม่สามารถสร้าง dashboard insights ได้" },
       { status: 500 }

@@ -68,6 +68,8 @@ describe("dashboard insights", () => {
           totalAbsoluteBalanceDifference: 12000,
           payFromCoverage: {
             transactionWithPayFromCount: 0,
+            attributedTransactionCount: 0,
+            attributedTransactionRatePercent: 0,
             unmatchedPayFromCount: 0,
             unmatchedPayFromRatePercent: 0,
             defaultAccountFallbackCount: 0,

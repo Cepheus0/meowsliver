@@ -60,14 +60,18 @@ function getAccountStatusLabel(
   language: InsightLanguage
 ) {
   if (status === "no_linked_transactions") {
-    return t(language, "ยังไม่มีรายการที่เชื่อม", "No linked transactions yet");
+    return t(language, "ใช้ยอดบัญชีเป็น snapshot", "Balance snapshot only");
   }
 
   if (status === "needs_attention") {
-    return t(language, "ยอดยังไม่ตรงกับ ledger", "Balance differs from ledger");
+    return t(
+      language,
+      "legacy linked rows ยังไม่ตรงกับ snapshot",
+      "Legacy linked rows differ from snapshot"
+    );
   }
 
-  return t(language, "ตรงกับ ledger", "Aligned with ledger");
+  return t(language, "linked rows ตรงกับ snapshot", "Linked rows match snapshot");
 }
 
 function severityRank(severity: InsightSeverity) {
@@ -168,38 +172,38 @@ function buildAccountHealthInsight(
     severity,
     title: t(
       language,
-      "มีบัญชีที่ควรตรวจสอบความน่าเชื่อถือของยอด",
-      "An account balance needs review"
+      "มีบัญชี legacy ที่ควร cleanup linkage",
+      "Legacy account linkage needs cleanup"
     ),
     summary:
       highestRisk.reconciliationStatus === "no_linked_transactions"
         ? t(
             language,
-            `${highestRisk.name} ยังไม่มีรายการที่เชื่อมไว้ จึงยังอธิบายยอด ${formatBaht(
+            `${highestRisk.name} ใช้ยอดบัญชีเป็น snapshot ${formatBaht(
               Math.abs(highestRisk.storedBalance),
               language
-            )} จาก ledger ไม่ได้`,
-            `${highestRisk.name} has no linked transactions yet, so the ledger cannot explain the ${formatBaht(
+            )} และรายการ import ไม่ได้ผูกบัญชีอัตโนมัติตาม design`,
+            `${highestRisk.name} uses a ${formatBaht(
               Math.abs(highestRisk.storedBalance),
               language
-            )} balance.`
+            )} account-balance snapshot; imported rows are intentionally not auto-linked by design.`
           )
         : t(
             language,
-            `${highestRisk.name} มียอดต่างจาก ledger อยู่ ${formatBaht(
+            `${highestRisk.name} ยังมี legacy linked transactions ที่ทำให้ยอด linked rows ต่างจาก stored snapshot ${formatBaht(
               Math.abs(highestRisk.balanceDifference),
               language
-            )}`,
-            `${highestRisk.name} is off from the linked ledger by ${formatBaht(
+            )} ควร cleanup หรือ unlink ก่อนใช้ reconciliation`,
+            `${highestRisk.name} still has legacy linked transactions causing a ${formatBaht(
               Math.abs(highestRisk.balanceDifference),
               language
-            )}.`
+            )} gap from the stored snapshot. Clean up or unlink them before using reconciliation.`
           ),
     actionHref: `/accounts/${highestRisk.accountId}`,
     actionLabel:
       highestRisk.reconciliationStatus === "no_linked_transactions"
-        ? t(language, "ดูวิธีแก้", "View fix steps")
-        : t(language, "ตรวจสอบบัญชี", "Review account"),
+        ? t(language, "ดู snapshot บัญชี", "View account snapshot")
+        : t(language, "cleanup linkage", "Clean up linkage"),
     evidence: [
       { label: t(language, "บัญชี", "Account"), value: highestRisk.name },
       {

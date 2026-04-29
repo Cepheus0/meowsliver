@@ -35,7 +35,12 @@ export function TransactionsHydrator() {
         }
       })
       .catch((error) => {
-        console.error("Transaction hydration failed", error);
+        if (!isCancelled) {
+          console.warn(
+            "Transaction hydration skipped:",
+            error instanceof Error ? error.message : "unknown_error"
+          );
+        }
       });
 
     return () => {

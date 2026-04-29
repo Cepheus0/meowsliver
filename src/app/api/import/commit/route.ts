@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { accounts, importRunRows, importRuns, transactions } from "@/db/schema";
+import { importRunRows, importRuns, transactions } from "@/db/schema";
 import type {
   ImportCommitRequest,
   ImportCommitResponse,
@@ -12,14 +12,7 @@ import {
   dbTransactionToUiTransaction,
   normalizedRowToInsert,
 } from "@/lib/server/import-db";
-import {
-  ensureDefaultAccount,
-  recalcAccountBalance,
-} from "@/lib/server/accounts";
-
-function canonicalize(value?: string | null): string {
-  return value?.trim().toLowerCase().replace(/\s+/g, " ") ?? "";
-}
+import { detectAccountForPayFrom } from "@/lib/server/accounts";
 
 export const dynamic = "force-dynamic";
 
@@ -52,40 +45,13 @@ export async function POST(request: Request) {
       .from(importRunRows)
       .where(eq(importRunRows.importRunId, body.importRunId));
 
-    // Build payFrom → accountId map once for all rows. If no active account
-    // matches the payFrom value, fall back to the Default Account so every
-    // committed row is linked to *something* — keeps the accounts dashboard
-    // coherent without forcing the user to tag each row.
-    const activeAccounts = await db
-      .select({
-        id: accounts.id,
-        name: accounts.name,
-        aliases: accounts.aliases,
-      })
-      .from(accounts)
-      .where(eq(accounts.isArchived, false));
-
-    const payFromToAccount = new Map<string, number>();
-    for (const account of activeAccounts) {
-      payFromToAccount.set(canonicalize(account.name), account.id);
-      for (const alias of account.aliases) {
-        payFromToAccount.set(canonicalize(alias), account.id);
-      }
-    }
-
     const newStagedRows = stagedRows.filter(
       (row) => row.previewStatus === "new" && row.normalizedRow !== null
     );
 
-    let defaultAccountId: number | null = null;
-    if (newStagedRows.length > 0) {
-      defaultAccountId = (await ensureDefaultAccount()).id;
-    }
-
-    const rowsToInsert = newStagedRows.map((row) => {
+    const rowsToInsert = await Promise.all(newStagedRows.map(async (row) => {
       const normalized = row.normalizedRow as unknown as NormalizedImportRow;
-      const matched = payFromToAccount.get(canonicalize(normalized.payFrom));
-      const accountId = matched ?? defaultAccountId;
+      const accountId = await detectAccountForPayFrom(normalized.payFrom);
 
       return normalizedRowToInsert(
         normalized,
@@ -96,7 +62,7 @@ export async function POST(request: Request) {
         row.fingerprint,
         accountId
       );
-    });
+    }));
 
     const insertedRows =
       rowsToInsert.length > 0
@@ -140,27 +106,6 @@ export async function POST(request: Request) {
               eq(importRunRows.previewStatus, "new")
             )
           );
-      }
-    }
-
-    // Recalculate balances for every account that received a committed row.
-    // Done sequentially to avoid race conditions on the same id; the number of
-    // touched accounts is small (typically ≤ dozen per import).
-    if (insertedRows.length > 0) {
-      const insertedFingerprintsSet = new Set(
-        insertedRows.map((row) => row.fingerprint)
-      );
-      const touchedAccountIds = new Set<number>();
-      for (const row of rowsToInsert) {
-        if (
-          insertedFingerprintsSet.has(row.fingerprint) &&
-          row.accountId != null
-        ) {
-          touchedAccountIds.add(row.accountId);
-        }
-      }
-      for (const id of touchedAccountIds) {
-        await recalcAccountBalance(id);
       }
     }
 

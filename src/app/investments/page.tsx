@@ -200,6 +200,19 @@ export default function InvestmentsPage() {
         </Card>
       ) : (
         <>
+          {/* Cost-basis tracking is currently disabled — gain/loss numbers
+              read 0 across the page because account balance is the manual
+              snapshot, not Σ(transactions). See task.md → "Reconcile UI". */}
+          <div className="rounded-xl border border-dashed border-[color:var(--app-border)] bg-[color:var(--app-surface-soft)] px-4 py-3 text-xs leading-relaxed text-[color:var(--app-text-muted)]">
+            <span className="font-semibold text-[color:var(--app-text-subtle)]">
+              {tr("หมายเหตุ", "Note")}:
+            </span>{" "}
+            {tr(
+              "ตัวเลขมูลค่าพอร์ตมาจาก balance ที่กรอกเองในหน้า Accounts โดยตรง — ยังไม่มีการ track ต้นทุน (cost basis) จึงไม่แสดง gain/loss จริง",
+              "Portfolio values come directly from manual account balances. Cost-basis tracking isn't enabled yet, so gain/loss figures are not meaningful."
+            )}
+          </div>
+
           {/* ── Portfolio hero ─────────────────────────────────────── */}
           <Card className="animate-fade-slide-up anim-delay-0 overflow-hidden">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">

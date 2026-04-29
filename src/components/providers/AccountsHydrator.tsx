@@ -25,7 +25,12 @@ export function AccountsHydrator() {
         }
       })
       .catch((error) => {
-        console.error("Account hydration failed", error);
+        if (!isCancelled) {
+          console.warn(
+            "Account hydration skipped:",
+            error instanceof Error ? error.message : "unknown_error"
+          );
+        }
       });
 
     return () => {

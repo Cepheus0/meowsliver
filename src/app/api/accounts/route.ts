@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { createAccount, listAccounts } from "@/lib/server/accounts";
+import {
+  databaseUnavailableResponseBody,
+  isDatabaseUnavailableError,
+} from "@/lib/server/db-errors";
 import { ACCOUNT_TYPE_LABELS, type AccountType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +17,12 @@ export async function GET() {
     const accounts = await listAccounts();
     return NextResponse.json({ accounts });
   } catch (error) {
-    console.error("Failed to load accounts", error);
+    if (isDatabaseUnavailableError(error)) {
+      console.warn("Accounts are unavailable because the database is not ready.");
+      return NextResponse.json(databaseUnavailableResponseBody(), { status: 503 });
+    }
+
+    console.warn("Failed to load accounts.");
     return NextResponse.json(
       { error: "ไม่สามารถโหลดบัญชีได้" },
       { status: 500 }

@@ -89,14 +89,16 @@ export default function BucketsPage() {
     try {
       const response = await fetch("/api/savings-goals", { cache: "no-store" });
       if (!response.ok) {
-        throw new Error("Failed to fetch savings goals");
+        setError(
+          tr("ไม่สามารถโหลด Savings Goals Portfolio ได้", "Could not load Savings Goals Portfolio")
+        );
+        return;
       }
 
       const data = (await response.json()) as SavingsGoalsPortfolio;
       setPortfolio(data);
       setError(null);
-    } catch (loadError) {
-      console.error(loadError);
+    } catch {
       setError(
         tr("ไม่สามารถโหลด Savings Goals Portfolio ได้", "Could not load Savings Goals Portfolio")
       );

@@ -3,6 +3,10 @@ import { desc } from "drizzle-orm";
 import { db } from "@/db";
 import { transactions } from "@/db/schema";
 import type { TransactionType } from "@/lib/types";
+import {
+  databaseUnavailableResponseBody,
+  isDatabaseUnavailableError,
+} from "@/lib/server/db-errors";
 import { dbTransactionToUiTransaction } from "@/lib/server/import-db";
 import { createManualTransaction } from "@/lib/server/transactions";
 
@@ -23,7 +27,12 @@ export async function GET() {
       transactions: rows.map(dbTransactionToUiTransaction),
     });
   } catch (error) {
-    console.error("Failed to load transactions", error);
+    if (isDatabaseUnavailableError(error)) {
+      console.warn("Transactions are unavailable because the database is not ready.");
+      return NextResponse.json(databaseUnavailableResponseBody(), { status: 503 });
+    }
+
+    console.warn("Failed to load transactions.");
     return NextResponse.json(
       { error: "ไม่สามารถโหลดรายการจากฐานข้อมูลได้" },
       { status: 500 }

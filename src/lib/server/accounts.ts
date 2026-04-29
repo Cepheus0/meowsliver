@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { accounts, transactions } from "@/db/schema";
 import { buildAccountReconciliation } from "@/lib/account-reconciliation";
@@ -92,7 +92,12 @@ async function getAccountTransactionSummary(
       lastTransactionDate: sql<string | null>`max(${transactions.transactionDate})`,
     })
     .from(transactions)
-    .where(eq(transactions.accountId, id));
+    .where(
+      and(
+        eq(transactions.accountId, id),
+        ne(transactions.source, "import")
+      )
+    );
 
   return {
     transactionCount: row?.transactionCount ?? 0,
@@ -249,8 +254,9 @@ export async function archiveAccount(id: number): Promise<Account | null> {
 }
 
 /**
- * Find or create the Default Account. Used by the import pipeline when a
- * transaction can't be auto-matched to a specific account.
+ * Find or create the Default Account. Used by manual transaction entry when the
+ * user does not pick an account. Imports should not fall back here because
+ * Meowjot-style source-account fields are attribution hints, not ledger truth.
  */
 export async function ensureDefaultAccount(): Promise<Account> {
   const [existing] = await db
@@ -270,8 +276,9 @@ export async function ensureDefaultAccount(): Promise<Account> {
 
 /**
  * Returns the accountId matching a payFrom string by name or alias.
- * Nothing fancy — exact case-insensitive match only. Caller decides
- * whether to fall back to the Default Account on null.
+ * Nothing fancy — exact case-insensitive match only. Returning null is a valid
+ * import outcome so ambiguous rows remain unlinked instead of creating false
+ * reconciliation confidence.
  */
 export async function detectAccountForPayFrom(
   payFrom: string | null | undefined

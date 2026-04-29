@@ -96,9 +96,10 @@ describe("account health metrics", () => {
       activeAccountCount: 2,
       needsAttentionCount: 1,
       noLinkedTransactionsCount: 1,
-      totalAbsoluteBalanceDifference: 22000,
+      totalAbsoluteBalanceDifference: 21000,
       payFromCoverage: {
         transactionWithPayFromCount: 2,
+        attributedTransactionCount: 1,
         unmatchedPayFromCount: 1,
         defaultAccountFallbackCount: 1,
       },

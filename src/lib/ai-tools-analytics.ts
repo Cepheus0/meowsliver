@@ -220,16 +220,16 @@ export function buildSmartAlerts(input: {
       title:
         accountRisk.reconciliationStatus === "no_linked_transactions"
           ? tr(
-              `${accountRisk.name} ยังไม่มีรายการที่เชื่อมกับยอด`,
-              `${accountRisk.name} has no ledger-linked rows`
+              `${accountRisk.name} ใช้ยอดบัญชีเป็น snapshot`,
+              `${accountRisk.name} uses an account-balance snapshot`
             )
           : tr(
-              `${accountRisk.name} ยอดต่างจาก ledger`,
-              `${accountRisk.name} differs from the ledger`
+              `${accountRisk.name} มี legacy linked rows ที่ควร cleanup`,
+              `${accountRisk.name} has legacy linked rows to clean up`
             ),
       summary: tr(
-        "เปิดบัญชีนี้เพื่อตรวจ alias, เพิ่มรายการตั้งต้น, หรือ reconcile ยอดให้ ledger อธิบายได้",
-        "Open this account to review aliases, add an opening adjustment, or reconcile the stored balance."
+        "รายการนำเข้าจากเหมียวจดไม่ได้ผูกบัญชีอัตโนมัติ ใช้ transactions สำหรับ cashflow และใช้ account balance เป็น snapshot; ถ้ามี legacy linkage ให้ cleanup หรือ unlink ก่อน reconcile",
+        "Meowjot imports are not auto-linked to accounts. Transactions drive cashflow and account balances are snapshots; clean up or unlink legacy linkage before reconciling."
       ),
       kind: "action",
       severity: accountRisk.riskLevel === "critical" ? "critical" : "warning",

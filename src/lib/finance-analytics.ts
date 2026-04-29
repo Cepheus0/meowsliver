@@ -284,9 +284,13 @@ export function getLiabilitiesFromAccounts(accounts: any[]): LiabilityItem[] {
 }
 
 export function getInvestmentsFromAccounts(
-  accounts: any[],
-  transactions: Transaction[]
+  accounts: any[]
 ): Record<string, InvestmentHolding[]> {
+  // Decoupled from transactions: balance is the manual `currentBalance` snapshot.
+  // Transactions are not used here because (a) imported transactions usually lack
+  // an account_id, and (b) treating Σtx as a "cost basis" produces incorrect
+  // gain/loss numbers that flicker on every import. See task.md for the
+  // future Reconcile UI plan that revisits cost-basis tracking properly.
   const result: Record<string, InvestmentHolding[]> = {
     crypto: [],
     ssf: [],
@@ -295,33 +299,23 @@ export function getInvestmentsFromAccounts(
     others: [],
   };
 
-  // Filter for investment-related accounts
   const investmentAccounts = accounts.filter(
     (a) => a.type === "investment" || a.type === "crypto"
   );
 
   for (const account of investmentAccounts) {
-    const accountTransactions = transactions.filter(
-      (tx) => tx.accountId === account.id
-    );
-
-    // Calculate total cost from transactions
-    // In this system, we'll assume transactions in investment accounts are contributions/buys
-    const totalCost = accountTransactions.reduce((sum, tx) => sum + tx.amount, 0);
     const currentValue = account.currentBalance;
-    const gainLoss = currentValue - totalCost;
-    const gainLossPercent = totalCost > 0 ? (gainLoss / totalCost) * 100 : 0;
 
     const holding: InvestmentHolding = {
       id: String(account.id),
       name: account.name,
       type: "other_investment", // Default
-      units: 0, // We don't have units in the current schema
-      avgCost: totalCost,
+      units: 0,
+      avgCost: currentValue, // No cost-basis tracking — show value as both
       currentPrice: currentValue,
       totalValue: currentValue,
-      gainLoss: gainLoss,
-      gainLossPercent: gainLossPercent,
+      gainLoss: 0,
+      gainLossPercent: 0,
     };
 
     // Categorize based on name or type
